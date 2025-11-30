@@ -4,7 +4,7 @@ const ToolsUI = () => {
   const BookOpen = (props) => React.createElement('svg',{className:props.className,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'2',strokeLinecap:'round',strokeLinejoin:'round'},React.createElement('path',{d:'M2 5h8a3 3 0 013 3v11H5a3 3 0 01-3-3V5z'}),React.createElement('path',{d:'M22 5h-8a3 3 0 00-3 3v11h8a3 3 0 003-3V5z'}));
   const items = [
     {name:'开发平台', desc:'快速进入平台控制台', icon:Terminal, onClick:()=>window.open('http://116.62.120.101:8088/signin','_blank')},
-    {name:'GitHub', desc:'代码托管与协作', icon:Github, onClick:()=>window.open('https://github.com/TonyWu3408','_blank')},
+    {name:'GitHub', desc:'代码托管与协作', icon:Github, onClick:()=>window.open('https://github.com/TonyWu340826/Tony-Agent-AI','_blank')},
     {name:'文档中心', desc:'平台使用文档', icon:BookOpen, onClick:()=>window.open('https://agijuejin.feishu.cn/wiki/UvJPwhfkiitMzhkhEfycUnS9nAm','_blank')}
   ];
   return React.createElement('div',{className:'grid md:grid-cols-3 gap-8'},

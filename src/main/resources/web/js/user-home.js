@@ -591,7 +591,7 @@ const UserHome = () => {
                                         // 🎯 优化 1: 点击“了解更多”在新标签页打开
                                         if(f.id==='platform') { window.open(SIGNIN_URL, '_blank'); }
                                         if(f.id==='vip') { const el=document.getElementById('vip-section'); if(el) el.scrollIntoView({behavior:'smooth'}) }
-                                        if(f.id==='opensource') { window.open('https://github.com/TonyWu340826/YS-CodeReviewer-AI','_blank'); }
+                                        if(f.id==='opensource') { window.open('hthttps://github.com/TonyWu340826/Tony-Agent-AI','_blank'); }
                                     }}, '了解更多', React.createElement(ArrowRight,{className:'w-4 h-4'}))
                             )
                         );
@@ -685,7 +685,7 @@ const UserHome = () => {
                 React.createElement('div',{className:'grid md:grid-cols-3 gap-8'},
                     [
                         {title:'文档中心',desc:'平台使用指南与API参考',href:'https://agijuejin.feishu.cn/wiki/UvJPwhfkiitMzhkhEfycUnS9nAm'},
-                        {title:'示例项目',desc:'快速学习与二次开发',href:'https://github.com/TonyWu340826/YS-CodeReviewer-AI'},
+                        {title:'示例项目',desc:'快速学习与二次开发',href:'https://github.com/TonyWu340826/Tony-Agent-AI'},
                         {title:'社区文章',desc:'前沿实践与最佳实践',href:'#articles-preview'}
                     ].map((c,i)=>React.createElement('div',{key:i,className:'bg-white rounded-2xl p-6 shadow-xl border hover:shadow-2xl transition'},
                         React.createElement('h3',{className:'text-xl font-semibold text-slate-900'}, c.title),
@@ -752,8 +752,8 @@ const UserHome = () => {
                         React.createElement('h3',{className:'text-4xl text-slate-900 mb-4 font-extrabold'}, '拥抱开源，共建生态'),
                         // 🎯 优化 2: 增加留白 mb-6
                         React.createElement('p',{className:'text-lg text-slate-600 mb-6 leading-relaxed'}, '开放源代码，与社区共同构建更好的AI生态系统。欢迎开发者们贡献代码和提交建议。'),
-                        // 🎯 优化 1: “访问GitHub”在新标签页打开
-                        React.createElement('button',{className:'px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-md', onClick:()=>window.open('https://github.com/TonyWu3408','_blank')}, '访问GitHub')
+                        // 🎯 优化 1: “访问GitHub”在新标签页打开·
+                        React.createElement('button',{className:'px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-md', onClick:()=>window.open('https://github.com/TonyWu340826/Tony-Agent-AI','_blank')}, '访问GitHub')
                     ),
                     React.createElement('div',{className:'order-1 lg:order-2'},
                         // 🎯 优化 2: 增加留白 p-8
