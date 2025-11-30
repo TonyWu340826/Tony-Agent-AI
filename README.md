@@ -30,10 +30,16 @@ TonyWu AI 聚合平台是一个轻量级、高灵活度的 AI 工具接入和管
 
 
 🛠️ 快速开始（Quick Start）
+🛠️ 快速开始（Quick Start）
+Bash
+
 git clone https://github.com/your-repo/your-project.git
 cd your-project
 mvn spring-boot:run
 访问系统：
+
+后管端： http://localhost:8080/idnex.html
+用户端： http://localhost:8080/home.html
 http://localhost:8080/idnex.html  //后管端
 http://localhost:8080/home.html   //用户端
 
