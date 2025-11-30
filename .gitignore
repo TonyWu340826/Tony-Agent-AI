@@ -35,3 +35,4 @@ application.properties/
 .vscode/
 .idea/
 .trae/
+/src/main/resources/application.yaml
