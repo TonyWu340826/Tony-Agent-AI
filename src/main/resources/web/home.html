@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TonyWu AI 用户主页</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>html,body{height:100%;background:#f6f7fb}</style>
+  </head>
+<body>
+    <div id="root" class="min-h-screen"></div>
+    <div id="fixed-footer" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:1200;background:#0f172a;color:#fff;border-top:1px solid #334155;text-align:center;padding:8px 0;">
+      <div style="font-size:12px;">© 2025 TonyWu AI 平台. All rights reserved.</div>
+      <div style="font-size:11px;color:#cbd5e1;margin-top:2px;">让智能赋能每个人 · 共建可信AI新纪元</div>
+    </div>
+    <script type="text/javascript" defer src="/js/tools-ui.js"></script>
+    <script type="text/javascript" defer src="/js/model-ui.js"></script>
+    <script type="text/javascript" defer src="/js/mcp-ui.js"></script>
+    <script type="text/javascript" defer src="/js/prompt-ui.js"></script>
+    <script type="text/javascript" defer src="/js/sql-dba-ui.js"></script>
+    <script type="text/javascript" defer src="/js/ai-tool-management.js"></script>
+  <script type="text/javascript" defer src="/tools/10-aiSql-tools-management.js"></script>
+    <script type="text/javascript" defer src="/js/user-home.js?v=13"></script>
+    <script type="text/babel">
+      const root = ReactDOM.createRoot(document.getElementById('root'))
+      const render = () => {
+        const Comp = window.Components && window.Components.UserHome
+        root.render(Comp ? React.createElement(Comp) : React.createElement('div', {className:'p-6'}, '组件加载中...'))
+      }
+      render()
+      try { window.addEventListener('modules:loaded', render) } catch(e) {}
+    </script>
+    <script>
+      (function(){
+        const init = () => {
+          if (document.getElementById('don-btn-inline')) return;
+          if (!document.body) return;
+          const s=document.createElement('style'); s.textContent='@keyframes d-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}'; document.head.appendChild(s);
+          const btn=document.createElement('button'); btn.id='don-btn-inline'; btn.innerText='鼓励'; btn.style.position='fixed'; btn.style.right='20px'; btn.style.top='14px'; btn.style.zIndex='1350'; btn.style.padding='8px 12px'; btn.style.borderRadius='9999px'; btn.style.color='#fff'; btn.style.background='#0ea5e9'; btn.style.boxShadow='0 6px 16px rgba(2,6,23,0.15)'; btn.style.fontWeight='700'; btn.style.letterSpacing='.3px'; btn.style.filter='saturate(1.05)'; document.body.appendChild(btn);
+          const show=()=>{
+            const bg=document.createElement('div'); bg.style.position='fixed'; bg.style.inset='0'; bg.style.background='rgba(0,0,0,.35)'; bg.style.zIndex='1350'; bg.style.display='flex'; bg.style.alignItems='center'; bg.style.justifyContent='center'; bg.style.padding='16px';
+            const box=document.createElement('div'); box.style.width='88vw'; box.style.maxWidth='420px'; box.style.background='#fff'; box.style.borderRadius='14px'; box.style.boxShadow='0 20px 44px rgba(2,6,23,.18)'; box.style.overflow='hidden'; bg.appendChild(box);
+            box.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#0ea5e9;color:#fff;font-weight:700"><span>是否资助 UP 主</span><button id="don-x" style="padding:8px 12px;border-radius:10px;background:#eef2ff;color:#334155">关闭</button></div><div id="don-body" style="padding:16px;color:#0f172a">点击确认后，将展示微信与支付宝收款码,一分也是爱。</div><div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid #e2e8f0"><button id="don-c" style="padding:8px 12px;border-radius:10px;background:#eef2ff;color:#334155;font-weight:600">取消</button><button id="don-ok" style="padding:8px 12px;border-radius:10px;background:#2563eb;color:#fff;font-weight:600">确认</button></div>';
+            document.body.appendChild(bg);
+            const close=()=>{ try{ document.body.removeChild(bg); }catch(e){} };
+            box.querySelector('#don-x').onclick=close; box.querySelector('#don-c').onclick=close;
+            bg.addEventListener('click',(e)=>{ if(e.target===bg) close(); });
+            box.querySelector('#don-ok').onclick=async()=>{
+              const body=box.querySelector('#don-body'); body.innerHTML='<div style="color:#334155">加载收款码中...</div>';
+              try{
+                const r1=await fetch('/api/v1/configs/value?key=PAY_QR_WECHAT',{credentials:'same-origin'}); const we=await r1.text();
+                const r2=await fetch('/api/v1/configs/value?key=PAY_QR_ALIPAY',{credentials:'same-origin'}); const al=await r2.text();
+                const asDataUrl = (raw) => {
+                  const v0 = (raw||'').trim();
+                  if (/^\s*<\s*(?:!doctype|html)/i.test(v0)) return '';
+                  const v = v0.replace(/^["'`]+|["'`]+$/g,'').replace(/\s+/g,'');
+                  if (!v) return '';
+                  if (/^data:/i.test(v) || /^https?:/i.test(v)) return v;
+                  if (/^iVBOR/.test(v)) return 'data:image/png;base64,'+v;
+                  if (/^\/9j\//.test(v)) return 'data:image/jpeg;base64,'+v;
+                  return 'data:image/png;base64,'+v;
+                };
+                const w=asDataUrl(we); const a=asDataUrl(al);
+                body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px"><div style="font-weight:700;color:#0f172a;margin-bottom:6px">微信收款码</div>'+(w?('<img src="'+w+'" alt="微信收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/>'):'<div style="font-size:12px;color:#475569">未配置</div>')+'</div><div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px"><div style="font-weight:700;color:#0f172a;margin-bottom:6px">支付宝收款码</div>'+(a?('<img src="'+a+'" alt="支付宝收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/>'):'<div style="font-size:12px;color:#475569">未配置</div>')+'</div></div><div style="font-size:12px;color:#475569;margin-top:4px">感谢您的支持！长按保存后在对应 App 识别。</div>';
+              }catch(e){ body.innerHTML='<div style="color:#ef4444">加载失败，请稍后重试</div>'; }
+            };
+          };
+          btn.addEventListener('click', show);
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+      })();
+    </script>
+    <script>
+      (function(){
+        const makeBtn = () => {
+          if (window.__supportChatMounted) return; // React版本已挂载则不创建fallback
+          if (document.getElementById('support-chat-fallback')) return;
+          const style = document.getElementById('sc-fallback-style') || document.createElement('style');
+          style.id = 'sc-fallback-style';
+          style.textContent = '@keyframes scFloat2{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 2px))}}@keyframes scPulse2{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.12);opacity:.2}}@keyframes scBounce2{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 8px))}}';
+          document.head.appendChild(style);
+          const btn = document.createElement('button');
+          btn.id = 'support-chat-fallback';
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M4 12a8 8 0 1 1 16 0"/><rect x="3" y="12" width="4" height="6" rx="2"/><rect x="17" y="12" width="4" height="6" rx="2"/><path d="M9 18h6"/><path d="M12 18v2"/></svg>';
+          btn.style.position = 'fixed';
+          btn.style.right = '24px';
+          btn.style.top = '50%';
+          btn.style.transform = 'translateY(-50%)';
+          btn.style.zIndex = '1301';
+          btn.style.width = '48px';
+          btn.style.height = '48px';
+          btn.style.borderRadius = '9999px';
+          btn.style.background = '#2563eb';
+          btn.style.color = '#fff';
+          btn.style.boxShadow = '0 10px 25px rgba(30,58,138,0.3)';
+          btn.style.display = 'grid';
+          btn.style.placeItems = 'center';
+          btn.style.animation = 'scBounce2 1.6s ease-in-out infinite';
+          btn.style.willChange = 'transform';
+          document.body.appendChild(btn);
+          const ring = document.createElement('span');
+          ring.style.position = 'absolute';
+          ring.style.inset = '0';
+          ring.style.border = '2px solid #67e8f9';
+          ring.style.borderRadius = '9999px';
+          ring.style.animation = 'scPulse2 1.8s ease-in-out infinite';
+          btn.appendChild(ring);
+          const dot = document.createElement('span');
+          dot.style.position = 'absolute';
+          dot.style.right = '-2px';
+          dot.style.top = '-2px';
+          dot.style.width = '8px';
+          dot.style.height = '8px';
+          dot.style.borderRadius = '9999px';
+          dot.style.background = '#f43f5e';
+          dot.style.boxShadow = '0 0 0 0 rgba(244,63,94,.7)';
+          dot.style.animation = 'scPulse2 1.8s ease-in-out infinite';
+          btn.appendChild(dot);
+          const panel = document.createElement('div');
+          panel.style.position = 'fixed';
+          panel.style.right = '24px';
+          panel.style.top = '50%';
+          panel.style.transform = 'translateY(-50%)';
+          panel.style.zIndex = '1300';
+          panel.style.width = '340px';
+          panel.style.height = '420px';
+          panel.style.background = '#fff';
+          panel.style.border = '1px solid #e2e8f0';
+          panel.style.borderRadius = '16px';
+          panel.style.boxShadow = '0 20px 40px rgba(2,6,23,0.2)';
+          panel.style.display = 'none';
+          panel.style.overflow = 'hidden';
+          panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#0ea5e9;border-bottom:1px solid #e2e8f0;font-weight:600;color:#fff">AI客服<div style="display:flex;align-items:center;gap:8px"><button id="support-chat-fallback-full" style="padding:4px 8px;border-radius:8px;background:#e2e8f0;color:#334155">全屏</button><button id="support-chat-fallback-close" style="padding:4px 8px;border-radius:8px;background:#e2e8f0;color:#334155">关闭</button></div></div><div style="padding:10px;overflow:auto;height:330px;font-size:12px;color:#0f172a" id="support-chat-fallback-body"></div><div style="position:sticky;bottom:0;padding:10px;border-top:1px solid #e2e8f0;background:#fff"><input id="support-chat-fallback-input" placeholder="请输入您的问题…" style="width:72%;padding:8px;border:1px solid #cbd5e1;border-radius:8px"/><button id="support-chat-fallback-send" style="margin-left:8px;padding:8px 10px;background:#2563eb;color:#fff;border-radius:8px">发送</button></div>';
+          document.body.appendChild(panel);
+          const body = panel.querySelector('#support-chat-fallback-body');
+          const add = (role, text) => {
+            const bubble = document.createElement('div');
+            bubble.style.padding = '8px'; bubble.style.borderRadius = '10px'; bubble.style.margin = '6px 0'; bubble.style.maxWidth = '85%';
+            if (role === 'assistant') { bubble.style.background = '#f1f5f9'; bubble.style.color = '#0f172a'; }
+            else { bubble.style.background = '#2563eb'; bubble.style.color = '#fff'; bubble.style.marginLeft = 'auto'; }
+            bubble.innerText = text; body.appendChild(bubble); body.scrollTop = body.scrollHeight;
+          };
+          const addThinking = () => {
+            const bubble = document.createElement('div');
+            bubble.style.padding = '8px'; bubble.style.borderRadius = '10px'; bubble.style.margin = '6px 0'; bubble.style.maxWidth = '85%';
+            bubble.style.background = '#f1f5f9'; bubble.style.color = '#0f172a';
+            bubble.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><svg class="animate-spin" viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"></circle><path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>正在思考…</span></div>';
+            body.appendChild(bubble); body.scrollTop = body.scrollHeight; return bubble;
+          };
+          add('assistant','您好，我是AI智能客服。可以为您提供以下帮助：\n- 了解平台核心功能\n- 查找工具合集分类\n- 咨询VIP权益与服务\n- 反馈问题与建议');
+          add('assistant','您可以直接输入问题，或点击“发送”反馈。');
+          btn.addEventListener('click', ()=>{ panel.style.display = 'block'; btn.style.display='none'; });
+          let isFull = false;
+          const applySize = () => {
+            if (isFull) {
+              panel.style.right = 'auto'; panel.style.left = '50%'; panel.style.top = '50%'; panel.style.transform = 'translate(-50%, -50%)';
+              panel.style.width = '75vw'; panel.style.height = '75vh'; panel.style.borderRadius = '12px'; panel.style.maxWidth = 'none';
+              const fullBtn = panel.querySelector('#support-chat-fallback-full'); if (fullBtn) fullBtn.textContent = '退出全屏';
+            } else {
+              panel.style.left = 'auto'; panel.style.right = '24px'; panel.style.top = '50%'; panel.style.transform = 'translateY(-50%)';
+              panel.style.width = '340px'; panel.style.height = '420px'; panel.style.borderRadius = '16px';
+              const fullBtn = panel.querySelector('#support-chat-fallback-full'); if (fullBtn) fullBtn.textContent = '全屏';
+            }
+          };
+          panel.querySelector('#support-chat-fallback-full').addEventListener('click', ()=>{ isFull = !isFull; applySize(); });
+          panel.querySelector('#support-chat-fallback-close').addEventListener('click', ()=>{ panel.style.display = 'none'; btn.style.display=''; isFull=false; applySize(); });
+          const doSend = async () => {
+            const inp = panel.querySelector('#support-chat-fallback-input');
+            const v = (inp.value||'').trim(); if(!v) return; add('user', v); inp.value='';
+            const holder = addThinking();
+            try {
+              const r = await fetch('/api/open/chat', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ prompt: v }) });
+              const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
+              const reply = (d && typeof d.response==='string') ? d.response : (d.message || '未获取到回复');
+              holder.innerText = reply;
+            } catch(_) {
+              holder.innerText = '网络异常，请稍后重试';
+            }
+          };
+          panel.querySelector('#support-chat-fallback-send').addEventListener('click', doSend);
+          panel.querySelector('#support-chat-fallback-input').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ doSend(); }});
+        };
+        document.addEventListener('DOMContentLoaded', makeBtn);
+        window.addEventListener('modules:loaded', makeBtn);
+      })();
+    </script>
+    <script>
+      (function(){
+        const el = document.getElementById('fixed-footer');
+        if(!el) return;
+        const threshold = 8;
+        const update = () => {
+          const atBottom = (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - threshold);
+          el.style.display = atBottom ? 'block' : 'none';
+        };
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        document.addEventListener('DOMContentLoaded', update);
+        update();
+      })();
+    </script>
+  </body>
+  </html>

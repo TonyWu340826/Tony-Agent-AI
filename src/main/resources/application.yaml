@@ -1,0 +1,27 @@
+spring:
+  # 数据库连接配置 (使用您提供的外部服务器信息)
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: xxxx
+    username: xxxx
+    password: xxxx
+
+  # JPA (Hibernate) 配置
+  jpa:
+    # ddl-auto: update - 允许 Hibernate 根据实体类自动更新数据库表结构 (开发环境推荐)
+    # ddl-auto: none - 生产环境推荐，不自动修改数据库
+    hibernate:
+      ddl-auto: update
+    show-sql: true # 在控制台打印 SQL 语句，方便调试
+    properties:
+      hibernate:
+        format_sql: true # 格式化打印的 SQL 语句
+
+logging:
+  level:
+    com.example: DEBUG # 调整您应用包下的日志级别
+    org.springframework.web: INFO
+openapi:
+  python:
+    base-url: xxxx   //调用AI模型接口
+    path_agent_01: xxxx
