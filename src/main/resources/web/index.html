@@ -1371,6 +1371,12 @@
                   .then(() => setExamSessionsReady(!!(window.Components && window.Components.ExamSessionAdmin)))
                   .catch(() => {});
             }
+            if (adminView === 'prompt-templates' && !(window.Components && window.Components.PromptTemplateManagement)) {
+                loadScriptOnce('/js/prompt-template-management.js').catch(() => {});
+            }
+            if (adminView === 'prompt-link' && !(window.Components && window.Components.PromptLinkManagement)) {
+                loadScriptOnce('/js/prompt-link-management.js').catch(() => {});
+            }
         }, [adminView]);
 
         const navItems = [
@@ -1384,6 +1390,8 @@
             { id: 'exam', name: '考试管理', icon: BookOpen },
             { id: 'interview', name: '面试宝典', icon: BookOpen },
             { id: 'ai-tools', name: 'AI功能管理', icon: Cpu },
+            { id: 'prompt-templates', name: '提示词模板', icon: FileText },
+            { id: 'prompt-link', name: '提示词关联', icon: Layers },
             { id: 'system', name: '系统管理', icon: Settings },
         ];
 
@@ -1438,6 +1446,12 @@
                     return (typeof InterviewManagementComp === 'function') ? <InterviewManagementComp /> : <div className="p-6">组件加载中...</div>;
                 case 'ai-tools':
                     return (typeof AIToolManagementComp === 'function') ? <AIToolManagementComp /> : <div className="p-6">组件加载中...</div>;
+                case 'prompt-templates':
+                    const PromptTemplateManagementComp = window.Components && window.Components.PromptTemplateManagement;
+                    return (typeof PromptTemplateManagementComp === 'function') ? <PromptTemplateManagementComp /> : <div className="p-6">组件加载中...</div>;
+                case 'prompt-link':
+                    const PromptLinkManagementComp = window.Components && window.Components.PromptLinkManagement;
+                    return (typeof PromptLinkManagementComp === 'function') ? <PromptLinkManagementComp /> : <div className="p-6">组件加载中...</div>;
                 case 'exam':
                     return (typeof ExamAdminComp === 'function') ? <ExamAdminComp /> : <div className="p-6">组件加载中...</div>;
                 case 'exam-questions':
