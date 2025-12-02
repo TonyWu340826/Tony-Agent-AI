@@ -16,9 +16,7 @@
   );
   const PromptTemplateManagement = () => {
     const [items, setItems] = useState([]);
-    const [scenes, setScenes] = useState([]);
-    const [activeScene, setActiveScene] = useState(null);
-    const [filters, setFilters] = useState({ scene: '', model: '', status: '', version: '' });
+    const [filters, setFilters] = useState({ model: '', status: '', version: '' });
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(0);
     const [size, setSize] = useState(10);
@@ -29,21 +27,10 @@
     const [editData, setEditData] = useState(null);
     const [showTest, setShowTest] = useState(false);
     const [testData, setTestData] = useState(null);
-    const fetchScenes = async () => {
-      try {
-        const r = await fetch(`/api/prompt/admin/scenes?status=1&page=0&size=1000`, { credentials: 'same-origin' });
-        const t = await r.text(); let d = [];
-        try { d = JSON.parse(t || '[]'); } catch(_) { d = []; }
-        const arr = Array.isArray(d) ? d : (Array.isArray(d.content) ? d.content : []);
-        setScenes(arr);
-      } catch (_) { setScenes([]); }
-    };
     const fetchList = async (targetPage = page) => {
       setLoading(true); setError('');
       try {
         const p = new URLSearchParams(); p.set('page', targetPage); p.set('size', size);
-        const sceneCode = activeScene?.sceneCode || activeScene?.scene_code || filters.scene;
-        if (sceneCode) p.set('scene_code', sceneCode);
         if (filters.model) p.set('model_type', filters.model);
         if (filters.status) p.set('status', filters.status);
         if (filters.version) p.set('version', filters.version);
@@ -54,7 +41,7 @@
         setItems(d.content || []); setTotalPages(d.totalPages || 0); setPage(d.number ?? targetPage);
       } catch(e) { setError(e.message || '请求失败'); } finally { setLoading(false); }
     };
-    useEffect(() => { fetchScenes(); fetchList(0); }, []);
+    useEffect(() => { fetchList(0); }, []);
     const handleDelete = async (id) => {
       if (!confirm('确认删除该模板？')) return; setLoading(true); setError('');
       try { const r = await fetch(`/api/prompt/admin/templates/${id}`, { method:'DELETE', credentials:'same-origin' }); const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){} if(!r.ok || d.success===false) throw new Error(d.message || '删除失败'); fetchList(page); } catch(e){ setError(e.message || '请求失败'); } finally { setLoading(false); }
@@ -74,19 +61,11 @@
     const onTestClosed = () => { setShowTest(false); setTestData(null); };
     const modelOptions = ['gpt-4o','deepseek-chat','glm-4','claude-3','qwen-2'];
     return React.createElement('div', { className:'p-6 md:p-10 bg-white rounded-xl shadow-lg w-full h-full space-y-6' },
-      React.createElement('h2', { className:'text-3xl font-bold text-gray-800 border-b pb-4 mb-4' }, '提示词管理'),
+      React.createElement('h2', { className:'text-3xl font-bold text-gray-800 border-b pb-4 mb-4' }, '提示词模板'),
       React.createElement('div', { className:'flex flex-col md:flex-row gap-3 items-start md:items-center' },
         React.createElement('div', { className:'relative w-full md:w-80' },
           React.createElement('input', { className:'w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg', placeholder:'搜索标题...', value:search, onChange:e=>setSearch(e.target.value), onKeyDown:e=>{ if(e.key==='Enter') fetchList(0); } }),
           React.createElement(Icon, { name:'Search', className:'w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' })
-        ),
-        React.createElement('select', { className:'border border-gray-300 rounded-lg px-3 py-2 w-48', value:filters.scene, onChange:e=>setFilters({ ...filters, scene:e.target.value }) },
-          React.createElement('option', { value:'' }, '所有场景'),
-          ...(Array.isArray(scenes) ? scenes : []).map(s => {
-            const code = s.sceneCode || s.scene_code || s.code;
-            const name = s.sceneName || s.scene_name || s.name || code;
-            return React.createElement('option', { key: String(code), value: String(code) }, name);
-          })
         ),
         React.createElement('select', { className:'border border-gray-300 rounded-lg px-3 py-2 w-40', value:filters.model, onChange:e=>setFilters({ ...filters, model:e.target.value }) },
           React.createElement('option', { value:'' }, '所有模型'),
@@ -99,58 +78,36 @@
         ),
         React.createElement('input', { className:'border border-gray-300 rounded-lg px-3 py-2 w-24', placeholder:'版本', value:filters.version, onChange:e=>setFilters({ ...filters, version:e.target.value }) }),
         React.createElement('div', { className:'flex gap-2 ml-auto' },
-          React.createElement('button', { className:'px-4 py-2 rounded-md bg-blue-600 text-white', onClick:()=>fetchList(0) }, '筛选'),
-          React.createElement('button', { className:'px-4 py-2 rounded-md bg-green-600 text-white', onClick:()=>openEdit(null) }, '新增模板')
+          React.createElement('button', { className:'px-4 py-2 rounded-md bg-blue-600 text-white', onClick:()=>fetchList(0) }, '筛选')
         )
       ),
       error ? React.createElement('div', { className:'bg-red-100 text-red-700 border border-red-200 p-3 rounded-lg text-sm shadow-md' }, error) : null,
-      React.createElement('div', { className:'grid grid-cols-1 md:grid-cols-2 gap-6' },
-        React.createElement('div', { className:'overflow-x-auto bg-white rounded-lg border border-gray-200 shadow' },
-          React.createElement('div', { className:'px-4 py-3 font-semibold text-gray-700 border-b' }, '场景列表'),
-          React.createElement('table', { className:'min-w-full divide-y divide-gray-200' },
-            React.createElement('thead', { className:'bg-gray-50' }, React.createElement('tr', null, ['场景编码','场景名称','状态','创建人'].map((h,i)=>React.createElement('th',{key:i,className:'px-4 py-3 text-left text-xs font-medium text-gray-500'},h)))),
-            React.createElement('tbody', { className:'bg-white divide-y divide-gray-200' },
-              (Array.isArray(scenes)&&scenes.length>0 ? scenes : []).map(sc => (
-                React.createElement('tr', { key: sc.id || sc.sceneCode, className: (activeScene && (activeScene.sceneCode===sc.sceneCode || activeScene.scene_code===sc.scene_code)) ? 'bg-blue-50' : '' },
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-gray-700' }, sc.sceneCode || sc.scene_code),
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-gray-700' }, sc.sceneName || sc.scene_name || '-'),
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-gray-700' }, sc.status===1?'启用':'停用'),
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-gray-700' }, sc.createPerson || sc.create_person || 'system'),
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-right' },
-                    React.createElement('button', { className:'px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700', onClick:()=>{ setActiveScene(sc); fetchList(0);} }, '查看模板')
-                  )
-                )
-              ))
-            )
-          )
+      React.createElement('div', { className:'overflow-x-auto bg-white rounded-lg border border-gray-200 shadow w-full' },
+        React.createElement('div', { className:'px-4 py-3 font-semibold text-gray-700 border-b flex items-center justify-between' },
+          React.createElement('span', null, '模板列表'),
+          React.createElement('button', { className:'px-3 py-1 rounded-md bg-green-600 text-white hover:bg-green-700', onClick:()=>openEdit(null) }, '新增模板')
         ),
-        React.createElement('div', { className:'overflow-x-auto bg-white rounded-lg border border-gray-200 shadow' },
-          React.createElement('div', { className:'px-4 py-3 font-semibold text-gray-700 border-b flex items-center justify-between' },
-            React.createElement('span', null, `模板列表 ${activeScene ? '(' + (activeScene.sceneName || activeScene.sceneCode || '') + ')' : ''}`),
-            React.createElement('button', { className:'px-3 py-1 rounded-md bg-green-600 text-white hover:bg-green-700', onClick:()=>openEdit(activeScene ? { scene_code: activeScene.sceneCode || activeScene.scene_code } : null) }, '新增模板')
-          ),
-          React.createElement('table', { className:'min-w-full divide-y divide-gray-200' },
-            React.createElement('thead', { className:'bg-gray-50' }, React.createElement('tr', null, ['模型','模板名称','版本','角色','状态','更新时间','操作'].map((h,i)=>React.createElement('th',{key:i,className:'px-4 py-3 text-left text-xs font-medium text-gray-500'},h)))),
-            React.createElement('tbody', { className:'bg-white divide-y divide-gray-200' },
-              loading ? React.createElement('tr', null, React.createElement('td', { className:'px-4 py-6 text-center text-gray-500', colSpan:7 }, '加载中...')) : (items.length===0 ? React.createElement('tr', null, React.createElement('td', { className:'px-4 py-6 text-center text-gray-500', colSpan:7 }, '暂无数据')) : items.map(it => (
-                React.createElement('tr', { key: it.id },
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-gray-700' }, React.createElement(ModelChip, { model: (it.modelType || it.model_type || '').toUpperCase() })),
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-gray-700' }, it.templateName || it.template_name || '-'),
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-gray-700' }, `v${it.version ?? 1}`),
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-gray-700' }, it.roleType || it.role_type || '-'),
-                  React.createElement('td', { className:'px-4 py-3 text-sm' }, React.createElement(StatusTag, { enabled: String(it.status ?? 0) !== '1' })),
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-gray-700' }, (()=>{ const u = it.updatedAt || it.update_time || it.updated_at; return u ? new Date(u).toLocaleString() : '-'; })()),
-                  React.createElement('td', { className:'px-4 py-3 text-sm text-right' },
-                    React.createElement('div', { className:'flex items-center justify-end gap-2 whitespace-nowrap' },
-                      React.createElement('button', { className:'px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300', onClick:()=>openTest(it) }, '测试'),
-                      React.createElement('button', { className:'px-3 py-1 rounded-md bg-blue-600 text白 hover:bg-blue-700', onClick:()=>openEdit(it) }, '编辑'),
-                      React.createElement('button', { className:'px-3 py-1 rounded-md bg-yellow-500 text白 hover:bg-yellow-600', onClick:()=>handleCopy(it.id) }, '复制版本'),
-                      React.createElement('button', { className:'px-3 py-1 rounded-md bg-red-600 text白 hover:bg-red-700', onClick:()=>handleDelete(it.id) }, '删除')
-                    )
+        React.createElement('table', { className:'min-w-full divide-y divide-gray-200' },
+          React.createElement('thead', { className:'bg-gray-50' }, React.createElement('tr', null, ['模型','模板名称','版本','角色','状态','更新时间','操作'].map((h,i)=>React.createElement('th',{key:i,className:'px-6 py-3 text-left text-xs font-medium text-gray-500'},h)))),
+          React.createElement('tbody', { className:'bg-white divide-y divide-gray-200' },
+            loading ? React.createElement('tr', null, React.createElement('td', { className:'px-6 py-6 text-center text-gray-500', colSpan:7 }, '加载中...')) : (items.length===0 ? React.createElement('tr', null, React.createElement('td', { className:'px-6 py-6 text-center text-gray-500', colSpan:7 }, '暂无数据')) : items.map(it => (
+              React.createElement('tr', { key: it.id },
+                React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, React.createElement(ModelChip, { model: (it.modelType || it.model_type || '').toUpperCase() })),
+                React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, it.templateName || it.template_name || '-'),
+                React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, `v${it.version ?? 1}`),
+                React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, it.roleType || it.role_type || '-'),
+                React.createElement('td', { className:'px-6 py-3 text-sm' }, React.createElement(StatusTag, { enabled: String(it.status ?? 0) !== '1' })),
+                React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, (()=>{ const u = it.updatedAt || it.update_time || it.updated_at; return u ? new Date(u).toLocaleString() : '-'; })()),
+                React.createElement('td', { className:'px-6 py-3 text-sm text-right' },
+                  React.createElement('div', { className:'flex items-center justify-end gap-2 whitespace-nowrap' },
+                    React.createElement('button', { className:'px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300', onClick:()=>openTest(it) }, '测试'),
+                    React.createElement('button', { className:'px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700', onClick:()=>openEdit(it) }, '编辑'),
+                    React.createElement('button', { className:'px-3 py-1 rounded-md bg-yellow-500 text-white hover:bg-yellow-600', onClick:()=>handleCopy(it.id) }, '复制版本'),
+                    React.createElement('button', { className:'px-3 py-1 rounded-md bg-red-600 text-white hover:bg-red-700', onClick:()=>handleDelete(it.id) }, '删除')
                   )
                 )
-              )))
-            )
+              )
+            )))
           )
         )
       ),

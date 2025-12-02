@@ -2,9 +2,7 @@
   const { useState, useEffect } = React;
 
   const PromptTemplateEdit = ({ initialData, onClose, onSaved }) => {
-    const [scenes, setScenes] = useState([]);
     const [form, setForm] = useState({
-      scene_code: '',
       model_type: '',
       version: 1,
       role_type: 'system',
@@ -23,25 +21,12 @@
     const [optLoading, setOptLoading] = useState(false);
     const [vars, setVars] = useState([]);
 
-    // 获取场景列表
-    useEffect(() => {
-      (async () => {
-        try {
-          const r = await fetch('/api/prompt/admin/scenes?status=1&page=0&size=1000', { credentials: 'same-origin' });
-          const t = await r.text();
-          let d = [];
-          try { d = JSON.parse(t || '[]'); } catch (_) { d = []; }
-          const arr = Array.isArray(d) ? d : (Array.isArray(d.content) ? d.content : []);
-          setScenes(arr || []);
-        } catch (_) { setScenes([]); }
-      })();
-    }, []);
+    // 无场景选择：新增模板不需要关联场景
 
     // 初始化表单数据
     useEffect(() => {
       if (initialData) {
         setForm({
-          scene_code: initialData.scene_code || initialData.sceneCode || '',
           model_type: initialData.model_type || initialData.modelType || '',
           version: initialData.version ?? 1,
           role_type: initialData.role_type || initialData.roleType || 'system',
@@ -77,7 +62,6 @@
     const handleSave = async () => {
       setError('');
       const jsonCheck = validateJSON();
-      if (!form.scene_code) { setError('请选择场景'); return; }
       if (!form.model_type) { setError('请选择模型类型'); return; }
       if (!form.role_type) { setError('请选择角色类型'); return; }
       if (!form.template_content.trim()) { setError('请输入模板内容'); return; }
@@ -86,7 +70,6 @@
       setSaving(true);
       try {
         const payload = {
-          scene_code: form.scene_code,
           model_type: form.model_type,
           version: Number(form.version || 1),
           role_type: form.role_type,
@@ -116,7 +99,7 @@
       let schemaTxt = form.param_schema || '';
       try { const obj = JSON.parse(schemaTxt || ''); schemaTxt = JSON.stringify(obj); } catch (_) {}
       try {
-        const payload = { raw_prompt: optSrc || form.template_content || '', scene_code: form.scene_code, model_type: form.model_type, role_type: form.role_type, param_schema: schemaTxt };
+        const payload = { raw_prompt: optSrc || form.template_content || '', model_type: form.model_type, role_type: form.role_type, param_schema: schemaTxt };
         const r = await fetch('/api/open/prompt/optimize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(payload) });
         const t = await r.text(); let d = {};
         try { d = JSON.parse(t || '{}'); } catch (_) {}

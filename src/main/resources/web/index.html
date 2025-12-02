@@ -1290,6 +1290,7 @@
         const [examReady, setExamReady] = useState(!!(window.Components && window.Components.ExamAdmin));
         const [examSessionsReady, setExamSessionsReady] = useState(!!(window.Components && window.Components.ExamSessionAdmin));
         const [examMenuOpen, setExamMenuOpen] = useState(false);
+        const [promptMenuOpen, setPromptMenuOpen] = useState(false);
 
         const loadScriptOnce = (src) => new Promise((resolve, reject) => {
             if ([...document.scripts].some(s => s.src.endsWith(src))) { resolve(); return; }
@@ -1390,8 +1391,7 @@
             { id: 'exam', name: '考试管理', icon: BookOpen },
             { id: 'interview', name: '面试宝典', icon: BookOpen },
             { id: 'ai-tools', name: 'AI功能管理', icon: Cpu },
-            { id: 'prompt-templates', name: '提示词模板', icon: FileText },
-            { id: 'prompt-link', name: '提示词关联', icon: Layers },
+            { id: 'prompt-management', name: '提示词管理', icon: FileText },
             { id: 'system', name: '系统管理', icon: Settings },
         ];
 
@@ -1466,7 +1466,13 @@
             }
         };
 
-        const currentLabel = (adminView==='exam-questions' ? '题库' : adminView==='exam-sessions' ? '考试' : (navItems.find(n => n.id === adminView)?.name) || '仪表盘概览');
+        const currentLabel = (
+          adminView==='exam-questions' ? '题库' :
+          adminView==='exam-sessions' ? '考试' :
+          adminView==='prompt-templates' ? '提示词模板' :
+          adminView==='prompt-link' ? '提示词关联' :
+          (navItems.find(n => n.id === adminView)?.name) || '仪表盘概览'
+        );
 
         const AdminTopBar = () => (
             <div className="sticky top-16 z-10 bg-white/80 backdrop-blur rounded-2xl border border-gray-200 px-6 py-4 mb-4 shadow-sm flex items-center justify-between">
@@ -1544,6 +1550,43 @@
                                         {!sidebarCollapsed && <span className="ml-3">考试</span>}
                                       </span>
                                       {!sidebarCollapsed && (adminView==='exam-sessions' ? <ChevronRight className="w-5 h-5 text-white" /> : <span className="w-5 h-5" />)}
+                                    </button>
+                                  </div>
+                                )}
+                              </React.Fragment>
+                            ) : item.id === 'prompt-management' ? (
+                              <React.Fragment key={item.id}>
+                                <button
+                                  onClick={() => { setPromptMenuOpen(o=>!o); setIsSidebarOpen(false); }}
+                                  className={getButtonClasses(item.id)}
+                                >
+                                  <span className="flex items-center">
+                                    <item.icon className={getIconClasses(item.id)} />
+                                    {!sidebarCollapsed && <span className="ml-3">{item.name}</span>}
+                                  </span>
+                                  {!sidebarCollapsed && (<ChevronRight className={`w-5 h-5 ${promptMenuOpen ? 'text-white rotate-90' : (item.id===adminView?'text-white':'text-gray-700')}`} />)}
+                                </button>
+                                {promptMenuOpen && (
+                                  <div className="space-y-2 ml-6">
+                                    <button
+                                      onClick={() => { setAdminView('prompt-templates'); setIsSidebarOpen(false); }}
+                                      className={getButtonClasses('prompt-templates')}
+                                    >
+                                      <span className="flex items-center">
+                                        <FileText className={getIconClasses('prompt-templates')} />
+                                        {!sidebarCollapsed && <span className="ml-3">提示词模板</span>}
+                                      </span>
+                                      {!sidebarCollapsed && (adminView==='prompt-templates' ? <ChevronRight className="w-5 h-5 text-white" /> : <span className="w-5 h-5" />)}
+                                    </button>
+                                    <button
+                                      onClick={() => { setAdminView('prompt-link'); setIsSidebarOpen(false); }}
+                                      className={getButtonClasses('prompt-link')}
+                                    >
+                                      <span className="flex items-center">
+                                        <Layers className={getIconClasses('prompt-link')} />
+                                        {!sidebarCollapsed && <span className="ml-3">提示词关联</span>}
+                                      </span>
+                                      {!sidebarCollapsed && (adminView==='prompt-link' ? <ChevronRight className="w-5 h-5 text-white" /> : <span className="w-5 h-5" />)}
                                     </button>
                                   </div>
                                 )}
