@@ -3,7 +3,7 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: xxxx
-    username: xxxx
+    username: xxx
     password: xxxx
 
   # JPA (Hibernate) 配置
@@ -23,5 +23,12 @@ logging:
     org.springframework.web: INFO
 openapi:
   python:
-    base-url: xxxx   //调用AI模型接口
-    path_agent_01: xxxx
+    url: xxxx
+  tongyi:
+    agent:
+      path_agent_01: /xxxx
+  deepseek:
+    api:
+      ask_base_path: /xxxx
+  coze:
+    workflow_path: /xxxx

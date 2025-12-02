@@ -1,5 +1,7 @@
 package com.tony.service.tonywuai.controller;
 
+import com.tony.service.tonywuai.dto.request.CozeWorkFlowRequest;
+import com.tony.service.tonywuai.dto.request.ModelRequest;
 import com.tony.service.tonywuai.openapi.PythonOpenApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,11 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.tony.service.tonywuai.com.ComStatus.TYPE_AUTO_CASE;
 
 @RestController
 @RequestMapping("/api/open")
@@ -88,25 +92,13 @@ public class OpenApiController {
                     "请严格遵循上述角色设定与约束条件，直接输出符合要求的 SQL 语句。";
 
             log.info("AI 提示词：{}", prompt);
-            String sql = pythonOpenApiClient.chat(prompt);
+            String sql = pythonOpenApiClient.deepSeekChat(prompt,null);
             logger.info("调用AI生成SQL返回:{}",sql);
             return ResponseEntity.ok(Map.of("sql", sql == null ? "" : sql));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", "upstream error"));
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -122,7 +114,7 @@ public class OpenApiController {
             Integer wrongNum = body != null && body.get("wrongNum") != null ? Integer.valueOf(String.valueOf(body.get("wrongNum"))) : 0;
             String score = body != null ? String.valueOf(body.getOrDefault("score", "")).trim() : "";
             List<?> details = body != null && body.get("details") instanceof List ? (List<?>) body.get("details") : List.of();
-            String detailText = details.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining("\n"));
+            String detailText = details.stream().map(String::valueOf).collect(Collectors.joining("\n"));
 
             StringBuilder sb = new StringBuilder();
 
@@ -144,7 +136,7 @@ public class OpenApiController {
             sb.append("请严格按照上述结构输出，避免任何额外的解释性文字或Markdown格式之外的内容。");
             // 提示词精简结束
             String finalPrompt = sb.toString();
-            String resp = pythonOpenApiClient.chat(finalPrompt);
+            String resp = pythonOpenApiClient.deepSeekChat(finalPrompt,null);
             logger.info("AI返回总结考试结果--------------------------------{}", resp);
             if (resp == null) resp = "";
             if (resp.length() > 2000) resp = resp.substring(0, 2000);
@@ -155,76 +147,65 @@ public class OpenApiController {
         }
     }
 
-    @PostMapping("/prompt/optimize")
-    public ResponseEntity<?> optimizePrompt(@RequestBody Map<String, Object> body) {
+
+
+
+    @PostMapping("/coze/workflow")
+    public ResponseEntity<?> workflow(@RequestBody CozeWorkFlowRequest request) {
         try {
-            String raw = body != null ? String.valueOf(body.getOrDefault("raw_prompt", "")).trim() : "";
-            String sceneCode = body != null ? String.valueOf(body.getOrDefault("scene_code", "")).trim() : "";
-            String modelType = body != null ? String.valueOf(body.getOrDefault("model_type", "")).trim() : "";
-            String roleType = body != null ? String.valueOf(body.getOrDefault("role_type", "")).trim() : "";
-            String goals = body != null ? String.valueOf(body.getOrDefault("goals", "")).trim() : "";
-            String style = body != null ? String.valueOf(body.getOrDefault("style", "")).trim() : "";
-            String schema = body != null && body.get("param_schema") != null ? String.valueOf(body.get("param_schema")) : "";
-            if (raw.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "raw_prompt required"));
+            if (request == null || StringUtils.isEmpty(request.getType())) {
+                throw new IllegalArgumentException("请求参数或类型不能为空");
+            }
+            if (TYPE_AUTO_CASE.equals(request.getType())) {
+                if (StringUtils.hasText(request.getDocumentId()) && StringUtils.hasText(request.getInput())) {
+                    throw new IllegalArgumentException("需求描述（input）和文档 ID（documentId）不能同时存在");
+                }
+                if (!StringUtils.hasText(request.getDocumentId()) && !StringUtils.hasText(request.getInput())) {
+                    throw new IllegalArgumentException("需求描述（input）或文档 ID（documentId）必须提供其一");
+                }
             }
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("你是一名资深 Prompt Engineer。\n");
-            sb.append("请对下方提示词进行结构化优化，增强清晰度、变量占位、约束、输出格式与稳健性。\n\n");
-            if (!sceneCode.isEmpty()) sb.append("场景编码: ").append(sceneCode).append("\n");
-            if (!modelType.isEmpty()) sb.append("模型: ").append(modelType).append("\n");
-            if (!roleType.isEmpty()) sb.append("角色: ").append(roleType).append("\n");
-            if (!goals.isEmpty()) sb.append("目标补充: ").append(goals).append("\n");
-            if (!style.isEmpty()) sb.append("风格偏好: ").append(style).append("\n");
-            if (!schema.isEmpty()) sb.append("参数Schema(JSON): ").append(schema).append("\n");
-            sb.append("\n--- 原始提示词 ---\n");
-            sb.append(raw).append("\n\n");
-            sb.append("请输出以下结构（中文）：\n");
-            sb.append("1) 优化后的提示词（仅内容，保留变量 {{var}} 占位）\n");
-            sb.append("2) 简短优化说明（不超过100字）\n");
-            sb.append("3) 建议变量列表（JSON数组，字段: name,label,type）\n");
-
-            String finalPrompt = sb.toString();
-            String resp = pythonOpenApiClient.chat(finalPrompt);
+            String resp = pythonOpenApiClient.cozeWorkFlow(request);
+            logger.info("工作流执行结束--------------------------------{}", resp);
             if (resp == null) resp = "";
-            // 直接返回整体文本，前端负责解析/展示
-            return ResponseEntity.ok(Map.of("optimized", resp));
+            if (resp.length() > 2000) resp = resp.substring(0, 2000);
+            return ResponseEntity.ok(Map.of("message", resp));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", "upstream error"));
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", e.getMessage()));
         }
     }
 
-    @PostMapping("/prompt/compose")
-    public ResponseEntity<?> composePrompt(@RequestBody Map<String, Object> body) {
+
+    /**
+     * 直接调用seepseek模型，没有任何
+     * @param request
+     * @return
+     */
+    @PostMapping("/deeoSeekChat/model1")
+    public ResponseEntity<?> deeoSeekChat(@RequestBody ModelRequest request) {
         try {
-            String sceneName = body != null ? String.valueOf(body.getOrDefault("scene_name", "")).trim() : "";
-            String task = body != null ? String.valueOf(body.getOrDefault("task", "")).trim() : "";
-            String roleType = body != null ? String.valueOf(body.getOrDefault("role_type", "")).trim() : "";
-            String modelType = body != null ? String.valueOf(body.getOrDefault("model_type", "")).trim() : "";
-            String schema = body != null && body.get("param_schema") != null ? String.valueOf(body.get("param_schema")) : "";
-            if (task.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "task required"));
-            }
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("你是一名资深 Prompt 模板设计师。\n");
-            sb.append("基于以下信息，输出一套可复用的提示词模板。\n\n");
-            if (!sceneName.isEmpty()) sb.append("场景: ").append(sceneName).append("\n");
-            if (!modelType.isEmpty()) sb.append("模型: ").append(modelType).append("\n");
-            if (!roleType.isEmpty()) sb.append("角色: ").append(roleType).append("\n");
-            if (!schema.isEmpty()) sb.append("参数Schema(JSON): ").append(schema).append("\n");
-            sb.append("任务描述: ").append(task).append("\n\n");
-            sb.append("输出结构（中文）：\n");
-            sb.append("1) 模板内容（包含角色/背景/目标/约束/输出格式/工作流程，变量占位用 {{var}}）\n");
-            sb.append("2) 建议变量Schema（JSON数组，字段: name,label,type,required）\n");
-
-            String finalPrompt = sb.toString();
-            String resp = pythonOpenApiClient.chat(finalPrompt);
+            String resp = pythonOpenApiClient.deepSeekChat(request.getMessage(),request.getPrompt());
+            logger.info("工作流执行结束--------------------------------{}", resp);
             if (resp == null) resp = "";
-            return ResponseEntity.ok(Map.of("template", resp));
+            return ResponseEntity.ok(Map.of("message", resp));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", "upstream error"));
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", e.getMessage()));
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
