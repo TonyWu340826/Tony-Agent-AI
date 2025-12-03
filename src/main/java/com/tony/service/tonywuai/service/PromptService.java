@@ -11,6 +11,7 @@ public interface PromptService {
     PromptTemplate createTemplate(PromptTemplate template);
     PromptTemplate updateTemplate(Long id, PromptTemplate template);
     void softDeleteTemplate(Long id);
+    void hardDeleteTemplate(Long id);
     PromptTemplate copyTemplate(Long id);
     String testTemplate(Long templateId, String modelType, String roleType, Map<String, Object> params);
 
@@ -18,5 +19,6 @@ public interface PromptService {
     PromptScene createScene(PromptScene scene);
     PromptScene updateScene(Long id, PromptScene scene);
     void softDeleteScene(Long id);
+    void hardDeleteScene(Long id);
 }
 

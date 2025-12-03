@@ -1,5 +1,5 @@
 (() => {
-  const { useState, useEffect } = React;
+  const { useState, useEffect, useRef } = React;
   const loadOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => s.src.includes(src))) { resolve(); return; } const tag=document.createElement('script'); tag.src=src; tag.defer=true; tag.onload=()=>resolve(); tag.onerror=(e)=>reject(e); document.head.appendChild(tag); });
   const ensureMarkdownLibs = async () => {
     const markedUrl = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
@@ -7,7 +7,24 @@
     await loadOnce(markedUrl); await loadOnce(purifyUrl);
   };
   const genFields = (schema) => {
-    try { const obj = typeof schema === 'string' ? JSON.parse(schema||'[]') : (schema || []); if (Array.isArray(obj)) return obj; if (obj && typeof obj==='object' && obj.properties) { const req = obj.required || []; return Object.keys(obj.properties).map(k => ({ name:k, label: obj.properties[k].title || k, type: obj.properties[k].type || 'text', required: req.includes(k), ...obj.properties[k] })); } return []; } catch(_) { return []; }
+    try {
+      const obj = typeof schema === 'string' ? JSON.parse(schema||'[]') : (schema || []);
+      if (Array.isArray(obj)) return obj.map(it => ({ name: it.name || it.key || '', label: it.label || it.name || it.key || '', type: it.type || 'string', note: it.note || '' }));
+      return [];
+    } catch(_) { return []; }
+  };
+  const renderPrompt = (tpl, params) => {
+    const s = String(tpl||'');
+    const re = /\{\{\s*([a-zA-Z0-9_.-]+)\s*\}}|\{\s*([a-zA-Z0-9_.-]+)\s*\}/g;
+    return s.replace(re, (_,a,b)=>{ const key = a||b; const val = params && Object.prototype.hasOwnProperty.call(params,key) ? params[key] : ''; return String(val??''); });
+  };
+  const renderWithParams = (templateContent, paramValues) => {
+    return renderPrompt(templateContent, paramValues);
+  };
+  const getTemplateContent = (tpl) => {
+    if (!tpl) return '';
+    const txt = tpl.template_content ?? tpl.templateContent ?? '';
+    return String(txt || '');
   };
   const PromptTemplateTest = ({ template, onClose }) => {
     const [params, setParams] = useState({});
@@ -15,45 +32,100 @@
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [fields, setFields] = useState([]);
-    const [model, setModel] = useState(template?.model_type || '');
-    useEffect(() => { setFields(genFields(template?.param_schema)); ensureMarkdownLibs().catch(()=>{}); }, [template]);
+    const [chat, setChat] = useState([]);
+    const [userMsg, setUserMsg] = useState('');
+    useEffect(() => {
+      const raw = (template && template.param_schema !== undefined) ? template.param_schema : (template ? template.paramSchema : undefined);
+      const fromSchema = genFields(raw);
+      setFields(fromSchema);
+      ensureMarkdownLibs().catch(()=>{});
+    }, [template]);
+    const listRef = useRef(null);
+    useEffect(() => { if (listRef.current) { listRef.current.scrollTop = listRef.current.scrollHeight; } }, [chat]);
     const handleTest = async () => {
-      setError(''); setLoading(true); setOutput('');
+      setError(''); setLoading(true);
       try {
-        const payload = { templateId: template?.id, model_type: model || template?.model_type, role_type: template?.role_type, params };
-        const r = await fetch('/api/prompt/admin/templates/test', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(payload) });
-        const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){}
+        const raw = getTemplateContent(template);
+        const promptText = renderWithParams(raw, params);
+        const msg = String(promptText||'').trim();
+        if (!msg) { throw new Error('请填写参数并确保提示词非空'); }
+        const r = await fetch('/api/open/deeoSeekChat/model', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ message: msg }) });
+        const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ }
         if(!r.ok) throw new Error(d.message || '测试失败');
-        setOutput(d.output || t || '');
+        const reply = d.message || t || '';
+        const next = [...chat];
+        next.push({ role:'user', content: msg });
+        next.push({ role:'assistant', content: reply });
+        setChat(next);
+        setOutput(reply);
       } catch(e){ setError(e.message || '请求失败'); } finally { setLoading(false); }
     };
-    const renderField = (f) => {
-      const v = params[f.name] ?? (f.default ?? '');
-      const set = (val) => setParams({ ...params, [f.name]: val });
-      if (f.type==='boolean') return React.createElement('label', { className:'flex items-center gap-2' }, React.createElement('input', { type:'checkbox', checked: !!v, onChange:e=>set(e.target.checked) }), React.createElement('span', null, f.label||f.name));
-      if (f.type==='number') return React.createElement('div', { className:'space-y-1' }, React.createElement('div', { className:'text-sm text-gray-700' }, f.label||f.name), React.createElement('input', { className:'border border-gray-300 rounded-lg px-3 py-2 w-full', type:'number', value:v, onChange:e=>set(e.target.value?Number(e.target.value):'') }));
-      if (f.type==='select' && Array.isArray(f.options)) return React.createElement('div', { className:'space-y-1' }, React.createElement('div', { className:'text-sm text-gray-700' }, f.label||f.name), React.createElement('select', { className:'border border-gray-300 rounded-lg px-3 py-2 w-full', value:v, onChange:e=>set(e.target.value) }, ...f.options.map(op => React.createElement('option', { key:op.value ?? op, value:op.value ?? op }, op.label ?? String(op)))));
-      const rows = Math.min(6, Math.max(2, (f.maxLength||0) > 80 ? 4 : 3));
-      return React.createElement('div', { className:'space-y-1' }, React.createElement('div', { className:'text-sm text-gray-700' }, f.label||f.name), React.createElement('textarea', { className:'border border-gray-300 rounded-lg px-3 py-2 w-full', rows, value:v, onChange:e=>set(e.target.value), placeholder:f.placeholder || '' }));
+    const handleSend = async () => {
+      const msg = String(userMsg||'').trim();
+      if (!msg) { setError('请输入消息'); return; }
+      setError(''); setLoading(true);
+      try {
+        const r = await fetch('/api/open/deeoSeekChat/model', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ message: msg }) });
+        const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ }
+        if(!r.ok) throw new Error(d.message || '测试失败');
+        const reply = d.message || t || '';
+        const next = [...chat];
+        next.push({ role:'user', content: msg });
+        next.push({ role:'assistant', content: reply });
+        setChat(next);
+        setUserMsg('');
+        setOutput(reply);
+      } catch(e){ setError(e.message || '请求失败'); } finally { setLoading(false); }
     };
-    return React.createElement('div', { className:'grid grid-cols-1 md:grid-cols-2 gap-4' },
-      React.createElement('div', { className:'space-y-3' },
-        React.createElement('div', { className:'text-sm text-gray-700' }, '模型选择'),
-        React.createElement('select', { className:'border border-gray-300 rounded-lg px-3 py-2 w-full', value:model, onChange:e=>setModel(e.target.value) },
-          ...['', 'gpt-4o','deepseek-chat','glm-4','claude-3','qwen-2'].map(m => React.createElement('option', { key:m, value:m }, m ? m.toUpperCase() : '跟随模板'))
+    const renderInputCell = (f) => {
+      const v = params[f.name] ?? '';
+      const set = (val) => setParams({ ...params, [f.name]: val });
+      if (f.type==='number') return React.createElement('input', { className:'border border-gray-300 rounded-lg px-3 py-2 text-base w-full', type:'number', value:v, onChange:e=>set(e.target.value?Number(e.target.value):'') });
+      if (f.type==='boolean') return React.createElement('input', { type:'checkbox', checked:!!v, onChange:e=>set(e.target.checked) });
+      if (f.type==='select' && Array.isArray(f.options)) return React.createElement('select', { className:'border border-gray-300 rounded-lg px-3 py-2 text-base w-full', value:v, onChange:e=>set(e.target.value) }, ...f.options.map(op => React.createElement('option', { key:op.value ?? op, value:op.value ?? op }, op.label ?? String(op))));
+      return React.createElement('input', { className:'border border-gray-300 rounded-lg px-3 py-2 text-base w-full', value:v, onChange:e=>set(e.target.value) });
+    };
+    return React.createElement('div', { className:'space-y-3', style:{ maxHeight:'65vh' } },
+      React.createElement('div', { className:'grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch h-full' },
+        React.createElement('div', { className:'flex flex-col h-full space-y-3' },
+          React.createElement('div', { className:'text-sm text-gray-700' }, '参数输入'),
+          React.createElement('div', { className:'border border-gray-200 rounded-lg overflow-y-auto', style:{ maxHeight: '380px' } },
+            React.createElement('table', { className:'w-full text-base' },
+              React.createElement('thead', null,
+                React.createElement('tr', { className:'bg-gray-50 text-gray-700' },
+                  React.createElement('th', { className:'px-3 py-2 text-left' }, '属性'),
+                  React.createElement('th', { className:'px-3 py-2 text-left' }, '类型'),
+                  React.createElement('th', { className:'px-3 py-2 text-left' }, '名称'),
+                  React.createElement('th', { className:'px-3 py-2 text-left' }, '输入值')
+                )
+              ),
+              React.createElement('tbody', null,
+                ...(fields||[]).map((f,i)=> React.createElement('tr', { key:f.name||i, className:'border-t border-gray-200' },
+                  React.createElement('td', { className:'px-3 py-2 font-mono text-gray-800' }, f.name || ''),
+                  React.createElement('td', { className:'px-3 py-2 text-gray-600 uppercase' }, String(f.type||'string')),
+                  React.createElement('td', { className:'px-3 py-2 text-gray-800' }, f.label || ''),
+                  React.createElement('td', { className:'px-3 py-2' }, renderInputCell(f))
+                ))
+              )
+            )
+          ),
+          null
         ),
-        React.createElement('div', { className:'text-sm text-gray-700' }, '参数输入'),
-        React.createElement('div', { className:'space-y-2' }, ...(fields||[]).map(f => React.createElement('div', { key:f.name }, renderField(f))))
-      ),
-      React.createElement('div', { className:'space-y-3' },
-        error ? React.createElement('div', { className:'bg-red-100 text-red-700 border border-red-200 p-3 rounded-lg text-sm shadow-md' }, error) : null,
-        React.createElement('div', { className:'flex gap-2' },
-          React.createElement('button', { className:'px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50', disabled:loading, onClick:handleTest }, '立即测试'),
-          React.createElement('button', { className:'px-4 py-2 rounded-md bg-gray-200 text-gray-700', onClick:()=>onClose && onClose() }, '关闭')
-        ),
-        React.createElement('div', { className:'border border-gray-200 rounded-lg p-4 bg-gray-50 min-h-[20rem]' },
-          React.createElement('div', { dangerouslySetInnerHTML:{ __html: (window.DOMPurify && window.marked) ? window.DOMPurify.sanitize(window.marked.parse(output || '')) : (output || '') } })
+        React.createElement('div', { className:'flex flex-col h-full space-y-3' },
+          error ? React.createElement('div', { className:'bg-red-100 text-red-700 border border-red-200 p-3 rounded-lg text-sm shadow-md' }, error) : null,
+          React.createElement('div', { className:'border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-3 flex flex-col', style:{ maxHeight: '500px' } },
+            React.createElement('div', { className:'flex-1 overflow-y-auto space-y-2', ref:listRef },
+              ...(chat||[]).map((m,i)=> React.createElement('div',{key:i, className: m.role==='user' ? 'text-sm bg-blue-50 border border-blue-200 rounded-lg p-2' : 'text-sm bg-gray-100 border border-gray-200 rounded-lg p-2'}, React.createElement('div',{dangerouslySetInnerHTML:{ __html: (window.DOMPurify && window.marked) ? window.DOMPurify.sanitize(window.marked.parse(String(m.content||''))) : String(m.content||'') }})))
+            ),
+            React.createElement('div', { className:'flex items-center gap-2 pt-2' },
+              React.createElement('input', { className:'border border-gray-300 rounded-lg px-3 py-2 w-full', placeholder:'输入框', value:userMsg, onChange:e=>setUserMsg(e.target.value), onKeyDown:e=>{ if(e.key==='Enter' && !loading) handleSend(); } }),
+              React.createElement('button', { className:'px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50', disabled:loading, onClick:handleSend }, '发送')
+            )
+          )
         )
+      )
+      , React.createElement('div', { className:'flex items-center gap-3 pt-0 mt-0' },
+        React.createElement('button', { className:'px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50', disabled:loading, onClick:handleTest }, '立即测试')
       )
     );
   };

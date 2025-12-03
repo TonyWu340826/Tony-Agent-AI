@@ -50,7 +50,7 @@ const ImageWithFallback = ({ src, alt, className }) => {
 // =============================================================================
 // 2. 头部组件 (必须在 UserHome 前定义)
 // =============================================================================
-const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, openModule }) => {
+const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, openModule, prefetchPrompt }) => {
     const { useEffect, useState } = React;
     const [agents, setAgents] = useState([]);
     const [loadingAgents, setLoadingAgents] = useState(false);
@@ -95,7 +95,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                     React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-indigo-600 transition-colors border-b-2 border-transparent hover:border-indigo-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ if(String(window.location.pathname||'').endsWith('/home.html')){ window.location.hash = 'tools'; if(openModule) openModule('tools'); } else { window.location.assign('/home.html#tools'); } }catch(_){ } try{ const el=document.getElementById('tools-page'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, React.createElement(Terminal,{className:'w-5 h-5'}),'工具合集'),
                     React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ window.location.hash = 'model'; openModule && openModule('model'); }catch(_){ } }}, '模型服务'),
                     React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ window.location.hash = 'mcp'; openModule && openModule('mcp'); }catch(_){ } }}, 'MCP'),
-                    React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ window.location.hash = 'prompt'; openModule && openModule('prompt'); }catch(_){ } }}, 'Prompt工程'),
+                    React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onMouseEnter:()=>{ try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } }, onClick:(e)=>{ e.preventDefault(); try{ history.pushState({ page:'prompt-engineering' }, '', '/prompt-engineering'); }catch(_){ try{ window.location.hash = 'prompt-engineering'; }catch(__){} } try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } try{ openModule && openModule('prompt-engineering'); }catch(_){ } try{ const el=document.getElementById('prompt-engineering-page'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, 'Prompt工程'),
                     React.createElement('div',{className:'relative group'},
                         React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ onOpenAgents && onOpenAgents(); }catch(_){ } }}, React.createElement(Star,{className:'w-5 h-5'}),'三方Agent平台'),
                         React.createElement('div',{className:'absolute right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-80 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-[70]'},
@@ -116,6 +116,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                     user ? (
                         React.createElement(React.Fragment,null,
                             React.createElement('span',{className:'hidden md:inline text-slate-700'}, `你好，${user.nickname||user.username}`),
+                            (Number(user.vipLevel)===99 ? React.createElement('span',{className:'inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-white text-xs font-semibold shadow-md border border-amber-300'}, React.createElement(Crown,{className:'w-4 h-4 text-white'}), 'VIP 99') : null),
                             React.createElement('button',{className:'px-4 py-2 text-slate-700 hover:text-blue-600 transition-colors', onClick:onLogout}, '登出')
                         )
                     ) : (
@@ -152,9 +153,9 @@ const HeroSection = ({ onOpenRegister, onOpenLogin }) => (
                         React.createElement('button',{className:'px-8 py-4 bg-white text-slate-700 rounded-xl border-2 border-slate-300 hover:border-blue-600 transition-all font-medium', onClick:()=>window.open('https://agijuejin.feishu.cn/wiki/UvJPwhfkiitMzhkhEfycUnS9nAm','_blank')}, '查看文档')
                     ),
                     React.createElement('div',{className:'flex items-center gap-8 pt-4'},
-                        React.createElement('div',null, React.createElement('div',{className:'text-3xl text-slate-900 font-bold'}, '1000+'), React.createElement('div',{className:'text-sm text-slate-600'}, '企业用户')),
+                        React.createElement('div',null, React.createElement('div',{className:'text-3xl text-slate-900 font-bold'}, 'X+'), React.createElement('div',{className:'text-sm text-slate-600'}, '企业用户')),
                         React.createElement('div',{className:'w-px h-12 bg-slate-300'}),
-                        React.createElement('div',null, React.createElement('div',{className:'text-3xl text-slate-900 font-bold'}, '50万+'), React.createElement('div',{className:'text-sm text-slate-600'}, '开发者')),
+                        React.createElement('div',null, React.createElement('div',{className:'text-3xl text-slate-900 font-bold'}, 'X+'), React.createElement('div',{className:'text-sm text-slate-600'}, '开发者')),
                         React.createElement('div',{className:'w-px h-12 bg-slate-300'}),
                         React.createElement('div',null, React.createElement('div',{className:'text-3xl text-slate-900 font-bold'}, '99.9%'), React.createElement('div',{className:'text-sm text-slate-600'}, '可用性'))
                     )
@@ -222,8 +223,8 @@ const Footer = () => (
                         {title:'工具合集', key:'tools'},
                         {title:'模型服务', key:'model'},
                         {title:'MCP', key:'mcp'},
-                        {title:'Prompt工程', key:'prompt'}
-                    ].map((c,i)=>React.createElement('div',{key:i,className:'bg-white rounded-2xl p-8 shadow-xl border hover:shadow-2xl transition cursor-pointer', onClick:()=>{ try{ window.location.hash = c.key; }catch(_){ } setShowAgents(c.key==='mcp')||setShowModule(c.key); }},
+                        {title:'Prompt工程', key:'prompt-engineering'}
+                    ].map((c,i)=>React.createElement('div',{key:i,className:'bg-white rounded-2xl p-8 shadow-xl border hover:shadow-2xl transition cursor-pointer', onClick:()=>{ if(c.key==='prompt-engineering'){ try{ history.pushState({ page:'prompt-engineering' }, '', '/prompt-engineering'); }catch(_){ try{ window.location.hash='prompt-engineering'; }catch(__){} } setShowModule(null); setActivePage('prompt-engineering'); } else { try{ window.location.hash = c.key; }catch(_){ } setShowAgents(c.key==='mcp')||setShowModule(c.key); } }},
                         React.createElement('div',{className:'text-xl font-semibold text-slate-900'}, c.title),
                         React.createElement('p',{className:'text-slate-600 text-sm mt-2'}, '点击打开')
                     ))
@@ -378,6 +379,7 @@ const UserHome = () => {
     const [showAgents, setShowAgents] = useState(false);
     const [showModule, setShowModule] = useState(null);
     const [toolsReady, setToolsReady] = useState(!!(window.Components && window.Components.UserToolsExplorer));
+    const [promptReady, setPromptReady] = useState(!!(window.Components && window.Components.PromptEngineeringPage));
     const [activePage, setActivePage] = useState(null);
     const [agentList, setAgentList] = useState([]);
     const [agentLoading, setAgentLoading] = useState(false);
@@ -385,8 +387,9 @@ const UserHome = () => {
 
     useEffect(()=>{
         try {
-            const applyHash = () => {
+            const applyRoute = () => {
                 const h = (window.location.hash || '').replace(/^#/, '');
+                const p = String(window.location.pathname||'');
                 if (h === 'tools') {
                     setActivePage('tools');
                     setShowModule(null);
@@ -404,14 +407,31 @@ const UserHome = () => {
                             setToolsReady(true);
                         }
                     } catch(_){}
+                } else if (h === 'prompt-engineering' || (!h && p.startsWith('/prompt-engineering'))) {
+                    setActivePage('prompt-engineering');
+                    setShowModule(null);
+                    try { const el = document.getElementById('prompt-engineering-page'); if (el) el.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(_){ }
+                    try {
+                        const loaded = !!(window.Components && window.Components.PromptEngineeringPage);
+                        if (!loaded) {
+                            const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+                            loadScriptOnce('/js/prompt-engineering.js').then(()=>{
+                                setPromptReady(!!(window.Components && window.Components.PromptEngineeringPage));
+                                try { window.dispatchEvent(new Event('modules:loaded')); } catch(e) { }
+                            }).catch(()=>{ });
+                        } else {
+                            setPromptReady(true);
+                        }
+                    } catch(_){ }
                 } else if (h === 'model' || h === 'mcp' || h === 'prompt' || h === 'dba') {
                     setActivePage(null);
                     setShowModule(h);
                 }
             };
-            applyHash();
-            window.addEventListener('hashchange', applyHash);
-            return () => window.removeEventListener('hashchange', applyHash);
+            applyRoute();
+            window.addEventListener('hashchange', applyRoute);
+            window.addEventListener('popstate', applyRoute);
+            return () => { window.removeEventListener('hashchange', applyRoute); window.removeEventListener('popstate', applyRoute); };
         } catch(_) {}
     }, []);
 
@@ -441,11 +461,25 @@ const UserHome = () => {
             try {
                 const r = await fetch('/api/auth/user');
                 const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
-                if(d && d.user){ setCurrentUser(d.user); await recordVisit(d.user); } else { setCurrentUser(null); await recordVisit(null); }
+                if(d && d.user){ setCurrentUser(d.user); try{ window.__currentUser = d.user; }catch(_){ } await recordVisit(d.user); } else { setCurrentUser(null); try{ window.__currentUser = null; }catch(_){ } await recordVisit(null); }
             } catch(_) { setCurrentUser(null); }
         };
         fetchUser();
     },[]);
+
+    useEffect(()=>{
+        // 背景预加载 Prompt 工程脚本，降低首次点击等待
+        try {
+            const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+            const t = setTimeout(()=>{
+                loadScriptOnce('/js/prompt-engineering.js').then(()=>{
+                    try { setPromptReady(!!(window.Components && window.Components.PromptEngineeringPage)); }catch(_){ }
+                    try { window.dispatchEvent(new Event('modules:loaded')); } catch(e) {}
+                }).catch(()=>{});
+            }, 1200);
+            return ()=>{ try{ clearTimeout(t); }catch(_){ } };
+        } catch(_) {}
+    }, []);
 
     useEffect(()=>{
         // 当弹窗打开“工具合集”模块时，确保组件脚本已加载
@@ -455,6 +489,31 @@ const UserHome = () => {
                 setToolsReady(!!(window.Components && window.Components.UserToolsExplorer));
                 try { window.dispatchEvent(new Event('modules:loaded')); } catch(e) {}
             }).catch(()=>{});
+        }
+        // 当主容器切换到 Prompt 工程时，确保页面脚本已加载
+        if (activePage === 'prompt-engineering' && !(window.Components && window.Components.PromptEngineeringPage)) {
+            const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+            loadScriptOnce('/js/prompt-engineering.js').then(()=>{
+                setPromptReady(!!(window.Components && window.Components.PromptEngineeringPage));
+                try { window.dispatchEvent(new Event('modules:loaded')); } catch(e) {}
+            }).catch(()=>{});
+        }
+        // 懒加载模块弹框组件脚本：model / mcp / prompt / dba
+        if (showModule === 'model' && !(window.Components && window.Components.ModelUI)) {
+            const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+            loadScriptOnce('/js/model-ui.js').then(()=>{ try{ window.dispatchEvent(new Event('modules:loaded')); }catch(e){}; }).catch(()=>{});
+        }
+        if (showModule === 'mcp' && !(window.Components && window.Components.MCPUI)) {
+            const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+            loadScriptOnce('/js/mcp-ui.js').then(()=>{ try{ window.dispatchEvent(new Event('modules:loaded')); }catch(e){}; }).catch(()=>{});
+        }
+        if (showModule === 'prompt' && !(window.Components && window.Components.PromptUI)) {
+            const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+            loadScriptOnce('/js/prompt-ui.js').then(()=>{ try{ window.dispatchEvent(new Event('modules:loaded')); }catch(e){}; }).catch(()=>{});
+        }
+        if (showModule === 'dba' && !(window.Components && window.Components.SqlDbaUI)) {
+            const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+            loadScriptOnce('/js/sql-dba-ui.js').then(()=>{ try{ window.dispatchEvent(new Event('modules:loaded')); }catch(e){}; }).catch(()=>{});
         }
         const fetchAgentsModal = async () => {
             if(!showAgents) return;
@@ -467,7 +526,9 @@ const UserHome = () => {
             setAgentLoading(false);
         };
         fetchAgentsModal();
-    }, [showAgents]);
+    }, [showAgents, showModule]);
+
+    useEffect(()=>{ try{ if (activePage==='prompt-engineering' || activePage==='tools') setShowModule(null); }catch(_){ } }, [activePage]);
 
     const loadMoreArticles = async () => {
         const next = articlesPage + 1;
@@ -563,12 +624,23 @@ const UserHome = () => {
 
     return (
         React.createElement('div',null,
-            React.createElement(Header,{ user: currentUser, onOpenLogin: ()=>openAuth('login'), onOpenRegister: ()=>openAuth('register'), onLogout: logout, onOpenAgents: ()=>setShowAgents(true), openModule: (key)=>{ setActivePage(key); setShowModule(null); } }),
-            (activePage!=='tools') && React.createElement(HeroSection,{ onOpenRegister: ()=>openAuth('register'), onOpenLogin: ()=>openAuth('login') }),
+            React.createElement(Header,{ user: currentUser, onOpenLogin: ()=>openAuth('login'), onOpenRegister: ()=>openAuth('register'), onLogout: logout, onOpenAgents: ()=>setShowAgents(true), openModule: (key)=>{
+                if (key==='tools' || key==='prompt-engineering') { setActivePage(key); setShowModule(null); }
+                else { setActivePage(null); setShowModule(key); }
+            }, prefetchPrompt: ()=>{
+                try {
+                    const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+                    loadScriptOnce('/js/prompt-engineering.js').then(()=>{
+                        try { setPromptReady(!!(window.Components && window.Components.PromptEngineeringPage)); }catch(_){ }
+                        try { window.dispatchEvent(new Event('modules:loaded')); } catch(e) {}
+                    }).catch(()=>{});
+                } catch(_) {}
+            } }),
+            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement(HeroSection,{ onOpenRegister: ()=>openAuth('register'), onOpenLogin: ()=>openAuth('login') }),
 
             // 核心功能区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools') && React.createElement('section',{id:'features-section', className:'py-24 px-6 max-w-7xl mx-auto'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'features-section', className:'py-24 px-6 max-w-7xl mx-auto'}, 
                 // 🎯 优化 2: 增加留白 mb-16
                 React.createElement('div',{className:'text-center mb-16'}, 
                     React.createElement('h2',{className:'text-4xl tracking-tight text-slate-900 mb-4 font-extrabold'}, '核心功能与服务'), 
@@ -599,11 +671,15 @@ const UserHome = () => {
                 )
             ),
 
-            (activePage==='tools') && React.createElement('section',{id:'tools-page', className:'py-16 px-6 max-w-[1400px] mx-auto bg-white rounded-2xl'},
+            (activePage==='tools') && React.createElement('section',{id:'tools-page', className:'py-16 px-6 max-w-[1400px] mx-auto bg白 rounded-2xl'},
                 React.createElement('div',{className:'flex items-center justify-between mb-6'},
                     React.createElement('h2',{className:'text-2xl font-extrabold text-slate-900'}, '工具合集')
                 ),
                 (window.Components && window.Components.UserToolsExplorer) ? React.createElement(window.Components.UserToolsExplorer, { currentUser }) : React.createElement('div',null, toolsReady ? '组件加载中...' : '正在加载组件脚本...')
+            ),
+
+            (activePage==='prompt-engineering') && React.createElement('section',{id:'prompt-engineering-page', className:'py-16 px-6 max-w-[1400px] mx-auto bg白 rounded-2xl'},
+                (window.Components && window.Components.PromptEngineeringPage) ? React.createElement(window.Components.PromptEngineeringPage, { currentUser, requireLogin: ()=>openAuth('login') }) : React.createElement('div',null, promptReady ? '组件加载中...' : '正在加载组件脚本...')
             ),
 
             showAgents && React.createElement('div',{className:'fixed inset-0 z-[950] bg-black/60 flex items-center justify-center p-4', onClick:()=>setShowAgents(false)},
@@ -632,7 +708,7 @@ const UserHome = () => {
 
             // 文章预览区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools') && React.createElement('section',{id:'articles-preview', className:'py-24 px-6 bg-slate-50'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'articles-preview', className:'py-24 px-6 bg-slate-50'}, 
                 React.createElement('div',{className:'max-w-7xl mx-auto'},
                     // 🎯 优化 2: 增加留白 gap-12
                     React.createElement('div',{className:'grid lg:grid-cols-2 gap-12 items-center'}, 
@@ -677,7 +753,7 @@ const UserHome = () => {
 
             // 技术学习区
             // 轻量模块，提供学习资料入口
-            (activePage!=='tools') && React.createElement('section',{id:'tech-learning', className:'py-24 px-6 max-w-7xl mx-auto bg-white'},
+            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'tech-learning', className:'py-24 px-6 max-w-7xl mx-auto bg-white'},
                 React.createElement('div',{className:'text-center mb-12'},
                     React.createElement('h2',{className:'text-4xl tracking-tight text-slate-900 mb-4 font-extrabold'}, '技术学习'),
                     React.createElement('p',{className:'text-lg text-slate-600'}, '精选学习资料与教程，快速上手与进阶')
@@ -696,7 +772,7 @@ const UserHome = () => {
             ),
 
             // Platform (iframe modal) - 逻辑保持，但点击功能卡片时在新窗口打开，所以 modal 不会显示
-            (activePage!=='tools' && showIframe) && React.createElement('div',{className:'fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-4', onClick:()=>setShowIframe(false)},
+            (activePage!=='tools' && activePage!=='prompt-engineering' && showIframe) && React.createElement('div',{className:'fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-4', onClick:()=>setShowIframe(false)},
                 React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] overflow-hidden', onClick:(e)=>e.stopPropagation()},
                     React.createElement('div',{className:'flex items-center justify-between p-3 border-b border-slate-100'},
                         React.createElement('div',{className:'inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 rounded-full text-indigo-700'}, React.createElement(Terminal,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm font-semibold'}, '开发平台')),
@@ -708,7 +784,7 @@ const UserHome = () => {
 
             // VIP服务留言区
             // 🎯 优化 2: 增加留白 my-24
-            (activePage!=='tools') && React.createElement('section',{id:'vip-section', className:'bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 md:p-16 my-24 max-w-7xl mx-auto shadow-xl border border-amber-200'}, // 增加 p-16 内边距，增加圆角
+            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'vip-section', className:'bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 md:p-16 my-24 max-w-7xl mx-auto shadow-xl border border-amber-200'},
                 React.createElement('div',{className:'max-w-4xl mx-auto text-center'},
                     // 🎯 优化 2: 增加留白 mb-6
                     React.createElement('div',{className:'inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full text-amber-700 font-semibold mb-6 shadow-md'}, React.createElement(Star,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm'}, 'VIP专属服务')),
@@ -742,7 +818,7 @@ const UserHome = () => {
 
             // 开源区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools') && React.createElement('section',{id:'opensource', className:'py-24 px-6 max-w-7xl mx-auto bg-white'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'opensource', className:'py-24 px-6 max-w-7xl mx-auto bg-white'}, 
                 // 🎯 优化 2: 增加留白 gap-12
                 React.createElement('div',{className:'grid lg:grid-cols-2 gap-12 items-center'},
                     React.createElement('div',{className:'order-2 lg:order-1'},
@@ -762,7 +838,7 @@ const UserHome = () => {
                             // 🎯 优化 2: 增加留白 space-y-4
                             React.createElement('div',{className:'space-y-4'},
                                 ['Stars','Forks','Contributors'].map((label,idx)=>React.createElement('div',{key:idx},
-                                    React.createElement('div',{className:'flex items-center justify-between mb-2'}, React.createElement('span',{className:'text-sm text-slate-600'}, label), React.createElement('span',{className:'text-xl text-slate-900 font-bold'}, ['12.5K','3.2K','580+'][idx])),
+                                    React.createElement('div',{className:'flex items-center justify-between mb-2'}, React.createElement('span',{className:'text-sm text-slate-600'}, label), React.createElement('span',{className:'text-xl text-slate-900 font-bold'}, ['x','x','x+'][idx])),
                                     React.createElement('div',{className:'w-full h-2 bg-slate-100 rounded-full overflow-hidden'}, React.createElement('div',{className:'h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full', style:{ width: ['85%','65%','75%'][idx] } }))
                                 ))
                             )

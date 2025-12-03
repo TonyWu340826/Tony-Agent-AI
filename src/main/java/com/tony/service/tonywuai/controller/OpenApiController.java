@@ -2,7 +2,9 @@ package com.tony.service.tonywuai.controller;
 
 import com.tony.service.tonywuai.dto.request.CozeWorkFlowRequest;
 import com.tony.service.tonywuai.dto.request.ModelRequest;
+import com.tony.service.tonywuai.dto.request.PromptBaseRequest;
 import com.tony.service.tonywuai.openapi.PythonOpenApiClient;
+import com.tony.service.tonywuai.utils.PlaceholderUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -13,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.tony.service.tonywuai.com.ComStatus.TYPE_AUTO_CASE;
@@ -181,7 +184,7 @@ public class OpenApiController {
      * @param request
      * @return
      */
-    @PostMapping("/deeoSeekChat/model1")
+    @PostMapping("/deeoSeekChat/model")
     public ResponseEntity<?> deeoSeekChat(@RequestBody ModelRequest request) {
         try {
             String resp = pythonOpenApiClient.deepSeekChat(request.getMessage(),request.getPrompt());
@@ -193,6 +196,67 @@ public class OpenApiController {
         }
     }
 
+
+
+
+    /**
+     * 直接调用seepseek模型，没有任何
+     * @param request
+     * @return
+     */
+    @PostMapping("/prompt/optimizePrompt")
+    public ResponseEntity<?> optimizePrompt(@RequestBody PromptBaseRequest request) {
+        logger.info("开始执行公司级提示词优化，请求参数: {}", request.toString());
+
+        try {
+            // 0. 解析期望的占位符集合
+            Set<String> requiredPlaceholders = PlaceholderUtil.getExpectedPlaceholders(request.getParamSchema());
+            String placeholderList = String.join(", ", requiredPlaceholders);
+
+            // 1. 增强后端内置优化器引导 (System Prompt) - 增加警告和明确后果
+            String systemPrompt = String.format("""
+                你是一名提示词工程（Prompt Engineering）专家，专长于将用户提供的自然语言提示词改写为适合大模型执行的、**结构化、可复用**的版本。
+                
+                ## 优化策略
+                1. **结构化**：用任务-约束-输出-范例四段式结构重写提示词。
+                2. **参数化（强制）**：根据提供的 `param_schema` 严格规范化所有占位符的命名。**你必须将以下占位符列表中的所有变量：%s 以 `{variable_name}` 的形式完整嵌入到《优化后提示词》的“任务”或“约束”部分。丢失任何一个占位符将导致提示词无法使用！**
+                3. **角色整合**：将原始提示词中定义的“角色”或“背景”信息，根据 `role_type` (如 'system') 的要求，融入到提示词的 “任务”或“约束” 部分。
+                4. **简洁化**：消除歧义、重复、堆叠语义，保留用户表达的核心目的。
+                
+                ## 必须输出
+                - 《优化后提示词》（此部分内容必须包含所有必需的占位符：%s，不要包含任何 JSON 或 Markdown 格式的包裹）
+                - 《优化理由》（按要点列出 3–6 条）
+                
+                ## 禁止输出
+                - 任何关于大模型工作机制的解释。
+                - 任何与任务无关的内容。
+                """, placeholderList, placeholderList); // 动态注入占位符列表
+
+            // 2. 构造最终 Prompt
+            String finalPrompt = systemPrompt + "\n\n### 上下文信息\n"
+                    + "1. **角色类型 (role_type)**: " + request.getRoleType() + "\n"
+                    + "2. **参数结构 (param_schema)**:\n```json\n" + request.getParamSchema() + "\n```\n"
+                    + "### 原始提示词 (raw_prompt)：\n" + request.getPromt();
+
+            // 3. 调用模型
+            String resp = pythonOpenApiClient.deepSeekChat(finalPrompt, null);
+            if (resp == null || resp.trim().isEmpty()) {
+                resp = "模型返回空结果";
+                logger.warn("LLM返回空结果，无法进行校验。");
+                return ResponseEntity.ok(Map.of("optimizedPrompt", resp));
+            }
+            logger.info("提示词优化完成 ---- \n{}", resp);
+
+            // 5. 返回结果
+            return ResponseEntity.ok(Map.of("optimizedPrompt", resp));
+
+        } catch (Exception e) {
+            logger.error("公司级提示词优化失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    Map.of("message", "提示词优化失败：" + e.getMessage())
+            );
+        }
+    }
 
 
 

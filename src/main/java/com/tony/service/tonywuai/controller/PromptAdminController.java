@@ -46,7 +46,7 @@ public class PromptAdminController {
 
     @DeleteMapping("/scenes/{id}")
     public ResponseEntity<?> deleteScene(@PathVariable Long id) {
-        try { promptService.softDeleteScene(id); return ResponseEntity.ok(Map.of("success", true)); }
+        try { promptService.hardDeleteScene(id); return ResponseEntity.noContent().build(); }
         catch (RuntimeException e) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", e.getMessage())); }
     }
 
@@ -84,7 +84,7 @@ public class PromptAdminController {
             t.setTemplateName(str(body.get("template_name")));
             t.setTemplateContent(str(body.get("template_content")));
             t.setParamSchema(jsonString(body.get("param_schema")));
-            t.setStatus(intOrDefault(body.get("status"), 1));
+            t.setStatus(intOrDefault(body.get("status"), 0));
             t.setCreatePerson(str(body.get("create_person")) == null ? "system" : str(body.get("create_person")));
             return ResponseEntity.status(HttpStatus.CREATED).body(promptService.createTemplate(t));
         } catch (RuntimeException e) { return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage())); }
@@ -101,7 +101,7 @@ public class PromptAdminController {
             t.setTemplateName(str(body.get("template_name")));
             t.setTemplateContent(str(body.get("template_content")));
             t.setParamSchema(jsonString(body.get("param_schema")));
-            t.setStatus(intOrDefault(body.get("status"), 1));
+            t.setStatus(intOrDefault(body.get("status"), 0));
             t.setCreatePerson(str(body.get("create_person")));
             return ResponseEntity.ok(promptService.updateTemplate(id, t));
         } catch (RuntimeException e) { return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage())); }
@@ -109,7 +109,7 @@ public class PromptAdminController {
 
     @DeleteMapping("/templates/{id}")
     public ResponseEntity<?> deleteTemplate(@PathVariable Long id) {
-        try { promptService.softDeleteTemplate(id); return ResponseEntity.ok(Map.of("success", true)); }
+        try { promptService.hardDeleteTemplate(id); return ResponseEntity.noContent().build(); }
         catch (RuntimeException e) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", e.getMessage())); }
     }
 

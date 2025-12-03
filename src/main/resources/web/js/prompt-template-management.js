@@ -56,6 +56,26 @@
     const openTest = async (data) => {
       await loadOnce('/js/prompt-template-test.js'); setTestData(data); setShowTest(true);
     };
+    const handleToggleStatus = async (it) => {
+      setLoading(true); setError('');
+      try {
+        const nextStatus = String(it.status ?? '0') === '0' ? 1 : 0;
+        const payload = {
+          scene_code: it.sceneCode || it.scene_code || '',
+          model_type: it.modelType || it.model_type || '',
+          version: Number(it.version ?? 1),
+          role_type: it.roleType || it.role_type || '',
+          template_name: it.templateName || it.template_name || '',
+          template_content: it.templateContent || it.template_content || '',
+          param_schema: (it.paramSchema !== undefined ? it.paramSchema : it.param_schema),
+          status: nextStatus
+        };
+        const r = await fetch(`/api/prompt/admin/templates/${it.id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(payload) });
+        const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){}
+        if (!r.ok || d.success===false) throw new Error(d.message || '状态修改失败');
+        fetchList(page);
+      } catch(e){ setError(e.message || '请求失败'); } finally { setLoading(false); }
+    };
     const onSaved = () => { setShowEdit(false); setEditData(null); fetchList(0); };
     const onClosed = () => { setShowEdit(false); setEditData(null); };
     const onTestClosed = () => { setShowTest(false); setTestData(null); };
@@ -73,8 +93,8 @@
         ),
         React.createElement('select', { className:'border border-gray-300 rounded-lg px-3 py-2 w-32', value:filters.status, onChange:e=>setFilters({ ...filters, status:e.target.value }) },
           React.createElement('option', { value:'' }, '所有状态'),
-          React.createElement('option', { value:'1' }, '启用'),
-          React.createElement('option', { value:'0' }, '停用')
+          React.createElement('option', { value:'0' }, '启用'),
+          React.createElement('option', { value:'1' }, '停用')
         ),
         React.createElement('input', { className:'border border-gray-300 rounded-lg px-3 py-2 w-24', placeholder:'版本', value:filters.version, onChange:e=>setFilters({ ...filters, version:e.target.value }) }),
         React.createElement('div', { className:'flex gap-2 ml-auto' },
@@ -88,21 +108,27 @@
           React.createElement('button', { className:'px-3 py-1 rounded-md bg-green-600 text-white hover:bg-green-700', onClick:()=>openEdit(null) }, '新增模板')
         ),
         React.createElement('table', { className:'min-w-full divide-y divide-gray-200' },
-          React.createElement('thead', { className:'bg-gray-50' }, React.createElement('tr', null, ['模型','模板名称','版本','角色','状态','更新时间','操作'].map((h,i)=>React.createElement('th',{key:i,className:'px-6 py-3 text-left text-xs font-medium text-gray-500'},h)))),
+          React.createElement('thead', { className:'bg-gray-50' }, React.createElement('tr', null, ['模型','模板名称','编码','版本','角色','业务属性','状态','更新时间','操作'].map((h,i)=>{
+            const alignClass = h==='操作' ? 'text-right' : 'text-left';
+            return React.createElement('th',{key:i,className:`px-6 py-3 ${alignClass} text-xs font-medium text-gray-500`},h);
+          }))),
           React.createElement('tbody', { className:'bg-white divide-y divide-gray-200' },
-            loading ? React.createElement('tr', null, React.createElement('td', { className:'px-6 py-6 text-center text-gray-500', colSpan:7 }, '加载中...')) : (items.length===0 ? React.createElement('tr', null, React.createElement('td', { className:'px-6 py-6 text-center text-gray-500', colSpan:7 }, '暂无数据')) : items.map(it => (
+            loading ? React.createElement('tr', null, React.createElement('td', { className:'px-6 py-6 text-center text-gray-500', colSpan:9 }, '加载中...')) : (items.length===0 ? React.createElement('tr', null, React.createElement('td', { className:'px-6 py-6 text-center text-gray-500', colSpan:9 }, '暂无数据')) : items.map(it => (
               React.createElement('tr', { key: it.id },
                 React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, React.createElement(ModelChip, { model: (it.modelType || it.model_type || '').toUpperCase() })),
                 React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, it.templateName || it.template_name || '-'),
+                React.createElement('td', { className:'px-6 py-3 text-xs text-gray-600 font-mono' }, it.code || '-'),
                 React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, `v${it.version ?? 1}`),
                 React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, it.roleType || it.role_type || '-'),
-                React.createElement('td', { className:'px-6 py-3 text-sm' }, React.createElement(StatusTag, { enabled: String(it.status ?? 0) !== '1' })),
+                React.createElement('td', { className:'px-6 py-3 text-xs text-gray-600' }, (()=>{ try{ const raw = (it.param_schema !== undefined ? it.param_schema : (it.paramSchema !== undefined ? it.paramSchema : undefined)); const obj = typeof raw === 'string' ? JSON.parse(raw||'[]') : (raw||[]); if(Array.isArray(obj)){ const names = obj.map(v=>String((v&&(v.name||v.label||v.key))||'').trim()).filter(Boolean); const head=names.slice(0,3).join(', '); const more = names.length>3 ? ` +${names.length-3}` : ''; return head ? `${head}${more}` : '-'; } if(obj && typeof obj==='object'){ const keys = Object.keys(obj||{}); const head = keys.slice(0,3).join(', '); const more = keys.length>3 ? ` +${keys.length-3}` : ''; return head ? `${head}${more}` : '-'; } return '-'; }catch(_){ return '-'; }})()),
+                React.createElement('td', { className:'px-6 py-3 text-sm' }, React.createElement(StatusTag, { enabled: String(it.status ?? '0') === '0' })),
                 React.createElement('td', { className:'px-6 py-3 text-sm text-gray-700' }, (()=>{ const u = it.updatedAt || it.update_time || it.updated_at; return u ? new Date(u).toLocaleString() : '-'; })()),
                 React.createElement('td', { className:'px-6 py-3 text-sm text-right' },
                   React.createElement('div', { className:'flex items-center justify-end gap-2 whitespace-nowrap' },
                     React.createElement('button', { className:'px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300', onClick:()=>openTest(it) }, '测试'),
                     React.createElement('button', { className:'px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700', onClick:()=>openEdit(it) }, '编辑'),
                     React.createElement('button', { className:'px-3 py-1 rounded-md bg-yellow-500 text-white hover:bg-yellow-600', onClick:()=>handleCopy(it.id) }, '复制版本'),
+                    React.createElement('button', { className: (String(it.status ?? '0') === '0' ? 'px-3 py-1 rounded-md bg-yellow-500 text-white hover:bg-yellow-600' : 'px-3 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700'), onClick:()=>handleToggleStatus(it) }, String(it.status ?? '0') === '0' ? '禁用' : '启用'),
                     React.createElement('button', { className:'px-3 py-1 rounded-md bg-red-600 text-white hover:bg-red-700', onClick:()=>handleDelete(it.id) }, '删除')
                   )
                 )
@@ -119,7 +145,7 @@
         )
       ),
       showEdit ? React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 overflow-auto' },
-        React.createElement('div', { className:'bg-white rounded-xl shadow-2xl w-full max-w-3xl p-6 space-y-4' },
+        React.createElement('div', { className:'bg-white rounded-xl shadow-2xl w-full max-w-4xl p-6 space-y-4' },
           React.createElement('div', { className:'flex items-center justify-between' },
             React.createElement('div', { className:'text-xl font-bold text-gray-800' }, editData && editData.id ? '编辑模板' : '新增模板'),
             React.createElement('button', { className:'px-3 py-1 rounded-md bg-gray-200 text-gray-700', onClick:onClosed }, '关闭')
@@ -128,8 +154,11 @@
         )
       ) : null,
       showTest ? React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 overflow-auto' },
-        React.createElement('div', { className:'bg-white rounded-xl shadow-2xl w-full max-w-5xl p-6' },
-          React.createElement('div', { className:'mb-4 text-xl font-bold text-gray-800' }, '模板测试'),
+        React.createElement('div', { className:'bg-white rounded-xl shadow-2xl w-full p-6', style:{ width:'70vw', maxWidth:'70vw', maxHeight:'80vh' } },
+          React.createElement('div', { className:'mb-4 flex items-center justify-between' },
+            React.createElement('div', { className:'text-xl font-bold text-gray-800' }, '模板测试'),
+            React.createElement('button', { className:'px-3 py-1 rounded-md bg-gray-200 text-gray-700', onClick:onTestClosed }, '关闭')
+          ),
           window.Components && window.Components.PromptTemplateTest ? React.createElement(window.Components.PromptTemplateTest, { template:testData, onClose:onTestClosed }) : React.createElement('div', { className:'p-6 text-gray-600' }, '测试组件加载中...')
         )
       ) : null

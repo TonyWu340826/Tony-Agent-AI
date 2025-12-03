@@ -47,12 +47,7 @@ public class PromptServiceImpl implements PromptService {
             if (!model.isBlank() && !model.equalsIgnoreCase(t.getModelType())) return false;
             if (!role.isBlank() && !role.equalsIgnoreCase(t.getRoleType())) return false;
             if (finalVersion != null && !Objects.equals(finalVersion, t.getVersion())) return false;
-            boolean isDeleted = Objects.equals(Integer.valueOf(1), t.getStatus());
-            if (finalStatus == null) {
-                if (isDeleted) return false; // 默认排除 status=1（删除）
-            } else {
-                if (!Objects.equals(finalStatus, t.getStatus())) return false;
-            }
+            if (finalStatus != null && !Objects.equals(finalStatus, t.getStatus())) return false;
             if (keyword != null && !keyword.isBlank()) {
                 String k = keyword.toLowerCase();
                 String nm = Optional.ofNullable(t.getTemplateName()).orElse("");
@@ -97,7 +92,7 @@ public class PromptServiceImpl implements PromptService {
         db.setTemplateName(template.getTemplateName());
         db.setTemplateContent(Optional.ofNullable(template.getTemplateContent()).orElse(db.getTemplateContent()==null?"":db.getTemplateContent()));
         db.setParamSchema(Optional.ofNullable(template.getParamSchema()).orElse(db.getParamSchema()==null?"[]":db.getParamSchema()));
-        db.setStatus(Optional.ofNullable(template.getStatus()).orElse(1));
+        db.setStatus(Optional.ofNullable(template.getStatus()).orElse(0));
         db.setCreatePerson(Optional.ofNullable(template.getCreatePerson()).orElse(db.getCreatePerson()));
         return templateRepo.save(db);
     }
@@ -108,6 +103,13 @@ public class PromptServiceImpl implements PromptService {
         PromptTemplate db = templateRepo.findById(id).orElseThrow(() -> new RuntimeException("模板不存在:" + id));
         db.setStatus(1); // 1 表示删除
         templateRepo.save(db);
+    }
+
+    @Override
+    @Transactional
+    public void hardDeleteTemplate(Long id) {
+        PromptTemplate db = templateRepo.findById(id).orElseThrow(() -> new RuntimeException("模板不存在:" + id));
+        templateRepo.deleteById(db.getId());
     }
 
     @Override
@@ -166,6 +168,9 @@ public class PromptServiceImpl implements PromptService {
         if (scene.getSceneCode() == null || scene.getSceneCode().isBlank()) {
             scene.setSceneCode(genSceneCode());
         }
+        if (scene.getTemplateCode() == null || scene.getTemplateCode().isBlank()) {
+            scene.setTemplateCode("UNLINKED");
+        }
         return sceneRepo.save(scene);
     }
 
@@ -173,7 +178,9 @@ public class PromptServiceImpl implements PromptService {
     @Transactional
     public PromptScene updateScene(Long id, PromptScene scene) {
         PromptScene db = sceneRepo.findById(id).orElseThrow(() -> new RuntimeException("场景不存在:" + id));
-        db.setSceneCode(scene.getSceneCode());
+        if (scene.getSceneCode() != null && !scene.getSceneCode().isBlank()) {
+            db.setSceneCode(scene.getSceneCode());
+        }
         db.setSceneName(scene.getSceneName());
         if (scene.getTemplateCode() != null && !scene.getTemplateCode().isBlank()) {
             db.setTemplateCode(scene.getTemplateCode());
@@ -192,6 +199,13 @@ public class PromptServiceImpl implements PromptService {
         sceneRepo.save(db);
     }
 
+    @Override
+    @Transactional
+    public void hardDeleteScene(Long id) {
+        PromptScene db = sceneRepo.findById(id).orElseThrow(() -> new RuntimeException("场景不存在:" + id));
+        sceneRepo.deleteById(db.getId());
+    }
+
     private String genCode() {
         String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
         return "TT" + ts;
@@ -201,7 +215,7 @@ public class PromptServiceImpl implements PromptService {
         return "BY" + ts;
     }
 
-    private static final Pattern VAR_PATTERN = Pattern.compile("\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}}");
+    private static final Pattern VAR_PATTERN = Pattern.compile("\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}}|\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}");
 
     private String render(String template, Map<String, Object> params) {
         if (template == null) return "";
@@ -209,7 +223,7 @@ public class PromptServiceImpl implements PromptService {
         Matcher m = VAR_PATTERN.matcher(template);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
-            String key = m.group(1);
+            String key = m.group(1) != null ? m.group(1) : m.group(2);
             Object val = params.get(key);
             String rep = val == null ? "" : String.valueOf(val);
             m.appendReplacement(sb, Matcher.quoteReplacement(rep));
