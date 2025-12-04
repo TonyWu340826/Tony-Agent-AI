@@ -1,5 +1,6 @@
 package com.tony.service.tonywuai.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.tony.service.tonywuai.dto.request.CozeWorkFlowRequest;
 import com.tony.service.tonywuai.dto.request.ModelRequest;
 import com.tony.service.tonywuai.dto.request.PromptBaseRequest;
@@ -13,9 +14,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.tony.service.tonywuai.com.ComStatus.TYPE_AUTO_CASE;
@@ -95,7 +100,7 @@ public class OpenApiController {
                     "请严格遵循上述角色设定与约束条件，直接输出符合要求的 SQL 语句。";
 
             log.info("AI 提示词：{}", prompt);
-            String sql = pythonOpenApiClient.deepSeekChat(prompt,null);
+            String sql = pythonOpenApiClient.deepSeekChat("请帮我生成sql",prompt,null);
             logger.info("调用AI生成SQL返回:{}",sql);
             return ResponseEntity.ok(Map.of("sql", sql == null ? "" : sql));
         } catch (Exception e) {
@@ -139,7 +144,7 @@ public class OpenApiController {
             sb.append("请严格按照上述结构输出，避免任何额外的解释性文字或Markdown格式之外的内容。");
             // 提示词精简结束
             String finalPrompt = sb.toString();
-            String resp = pythonOpenApiClient.deepSeekChat(finalPrompt,null);
+            String resp = pythonOpenApiClient.deepSeekChat("请给出本次考试的考试小结",finalPrompt,null);
             logger.info("AI返回总结考试结果--------------------------------{}", resp);
             if (resp == null) resp = "";
             if (resp.length() > 2000) resp = resp.substring(0, 2000);
@@ -186,8 +191,9 @@ public class OpenApiController {
      */
     @PostMapping("/deeoSeekChat/model")
     public ResponseEntity<?> deeoSeekChat(@RequestBody ModelRequest request) {
+        logger.info("直接调用seepseek模型：request>>>{}", JSON.toJSONString(request));
         try {
-            String resp = pythonOpenApiClient.deepSeekChat(request.getMessage(),request.getPrompt());
+            String resp = pythonOpenApiClient.deepSeekChat(request.getMessage(),request.getPrompt(),null);
             logger.info("工作流执行结束--------------------------------{}", resp);
             if (resp == null) resp = "";
             return ResponseEntity.ok(Map.of("message", resp));
@@ -200,66 +206,115 @@ public class OpenApiController {
 
 
     /**
-     * 直接调用seepseek模型，没有任何
+     * 直接调用seepseek模型，进行提示词优化
      * @param request
      * @return
      */
     @PostMapping("/prompt/optimizePrompt")
     public ResponseEntity<?> optimizePrompt(@RequestBody PromptBaseRequest request) {
-        logger.info("开始执行公司级提示词优化，请求参数: {}", request.toString());
+        logger.info("开始执行提示词优化，请求参数: {}", JSON.toJSONString(request));
+
+        final String DEFAULT_ERROR_PROMPT = "";
+        final String DEFAULT_ERROR_REASON = "模型服务异常或返回结果解析失败。";
 
         try {
             // 0. 解析期望的占位符集合
             Set<String> requiredPlaceholders = PlaceholderUtil.getExpectedPlaceholders(request.getParamSchema());
-            String placeholderList = String.join(", ", requiredPlaceholders);
+            String placeholderList = requiredPlaceholders.stream()
+                    .map(s -> "{" + s + "}")
+                    .collect(Collectors.joining(", "));
 
-            // 1. 增强后端内置优化器引导 (System Prompt) - 增加警告和明确后果
+            // 1. 构造增强型 System Prompt (元提示词) - **使用纯中文标签**
             String systemPrompt = String.format("""
-                你是一名提示词工程（Prompt Engineering）专家，专长于将用户提供的自然语言提示词改写为适合大模型执行的、**结构化、可复用**的版本。
+                # 角色设定 (Role)
+                你现在是世界上最顶尖的**提示词（Prompt）工程专家**、AIGC内容战略家和语言优化大师。你的核心任务是接收用户提供的原始请求，并根据提示词工程的最佳实践，将其改写、优化并扩展成一个**结构严谨、意图清晰、输出可控**的专业提示词。
+                # 核心优化策略与要求 (Optimization Strategy)
+                ## 策略一：结构化与增强 (Structure & Enhance)
+                将原始输入转化为以下专业提示词的五大要素：
+                1.  **[角色定位]：** 为AI模型指定一个具体的、权威的、可信赖的身份。
+                2.  **[任务目标]：** 明确、量化、具体地阐述任务目标和最终产物。
+                3.  **[输入信息]：** 提供必要的背景信息、输入数据或引用材料。
+                4.  **[约束条件]：** 设定所有的限制条件和规则，以控制输出质量。
+                5.  **[执行步骤]：** 如果任务复杂，请将生成过程分解为2-5个清晰的步骤。
                 
-                ## 优化策略
-                1. **结构化**：用任务-约束-输出-范例四段式结构重写提示词。
-                2. **参数化（强制）**：根据提供的 `param_schema` 严格规范化所有占位符的命名。**你必须将以下占位符列表中的所有变量：%s 以 `{variable_name}` 的形式完整嵌入到《优化后提示词》的“任务”或“约束”部分。丢失任何一个占位符将导致提示词无法使用！**
-                3. **角色整合**：将原始提示词中定义的“角色”或“背景”信息，根据 `role_type` (如 'system') 的要求，融入到提示词的 “任务”或“约束” 部分。
-                4. **简洁化**：消除歧义、重复、堆叠语义，保留用户表达的核心目的。
+                ## 策略二：参数化 (强制约束)
+                **你必须将以下占位符列表中的所有变量: %s 以 {variable_name} 的形式完整嵌入到[优化后提示词]的"任务"或"约束"部分。**
+                **如果原始提示词中不包含这些变量，你也必须为它们在优化后的提示词中创造合适的上下文。丢失任何一个占位符将导致提示词无法使用!**
                 
-                ## 必须输出
-                - 《优化后提示词》（此部分内容必须包含所有必需的占位符：%s，不要包含任何 JSON 或 Markdown 格式的包裹）
-                - 《优化理由》（按要点列出 3–6 条）
+                ## 策略三：角色整合
+                将原始提示词中定义的"角色"或"背景"信息, 根据提供的 `role_type` (如 'system') 的要求, 融入到提示词的 "任务" 或 "约束" 部分。
+
+                # 输出格式要求 (Output Format)
+                **你必须严格按照以下格式输出结果，不要添加任何额外的解释或Markdown包裹。**
+                [优化后提示词]
+                [此处是优化后的提示词内容，使用纯中文标签（如[角色定位]）和Markdown格式]
+                [优化理由]
+                [此处是优化理由列表，使用Markdown格式]
                 
-                ## 禁止输出
+                # 禁止输出
                 - 任何关于大模型工作机制的解释。
                 - 任何与任务无关的内容。
-                """, placeholderList, placeholderList); // 动态注入占位符列表
+                """, placeholderList, placeholderList);
 
             // 2. 构造最终 Prompt
+            String rawPrompt = request.getPromt() != null ? request.getPromt() : "";
             String finalPrompt = systemPrompt + "\n\n### 上下文信息\n"
                     + "1. **角色类型 (role_type)**: " + request.getRoleType() + "\n"
                     + "2. **参数结构 (param_schema)**:\n```json\n" + request.getParamSchema() + "\n```\n"
-                    + "### 原始提示词 (raw_prompt)：\n" + request.getPromt();
+                    + "### 原始提示词 (raw_prompt)：\n" + rawPrompt;
+
+            logger.info("finalPrompt>>>{}",JSON.toJSONString(finalPrompt));
+
+            // 默认的用户消息
+            if(StringUtils.isEmpty(request.getMessage())) {
+                request.setMessage("请根据上述规则和上下文信息，开始优化我的原始提示词。");
+            }
 
             // 3. 调用模型
-            String resp = pythonOpenApiClient.deepSeekChat(finalPrompt, null);
-            if (resp == null || resp.trim().isEmpty()) {
-                resp = "模型返回空结果";
-                logger.warn("LLM返回空结果，无法进行校验。");
-                return ResponseEntity.ok(Map.of("optimizedPrompt", resp));
-            }
-            logger.info("提示词优化完成 ---- \n{}", resp);
+            String resp = pythonOpenApiClient.deepSeekChat(request.getMessage(), finalPrompt, null);
 
-            // 5. 返回结果
-            return ResponseEntity.ok(Map.of("optimizedPrompt", resp));
+            if (resp == null || resp.trim().isEmpty()) {
+                logger.warn("LLM返回空结果，无法进行校验。");
+                return ResponseEntity.ok(Map.of("optimizedPrompt", DEFAULT_ERROR_PROMPT,
+                        "optimizationReason", "LLM返回空结果。"));
+            }
+            logger.info("提示词优化完成 ---- 原始响应:\n{}", resp);
+
+            // 4. 解析并结构化输出 (使用正则表达式)
+            Map<String, String> parsedResult = new HashMap<>();
+
+            // 模式1: 提取 [优化后提示词] 的内容
+            // Pattern.DOTALL 确保 . 匹配包括换行符在内的所有字符
+            Pattern promptPattern = Pattern.compile("\\[优化后提示词\\]\\s*?(.*?)\\s*\\[优化理由\\]", Pattern.DOTALL);
+            Matcher promptMatcher = promptPattern.matcher(resp);
+
+            if (promptMatcher.find()) {
+                String optimizedPrompt = promptMatcher.group(1).trim();
+                parsedResult.put("optimizedPrompt", optimizedPrompt);
+            }
+
+            // 模式2: 提取 [优化理由] 之后的内容，直到字符串结束
+            Pattern reasonPattern = Pattern.compile("\\[优化理由\\]\\s*?(.*)", Pattern.DOTALL);
+            Matcher reasonMatcher = reasonPattern.matcher(resp);
+
+            if (reasonMatcher.find()) {
+                String optimizationReason = reasonMatcher.group(1).trim();
+                parsedResult.put("optimizationReason", optimizationReason);
+            }
+
+            // 5. 返回结构化 JSON 结果
+            return ResponseEntity.ok(Map.of(
+                    "optimizedPrompt", parsedResult.getOrDefault("optimizedPrompt", DEFAULT_ERROR_PROMPT),
+                    "optimizationReason", parsedResult.getOrDefault("optimizationReason", DEFAULT_ERROR_REASON)
+            ));
 
         } catch (Exception e) {
-            logger.error("公司级提示词优化失败", e);
+            logger.error("提示词优化失败", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     Map.of("message", "提示词优化失败：" + e.getMessage())
             );
         }
     }
-
-
-
 
 
 

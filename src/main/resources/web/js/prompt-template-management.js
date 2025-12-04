@@ -144,13 +144,13 @@
           React.createElement('button', { className:'px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50', disabled: page>=totalPages-1, onClick:()=>{ if(page<totalPages-1) fetchList(page+1); } }, '下一页')
         )
       ),
-      showEdit ? React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 overflow-auto' },
-        React.createElement('div', { className:'bg-white rounded-xl shadow-2xl w-full max-w-4xl p-6 space-y-4' },
-          React.createElement('div', { className:'flex items-center justify-between' },
+      showEdit ? React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4', onClick:onClosed },
+        React.createElement('div', { className:'bg-white rounded-xl shadow-2xl w-full max-w-4xl space-y-4 overflow-y-auto', style:{ maxHeight:'80vh' }, onClick:(e)=>e.stopPropagation() },
+          React.createElement('div', { className:'flex items-center justify-between p-6 border-b' },
             React.createElement('div', { className:'text-xl font-bold text-gray-800' }, editData && editData.id ? '编辑模板' : '新增模板'),
             React.createElement('button', { className:'px-3 py-1 rounded-md bg-gray-200 text-gray-700', onClick:onClosed }, '关闭')
           ),
-          window.Components && window.Components.PromptTemplateEdit ? React.createElement(window.Components.PromptTemplateEdit, { initialData: editData, onClose:onClosed, onSaved }) : React.createElement('div', { className:'p-6 text-gray-600' }, '编辑组件加载中...')
+          window.Components && window.Components.PromptTemplateEdit ? React.createElement('div',{className:'p-6'}, React.createElement(window.Components.PromptTemplateEdit, { initialData: editData, onClose:onClosed, onSaved })) : React.createElement('div', { className:'p-6 text-gray-600' }, '编辑组件加载中...')
         )
       ) : null,
       showTest ? React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 overflow-auto' },

@@ -24,6 +24,8 @@
     const contentRef = useRef(null);
     const [lastVarName, setLastVarName] = useState('');
     const [sceneOptions, setSceneOptions] = useState([]);
+    const [previewCollapsed, setPreviewCollapsed] = useState(true);
+    const [jsonCollapsed, setJsonCollapsed] = useState(true);
 
     useEffect(() => {
       (async () => {
@@ -242,13 +244,19 @@
                 value:form.template_content,
                 onChange:handleContentChange
               })
-            , (function(){
-              const s = String(form.template_content||'');
-              const re = /(\{\{[a-zA-Z0-9_]+\}\}|\{[a-zA-Z0-9_]+\})/g;
-              const nodes=[]; let lastIndex=0; let m; while((m=re.exec(s))){ const idx=m.index; const token=m[0]; if(idx>lastIndex){ nodes.push(React.createElement('span',{key:'pv-'+lastIndex}, s.slice(lastIndex, idx))); } nodes.push(React.createElement('span',{key:'pv-h-'+idx, className:'bg-red-600 text-white font-bold underline font-mono px-1 rounded shadow-sm ring-2 ring-red-300'}, token)); lastIndex=re.lastIndex; }
-              if(lastIndex<s.length){ nodes.push(React.createElement('span',{key:'pv-end'}, s.slice(lastIndex))); }
-              return React.createElement('div',{ className:'mt-2 border border-gray-200 rounded-lg p-3 bg-gray-50 text-sm', style:{ whiteSpace:'pre-wrap' } }, nodes);
-            })()
+            , React.createElement('div', { className:'mt-2 border border-gray-200 rounded-lg bg-gray-50' },
+                React.createElement('div', { className:'flex items-center justify-between p-3' },
+                  React.createElement('div', { className:'text-sm font-medium text-gray-700' }, '提示词预览'),
+                  React.createElement('button', { className:'text-blue-600 text-sm', onClick:()=>setPreviewCollapsed(v=>!v) }, previewCollapsed ? '展开预览' : '收起预览')
+                ),
+                previewCollapsed ? null : (function(){
+                  const s = String(form.template_content||'');
+                  const re = /(\{\{[a-zA-Z0-9_]+\}\}|\{[a-zA-Z0-9_]+\})/g;
+                  const nodes=[]; let lastIndex=0; let m; while((m=re.exec(s))){ const idx=m.index; const token=m[0]; if(idx>lastIndex){ nodes.push(React.createElement('span',{key:'pv-'+lastIndex}, s.slice(lastIndex, idx))); } nodes.push(React.createElement('span',{key:'pv-h-'+idx, className:'bg-red-600 text-white font-bold underline font-mono px-1 rounded shadow-sm ring-2 ring-red-300'}, token)); lastIndex=re.lastIndex; }
+                  if(lastIndex<s.length){ nodes.push(React.createElement('span',{key:'pv-end'}, s.slice(lastIndex))); }
+                  return React.createElement('div',{ className:'p-3 text-sm', style:{ whiteSpace:'pre-wrap', maxHeight:'40vh', overflow:'auto' } }, nodes);
+                })()
+            )
             ),
           // 变量设置
           React.createElement('div', { className:'md:col-span-2 border rounded-lg p-4 space-y-3' },
@@ -270,14 +278,21 @@
                 ))
               )
           ),
-          
-          React.createElement('textarea', {
-            className:'border border-gray-300 rounded-lg px-3 py-2 md:col-span-2 font-mono text-sm',
-            rows:8,
-            placeholder:'参数结构 JSON',
-            value:form.param_schema,
-            onChange:e=>{ const val = e.target.value; setForm({ ...form, param_schema: val }); setVars(parseVarsFromSchema(val)); }
-          }),
+          React.createElement('div', { className:'md:col-span-2 border rounded-lg' },
+            React.createElement('div', { className:'flex items-center justify-between p-3' },
+              React.createElement('div', { className:'text-sm font-medium text-gray-700' }, '参数结构 JSON'),
+              React.createElement('button', { className:'text-blue-600 text-sm', onClick:()=>setJsonCollapsed(v=>!v) }, jsonCollapsed ? '展开预览' : '收起预览')
+            ),
+            jsonCollapsed ? null : React.createElement('div', { className:'p-3' },
+              React.createElement('textarea', {
+                className:'border border-gray-300 rounded-lg px-3 py-2 w-full font-mono text-sm',
+                rows:8,
+                placeholder:'参数结构 JSON',
+                value:form.param_schema,
+                onChange:e=>{ const val = e.target.value; setForm({ ...form, param_schema: val }); setVars(parseVarsFromSchema(val)); }
+              })
+            )
+          ),
           React.createElement('label', { className:'inline-flex items-center space-x-2 md:col-span-2' },
               React.createElement('input', { type:'checkbox', checked: Number(form.status)===0, onChange:e=>setForm({ ...form, status: e.target.checked ? 0 : 1 }) }),
               React.createElement('span', { className:'text-sm text-gray-700' }, '启用此模板')

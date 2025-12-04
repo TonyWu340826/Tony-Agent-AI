@@ -26,9 +26,9 @@ public class PythonOpenApiClient {
     private String deepSeekPath;
     @Value("${openapi.coze.workflow_path:/api/coze/run-workflow}")
     private String workFlowPath;
-    @Value("${openapi.python.connect-timeout-ms:60000}")
+    @Value("${openapi.python.connect-timeout-ms:600000}")
     private int connectTimeoutMs;
-    @Value("${openapi.python.read-timeout-ms:60000}")
+    @Value("${openapi.python.read-timeout-ms:600000}")
     private int readTimeoutMs;
 
     private RestTemplate restTemplate;
@@ -67,11 +67,24 @@ public class PythonOpenApiClient {
 
     /**
      *DeepSeek 模型调用
-     * @param message 用户输入
-     * @param prompt  提示词
+     * @param message 用户输入   -user
+     * @param prompt  提示词    -system
+     * @param context  上下文   -assistant
+     *
+     *
+     *示例：
+     *                 {
+     *   "messages": [
+     *     {"role": "system", "content": "你是一个书籍推荐专家"},
+     *     {"role": "user", "content": "推荐一本适合孩子的书"},
+     *     {"role": "assistant", "content": "《强风吹拂》是一本关于团队合作和成长的书..."},
+     *     {"role": "user", "content": "这本书适合几岁孩子？"}
+     *   ]
+     * }
+     *
      * @return
      */
-    public String deepSeekChat(String message, String prompt) throws Exception {
+    public String deepSeekChat(String message, String prompt, String context) throws Exception {
         logger.info("开始调用DeepSeek");
         if (StringUtils.isEmpty(message)) {
             throw new IllegalArgumentException("输入不能为空");
