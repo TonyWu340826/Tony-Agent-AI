@@ -79,7 +79,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                 React.createElement('div',{className:'hidden md:flex items-center gap-12 relative flex-1 justify-center'}, 
                     React.createElement('div',{className:'relative group'},
                         React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ window.location.assign('/home.html'); }catch(_){ } try{ openModule && openModule(null); }catch(_){ } try{ const el=document.getElementById('features-section'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, React.createElement(Code2,{className:'w-5 h-5'}),'平台功能'),
-                        React.createElement('div',{className:'absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-64 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-[70]'},
+                        React.createElement('div',{className:'absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-64 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-[70] pointer-events-none group-hover:pointer-events-auto'},
                             [
                                 {name:'核心功能', anchor:'#features-section', icon:Sparkles},
                                 {name:'AI资讯', anchor:'#articles-preview', icon:Newspaper},
@@ -102,7 +102,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                     React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onMouseEnter:()=>{ try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } }, onClick:(e)=>{ e.preventDefault(); try{ history.pushState({ page:'prompt-engineering' }, '', '/prompt-engineering'); }catch(_){ try{ window.location.hash = 'prompt-engineering'; }catch(__){} } try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } try{ openModule && openModule('prompt-engineering'); }catch(_){ } try{ const el=document.getElementById('prompt-engineering-page'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, 'Prompt工程'),
                     React.createElement('div',{className:'relative group'},
                         React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ onOpenAgents && onOpenAgents(); }catch(_){ } }}, React.createElement(Star,{className:'w-5 h-5'}),'三方Agent平台'),
-                        React.createElement('div',{className:'absolute right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-80 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-[70]'},
+                        React.createElement('div',{className:'absolute right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-80 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-[70] pointer-events-none group-hover:pointer-events-auto'},
                             (loadingAgents ? [1,2,3].map((i)=>React.createElement('div',{key:i,className:'h-8 bg-slate-100 rounded animate-pulse mb-2'}))
                             : agents.map((a,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-indigo-50 cursor-pointer', onClick:()=>{
                                     const isVipTool = String(a.vipAllow||'').toUpperCase()==='VIP';
@@ -510,6 +510,8 @@ const UserHome = () => {
     const [toolsReady, setToolsReady] = useState(!!(window.Components && window.Components.UserToolsExplorer));
     const [promptReady, setPromptReady] = useState(!!(window.Components && window.Components.PromptEngineeringPage));
     const [techLearningReady, setTechLearningReady] = useState(!!(window.Components && window.Components.TechLearningPage));
+    const [interviewReady, setInterviewReady] = useState(!!(window.Components && window.Components.InterviewHomePage));
+    const [interviewParams, setInterviewParams] = useState({});
     const [activePage, setActivePage] = useState(null);
     const [agentList, setAgentList] = useState([]);
     const [agentLoading, setAgentLoading] = useState(false);
@@ -538,6 +540,33 @@ const UserHome = () => {
                             setTechLearningReady(true);
                         }
                     } catch(_){ }
+                } else if (p.startsWith('/interview')) {
+                    setShowModule(null);
+                    try {
+                        const loaded = !!(window.Components && window.Components.InterviewHomePage);
+                        if (!loaded) {
+                            const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+                            loadScriptOnce('/js/home/interview-guide.js').then(()=>{
+                                setInterviewReady(true);
+                            }).catch(()=>{ });
+                        } else {
+                            setInterviewReady(true);
+                        }
+                    } catch(_){}
+
+                    if (p.includes('/items')) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const categoryId = urlParams.get('categoryId');
+                        setInterviewParams({ categoryId });
+                        setActivePage('interview-items');
+                    } else if (p.includes('/category/')) {
+                        const parts = p.split('/category/');
+                        const id = parts.length > 1 ? parts[1] : null;
+                        setInterviewParams({ id });
+                        setActivePage('interview-category');
+                    } else {
+                         setActivePage('interview-home');
+                    }
                 } else if (p.endsWith('/home.html') || (!h && (p==='/' || p.endsWith('/home.html')))) {
                     setActivePage(null);
                     setShowModule(null);
@@ -817,11 +846,14 @@ const UserHome = () => {
             } }),
             (activePage==='articles') && React.createElement(ArticlesPage,null),
             (activePage==='tech-learning') && ((window.Components && window.Components.TechLearningPage) ? React.createElement(window.Components.TechLearningPage,null) : React.createElement('div',null, techLearningReady ? '组件加载中...' : '正在加载组件脚本...')),
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement(HeroSection,{ onOpenRegister: ()=>openAuth('register'), onOpenLogin: ()=>openAuth('login') }),
+            (activePage==='interview-home') && ((window.Components && window.Components.InterviewHomePage) ? React.createElement(window.Components.InterviewHomePage,null) : React.createElement('div',null, interviewReady ? '组件加载中...' : '正在加载组件脚本...')),
+            (activePage==='interview-category') && ((window.Components && window.Components.InterviewCategoryPage) ? React.createElement(window.Components.InterviewCategoryPage, { id: interviewParams.id }) : React.createElement('div',null, interviewReady ? '组件加载中...' : '正在加载组件脚本...')),
+            (activePage==='interview-items') && ((window.Components && window.Components.InterviewItemsPage) ? React.createElement(window.Components.InterviewItemsPage, { categoryId: interviewParams.categoryId }) : React.createElement('div',null, interviewReady ? '组件加载中...' : '正在加载组件脚本...')),
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning' && !String(activePage||'').startsWith('interview')) && React.createElement(HeroSection,{ onOpenRegister: ()=>openAuth('register'), onOpenLogin: ()=>openAuth('login') }),
 
             // 核心功能区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement('section',{id:'features-section', className:'py-24 px-6 max-w-7xl mx-auto'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning' && !String(activePage||'').startsWith('interview')) && React.createElement('section',{id:'features-section', className:'py-24 px-6 max-w-7xl mx-auto'}, 
                 // 🎯 优化 2: 增加留白 mb-16
                 React.createElement('div',{className:'text-center mb-16'}, 
                     React.createElement('h2',{className:'text-4xl tracking-tight text-slate-900 mb-4 font-extrabold'}, '核心功能与服务'), 
@@ -889,7 +921,7 @@ const UserHome = () => {
 
             // 文章预览区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement('section',{id:'articles-preview', className:'py-24 px-6 bg-slate-50'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning' && !String(activePage||'').startsWith('interview')) && React.createElement('section',{id:'articles-preview', className:'py-24 px-6 bg-slate-50'}, 
                 React.createElement('div',{className:'max-w-7xl mx-auto'},
                     // 🎯 优化 2: 增加留白 gap-12
                     React.createElement('div',{className:'grid lg:grid-cols-2 gap-12 items-center'}, 
@@ -937,7 +969,7 @@ const UserHome = () => {
 
 
             // Platform (iframe modal) - 逻辑保持，但点击功能卡片时在新窗口打开，所以 modal 不会显示
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning' && showIframe) && React.createElement('div',{className:'fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-4', onClick:()=>setShowIframe(false)},
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning' && !String(activePage||'').startsWith('interview') && showIframe) && React.createElement('div',{className:'fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-4', onClick:()=>setShowIframe(false)},
                 React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] overflow-hidden', onClick:(e)=>e.stopPropagation()},
                     React.createElement('div',{className:'flex items-center justify-between p-3 border-b border-slate-100'},
                         React.createElement('div',{className:'inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 rounded-full text-indigo-700'}, React.createElement(Terminal,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm font-semibold'}, '开发平台')),
@@ -949,7 +981,7 @@ const UserHome = () => {
 
             // VIP服务留言区
             // 🎯 优化 2: 增加留白 my-24
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement('section',{id:'vip-section', className:'bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 md:p-16 my-24 max-w-7xl mx-auto shadow-xl border border-amber-200'},
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning' && !String(activePage||'').startsWith('interview')) && React.createElement('section',{id:'vip-section', className:'bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 md:p-16 my-24 max-w-7xl mx-auto shadow-xl border border-amber-200'},
                 React.createElement('div',{className:'max-w-4xl mx-auto text-center'},
                     // 🎯 优化 2: 增加留白 mb-6
                     React.createElement('div',{className:'inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full text-amber-700 font-semibold mb-6 shadow-md'}, React.createElement(Star,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm'}, 'VIP专属服务')),
@@ -983,7 +1015,7 @@ const UserHome = () => {
 
             // 开源区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement('section',{id:'opensource', className:'py-24 px-6 max-w-7xl mx-auto bg-white'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning' && !String(activePage||'').startsWith('interview')) && React.createElement('section',{id:'opensource', className:'py-24 px-6 max-w-7xl mx-auto bg-white'}, 
                 // 🎯 优化 2: 增加留白 gap-12
                 React.createElement('div',{className:'grid lg:grid-cols-2 gap-12 items-center'},
                     React.createElement('div',{className:'order-2 lg:order-1'},
@@ -1052,8 +1084,7 @@ const UserHome = () => {
                     )
                 )
             ),
-
-            !showAuth && React.createElement(Footer,null)
+            !showAuth && !String(activePage||'').startsWith('interview') && React.createElement(Footer,null)
             , React.createElement(SupportChat, null)
         )
     ));

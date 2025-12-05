@@ -27,6 +27,9 @@ public class InterviewItem {
     @Column(name = "visibility_vip", nullable = false)
     private Integer visibilityVip = 0;
 
+    @Column(name = "type", length = 20)
+    private String type;
+
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 

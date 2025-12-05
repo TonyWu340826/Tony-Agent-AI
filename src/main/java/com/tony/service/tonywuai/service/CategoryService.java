@@ -12,6 +12,7 @@ public interface CategoryService {
     Category create(CategoryCreateRequest req);
     Category update(Long id, CategoryUpdateRequest req);
     void delete(Long id);
-    Page<Category> list(Pageable pageable, String search, Integer type);
+    Page<Category> list(Pageable pageable, String search, Integer type, Long parentId, Integer maxType);
+    Category get(Long id);
     List<CategoryNodeDTO> tree(Integer type);
 }

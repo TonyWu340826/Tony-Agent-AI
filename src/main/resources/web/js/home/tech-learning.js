@@ -12,9 +12,9 @@
         const { useEffect } = React;
         useEffect(() => { document.title = '技术学习 - 宙斯'; return () => { document.title = '宙斯 - AI 赋能平台'; }; }, []);
         const cards = [
-            { title: '面试宝典', desc: '技术内容和海量面试题学习', icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', btnColor: 'bg-blue-600 hover:bg-blue-700' },
-            { title: '示例项目', desc: '快速学习与二次开发', icon: Code2, color: 'text-cyan-600', bg: 'bg-cyan-50', btnColor: 'bg-cyan-600 hover:bg-cyan-700' },
-            { title: '最佳实践', desc: '前沿实践与最佳实践', icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', btnColor: 'bg-indigo-600 hover:bg-indigo-700' }
+            { title: '面试宝典', desc: '技术内容和海量面试题学习', icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', btnColor: 'bg-blue-600 hover:bg-blue-700', action: () => { window.history.pushState({}, '', '/interview'); window.dispatchEvent(new Event('popstate')); } },
+            { title: '示例项目', desc: '快速学习与二次开发', icon: Code2, color: 'text-cyan-600', bg: 'bg-cyan-50', btnColor: 'bg-cyan-600 hover:bg-cyan-700', action: () => alert('功能开发中，敬请期待') },
+            { title: '最佳实践', desc: '前沿实践与最佳实践', icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', btnColor: 'bg-indigo-600 hover:bg-indigo-700', action: () => alert('功能开发中，敬请期待') }
         ];
 
         return React.createElement('div', { className: 'min-h-screen bg-slate-50 py-12 px-4 md:px-6' },
@@ -43,7 +43,7 @@
                         React.createElement('p', { className: 'text-slate-600 mb-8 flex-1 leading-relaxed' }, c.desc),
                         React.createElement('button', { 
                             className: `px-8 py-3 ${c.btnColor} text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all w-full transform active:scale-95`, 
-                            onClick: () => alert('功能开发中，敬请期待') 
+                            onClick: c.action
                         }, '进入')
                     ))
                 )

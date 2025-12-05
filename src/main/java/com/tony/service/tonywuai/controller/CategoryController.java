@@ -27,14 +27,23 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.tree(type));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Category> get(@PathVariable Long id) {
+        Category c = categoryService.get(id);
+        if (c == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(c);
+    }
+
     @GetMapping
     public ResponseEntity<Page<Category>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
-            @RequestParam(value = "type", required = false) Integer type
+            @RequestParam(value = "type", required = false) Integer type,
+            @RequestParam(value = "parentId", required = false) Long parentId,
+            @RequestParam(value = "maxType", required = false) Integer maxType
     ) {
-        return ResponseEntity.ok(categoryService.list(PageRequest.of(Math.max(0, page), size), search, type));
+        return ResponseEntity.ok(categoryService.list(PageRequest.of(Math.max(0, page), size), search, type, parentId, maxType));
     }
 
     @PostMapping

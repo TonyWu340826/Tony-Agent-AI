@@ -110,6 +110,7 @@ public class InterviewItemController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String type,
             org.springframework.security.core.Authentication authentication
     ) {
         var pageable = PageRequest.of(Math.max(0, page), size);
@@ -117,11 +118,6 @@ public class InterviewItemController {
         boolean allowVip;
         if (authentication != null && authentication.isAuthenticated()) {
             String username = authentication.getName();
-            userRepository.findByUsername(username).ifPresent(u -> {
-                if (u.getVipLevel() != null && u.getVipLevel() == 99) {
-                    // use outer variable via array workaround
-                }
-            });
             var opt = userRepository.findByUsername(username);
             if (opt.isPresent() && opt.get().getVipLevel() != null && opt.get().getVipLevel() == 99) {
                 allowVip = true;
@@ -133,6 +129,7 @@ public class InterviewItemController {
         }
         List<InterviewItem> filtered = all.stream()
                 .filter(i -> categoryId == null || i.getCategoryId().equals(categoryId))
+                .filter(i -> type == null || type.isBlank() || (i.getType() != null && i.getType().equals(type)))
                 .filter(i -> search == null || search.isBlank() ||
                         (i.getTitle()!=null && i.getTitle().toLowerCase().contains(search.toLowerCase())) ||
                         (i.getQuestion()!=null && i.getQuestion().toLowerCase().contains(search.toLowerCase())))
@@ -145,6 +142,9 @@ public class InterviewItemController {
             java.util.Map<String,Object> m = new java.util.LinkedHashMap<>();
             m.put("id", i.getId());
             m.put("title", i.getTitle());
+            m.put("question", i.getQuestion());
+            m.put("solution", i.getSolution());
+            m.put("type", i.getType());
             m.put("categoryId", i.getCategoryId());
             m.put("visibilityVip", i.getVisibilityVip());
             m.put("createdAt", i.getCreatedAt());

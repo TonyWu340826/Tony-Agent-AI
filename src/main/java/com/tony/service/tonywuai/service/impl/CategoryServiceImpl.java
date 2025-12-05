@@ -75,7 +75,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Category> list(Pageable pageable, String search, Integer type) {
+    public Category get(Long id) {
+        return categoryRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Category> list(Pageable pageable, String search, Integer type, Long parentId, Integer maxType) {
         List<Category> all = categoryRepository.findAll();
         List<Category> filtered = all;
         if (search != null && !search.isBlank()) {
@@ -88,6 +94,22 @@ public class CategoryServiceImpl implements CategoryService {
             filtered = filtered.stream()
                     .filter(c -> c.getType() != null && c.getType().equals(type))
                     .collect(Collectors.toList());
+        }
+        if (maxType != null) {
+            filtered = filtered.stream()
+                    .filter(c -> c.getType() != null && c.getType() <= maxType)
+                    .collect(Collectors.toList());
+        }
+        if (parentId != null) {
+            if (parentId == 0) {
+                filtered = filtered.stream()
+                        .filter(c -> c.getParentId() == null || c.getParentId() == 0)
+                        .collect(Collectors.toList());
+            } else {
+                filtered = filtered.stream()
+                        .filter(c -> c.getParentId() != null && c.getParentId().equals(parentId))
+                        .collect(Collectors.toList());
+            }
         }
 
         int total = filtered.size();

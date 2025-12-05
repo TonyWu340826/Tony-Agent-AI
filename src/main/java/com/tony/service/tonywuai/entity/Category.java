@@ -16,6 +16,12 @@ public class Category {
     @Column(nullable = false, length = 100)
     private String name;
 
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "icon")
+    private String icon;
+
     /** 父级分类ID，顶级为 null */
     @Column(name = "parent_id")
     private Long parentId;
