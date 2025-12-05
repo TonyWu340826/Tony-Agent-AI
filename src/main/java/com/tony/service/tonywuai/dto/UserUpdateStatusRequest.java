@@ -14,4 +14,6 @@ public class UserUpdateStatusRequest {
 
     @NotNull(message = "激活状态不能为空")
     private Boolean isActive; // true: 激活, false: 禁用
+
+    private String userType = "0";
 }

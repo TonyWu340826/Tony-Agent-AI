@@ -82,11 +82,11 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                         React.createElement('div',{className:'absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-64 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-[70]'},
                             [
                                 {name:'核心功能', anchor:'#features-section', icon:Sparkles},
-                                {name:'前沿咨询', anchor:'#articles-preview', icon:Newspaper},
+                                {name:'AI资讯', anchor:'#articles-preview', icon:Newspaper},
                                 {name:'技术学习', anchor:'#tech-learning', icon:BookOpen},
                                 {name:'VIP服务', anchor:'#vip-section', icon:Crown},
                                 {name:'代码开源', anchor:'#opensource', icon:GitBranch}
-                            ].map((a,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer', onClick:()=>{ const el=document.querySelector(a.anchor); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }},
+                            ].map((a,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer', onClick:()=>{ if(a.anchor==='#articles-preview'){ try{ history.pushState({ page:'articles' }, '', '/articles'); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} } else { const el=document.querySelector(a.anchor); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); } }},
                                 React.createElement(a.icon,{className:'w-5 h-5 text-slate-700'}),
                                 React.createElement('span',{className:'text-slate-900 font-medium'}, a.name)
                             ))
@@ -195,7 +195,9 @@ const Footer = () => (
                     React.createElement('h4',{className:'text-white font-semibold mb-4'}, '产品'),
                     React.createElement('ul',{className:'space-y-2 text-sm'},
                         // 内部锚点跳转不需要新页面
-                        ['文章咨询','开发平台','VIP服务','代码开源'].map((t,i)=>React.createElement('li',{key:i}, React.createElement('a',{href:`#${['articles-preview','platform','vip-section','opensource'][i]}`,className:'hover:text-white transition-colors'}, t)))
+                        ['文章咨询','开发平台','VIP服务','代码开源'].map((t,i)=>React.createElement('li',{key:i}, i===0
+                            ? React.createElement('a',{href:'#',className:'hover:text-white transition-colors', onClick:(e)=>{ e.preventDefault(); try{ history.pushState({ page:'articles' }, '', '/articles'); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} }}, t)
+                            : React.createElement('a',{href:`#${['articles-preview','platform','vip-section','opensource'][i]}`,className:'hover:text-white transition-colors'}, t)))
                     )
                 ),
                 React.createElement('div',null,
@@ -256,14 +258,133 @@ const Footer = () => (
 );
 
 const ArticleContent = ({ detail }) => {
-    const fmt = String((detail && detail.contentFormat) || '').toUpperCase();
-    let c = (detail && (detail.content ?? detail.summary ?? detail.text ?? '')) || '';
-    if (typeof c !== 'string') { try { c = JSON.stringify(c, null, 2); } catch(_) { c = String(c||''); } }
-    const looksHtml = /<[^>]+>/.test(c||'');
-    if (fmt === 'HTML' || looksHtml) {
-        return React.createElement('div',{dangerouslySetInnerHTML:{__html:c}});
+  const fmt = String((detail && detail.contentFormat) || '').toUpperCase();
+  let c = (detail && (detail.content ?? detail.summary ?? detail.text ?? '')) || '';
+  if (typeof c !== 'string') { try { c = JSON.stringify(c, null, 2); } catch(_) { c = String(c||''); } }
+  if (!c || String(c).trim().length === 0) { c = '暂无内容'; }
+  const looksHtml = /<[^>]+>/.test(c||'');
+  if (fmt === 'HTML' || looksHtml) {
+    return React.createElement('div',{className:'text-slate-800', dangerouslySetInnerHTML:{__html:c}});
+  }
+  return React.createElement('pre',{className:'whitespace-pre-wrap break-words text-slate-800'}, c);
+};
+
+const ArticlesPage = () => {
+  const { useEffect, useState, useMemo } = React;
+  const [list, setList] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(20);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [active, setActive] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [cache, setCache] = useState({});
+
+  const params = () => new URLSearchParams(String(window.location.search||''));
+  const currentId = useMemo(()=>{ const p=params(); return p.get('id')||null; }, [window.location.search]);
+  const currentSlug = useMemo(()=>{ const p=params(); return p.get('slug')||null; }, [window.location.search]);
+
+  const fetchList = async (target=0, append=false) => {
+    setLoading(true); setError('');
+    try {
+      const r = await fetch(`/api/articles?page=${target}&size=${size}`, { credentials:'same-origin' });
+      const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
+      const arr = Array.isArray(d.content) ? d.content : (Array.isArray(d) ? d : []);
+      const tp = Number.isFinite(d.totalPages) ? d.totalPages : (arr.length<size ? target+1 : target+2);
+      setList(prev => append ? [...prev, ...arr] : arr);
+      setPage(target); setHasMore((target+1)<tp && arr.length>0);
+    } catch(e){ setError('加载失败'); if(!append) setList([]); setHasMore(false); }
+    setLoading(false);
+  };
+
+  const normalize = (d) => { try{ if(d && typeof d==='object'){ if(d.data) d=d.data; else if(d.result) d=d.result; else if(d.article) d=d.article; } }catch(_){ } return d; };
+  const tryFetch = async (url) => { const r=await fetch(url,{credentials:'same-origin',cache:'no-store'}); const t=await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; } d=normalize(d); return d; };
+
+  const openByItem = async (item) => {
+    if(!item) return;
+    setActive(item);
+    const push = () => { const q = new URLSearchParams(); if(item.id) q.set('id', item.id); else if(item.slug) q.set('slug', item.slug); history.pushState({ page:'articles', id:item.id, slug:item.slug }, '', `/articles?${q.toString()}`); };
+    try{ push(); }catch(_){ try{ window.location.hash='articles'; }catch(__){} }
+    const key = item.id || item.slug || item.title;
+    const cached = key ? cache[key] : null;
+    if (cached && (cached.content || cached.summary || cached.text)) { setDetail(cached); return; }
+    let d=null;
+    try {
+      if(item.toolId){ d = await tryFetch(`/api/tools/${encodeURIComponent(item.toolId)}?t=${Date.now()}`); }
+      if(item.id && (!d || !d.content)){ d = await tryFetch(`/api/articles?id=${encodeURIComponent(item.id)}&t=${Date.now()}`); }
+      if(item.slug && (!d || !d.content)){ d = await tryFetch(`/api/articles/${encodeURIComponent(item.slug)}?t=${Date.now()}`); }
+      if(item.id && (!d || !d.content)){ d = await tryFetch(`/api/articles/admin/${encodeURIComponent(item.id)}?t=${Date.now()}`); }
+    } catch(_){ d=null; }
+    if(!d || (!d.content && !d.summary && !d.text)){
+      if(item.content){ d = { title:item.title, createdAt:item.createdAt, content:item.content, contentFormat:'HTML' }; }
+      else if(item.summary){ d = { title:item.title, createdAt:item.createdAt, content:item.summary, contentFormat:'HTML' }; }
     }
-    return React.createElement('pre',{className:'whitespace-pre-wrap break-words text-slate-800'}, c || '暂无内容');
+    const finalD = (d && (d.content || d.summary || d.text)) ? { title:d.title||item.title||'文章详情', createdAt:d.createdAt||item.createdAt, content:d.content||d.summary||d.text, contentFormat:d.contentFormat, text:d.text } : { title:item.title||'文章详情', createdAt:item.createdAt, content:'加载失败，请稍后重试' };
+    setDetail(finalD); if(key) setCache(prev=>({ ...prev, [key]: finalD }));
+  };
+
+  const openByQuery = async () => {
+    const id = currentId; const slug = currentSlug;
+    if (!id && !slug && list.length>0) { openByItem(list[0]); return; }
+    let item = null;
+    try { item = list.find(x => (id && String(x.id)===String(id)) || (slug && String(x.slug)===String(slug))); } catch(_) {}
+    if (!item) {
+      try {
+        let d=null;
+        if(id){ d = await tryFetch(`/api/articles/admin/${encodeURIComponent(id)}?t=${Date.now()}`); }
+        if(!d && slug){ d = await tryFetch(`/api/articles/${encodeURIComponent(slug)}?t=${Date.now()}`); }
+        if(d) item = d;
+      } catch(_){ }
+    }
+    if(item) openByItem(item);
+  };
+
+  useEffect(()=>{ fetchList(0,false); },[]);
+  useEffect(()=>{ if(list.length>0) openByQuery(); },[list]);
+  useEffect(()=>{ const onPop = () => { openByQuery(); }; window.addEventListener('popstate', onPop); return ()=>window.removeEventListener('popstate', onPop); }, []);
+
+  const idx = useMemo(()=>{ try{ return list.findIndex(x => active && (x.id===active.id || x.slug===active.slug)); }catch(_){ return -1; } }, [list, active]);
+  const goPrev = () => { if(idx>0) openByItem(list[idx-1]); };
+  const goNext = () => { if(idx>=0 && idx<list.length-1) openByItem(list[idx+1]); };
+
+  return (
+    React.createElement('section',{className:'min-h-[60vh] py-6 px-3 md:px-6'},
+      React.createElement('div',{className:'max-w-7xl mx-auto grid grid-cols-12 gap-6'},
+        React.createElement('aside',{className:'col-span-12 md:col-span-3'},
+          React.createElement('div',{className:'bg-white border rounded-xl shadow overflow-hidden h-[70vh] md:h-[80vh] flex flex-col'},
+            React.createElement('div',{className:'px-4 py-3 border-b text-blue-700 font-bold'}, '文章列表'),
+            React.createElement('div',{className:'flex-1 overflow-auto'},
+              loading ? React.createElement('div',{className:'p-3 text-slate-500'}, '加载中...')
+              : (list||[]).map(a => React.createElement('div',{key:a.id, className:'px-4 py-2 border-b hover:bg-blue-50 cursor-pointer text-sm flex items-center gap-2', onClick:()=>openByItem(a)},
+                  React.createElement('span',{className:'truncate flex-1'}, a.title),
+                  React.createElement('span',{className:'text-slate-400 text-xs'}, a.authorName||'')
+                ))
+            ),
+            React.createElement('div',{className:'flex items-center justify-between px-4 py-2 border-t'},
+              React.createElement('button',{className:'px-3 py-1 bg-slate-100 rounded text-slate-700 hover:bg-slate-200 disabled:opacity-50', disabled:page===0, onClick:()=>fetchList(Math.max(0,page-1), false)}, '上一页'),
+              React.createElement('button',{className:'px-3 py-1 bg-slate-100 rounded text-slate-700 hover:bg-slate-200 disabled:opacity-50', disabled:!hasMore, onClick:()=>fetchList(page+1, false)}, '下一页')
+            )
+          )
+        ),
+        React.createElement('main',{className:'col-span-12 md:col-span-9'},
+          React.createElement('div',{className:'bg-white border rounded-xl shadow overflow-hidden min-h-[70vh] md:min-h-[80vh]'},
+            React.createElement('div',{className:'px-6 py-4 border-b flex items-center justify-between'},
+              React.createElement('h2',{className:'text-2xl font-extrabold text-slate-900 truncate'}, (detail && detail.title) || (active && active.title) || '文章详情'),
+              React.createElement('div',{className:'flex items-center gap-2'},
+                React.createElement('button',{className:'px-3 py-1 bg-slate-100 text-slate-700 rounded hover:bg-slate-200', onClick:()=>{ try{ const prev = document.referrer||''; if(prev.includes('/home.html')) { history.back(); } else { window.location.assign('/home.html#articles-preview'); } } catch(_){ window.location.assign('/home.html#articles-preview'); } }}, '返回'),
+                React.createElement('button',{className:'px-3 py-1 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 disabled:opacity-50', disabled:idx<=0, onClick:goPrev}, '上一篇'),
+                React.createElement('button',{className:'px-3 py-1 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 disabled:opacity-50', disabled:idx<0 || idx>=list.length-1, onClick:goNext}, '下一篇')
+              )
+            ),
+            error && React.createElement('div',{className:'px-6 py-2 text-red-600 text-sm'}, error),
+            React.createElement('div',{className:'px-6 py-3 text-slate-500 text-sm'}, (detail && detail.createdAt) ? new Date(detail.createdAt).toLocaleString() : ''),
+            React.createElement('div',{className:'px-6 py-6'}, detail ? React.createElement(ArticleContent,{detail}) : React.createElement('div',{className:'text-slate-500'}, '请选择左侧文章'))
+          )
+        )
+      )
+    )
+  );
 };
 
 // =============================================================================
@@ -366,6 +487,8 @@ const UserHome = () => {
     const [articlesHasMore, setArticlesHasMore] = useState(true);
     const [articleDetail, setArticleDetail] = useState(null);
     const [showArticle, setShowArticle] = useState(false);
+    const [activeArticleId, setActiveArticleId] = useState(null);
+    const [detailCache, setDetailCache] = useState({});
     const [currentUser, setCurrentUser] = useState(null);
     const [showAuth, setShowAuth] = useState(false);
     const [authMode, setAuthMode] = useState('login');
@@ -390,10 +513,20 @@ const UserHome = () => {
             const applyRoute = () => {
                 const h = (window.location.hash || '').replace(/^#/, '');
                 const p = String(window.location.pathname||'');
-                if (h === 'tools') {
+                if (h === 'articles' || (!h && p.startsWith('/articles'))) {
+                    setActivePage('articles');
+                    setShowModule(null);
+                } else if (p.endsWith('/home.html') || (!h && (p==='/' || p.endsWith('/home.html')))) {
+                    setActivePage(null);
+                    setShowModule(null);
+                } else if (h === 'articles-preview') {
+                    setActivePage(null);
+                    setShowModule(null);
+                    try { const el = document.getElementById('articles-preview'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(_){}
+                } else if (h === 'tools') {
                     setActivePage('tools');
                     setShowModule(null);
-                    try { const el = document.getElementById('tools-page'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(_){}
+                    try { const el = document.getElementById('tools-page'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(_){ }
                     // 确保工具合集组件脚本已加载
                     try {
                         const loaded = !!(window.Components && window.Components.UserToolsExplorer);
@@ -544,8 +677,20 @@ const UserHome = () => {
     };
 
     const openArticle = async (item) => {
+        if (activeArticleId && item && item.id === activeArticleId && showArticle) {
+            setShowArticle(false);
+            setActiveArticleId(null);
+            return;
+        }
+        setActiveArticleId(item?.toolId ?? item?.id ?? null);
         setArticleDetail({ title: item?.title || '文章详情', content: '内容加载中...' });
         setShowArticle(true);
+        const key = item?.toolId ?? item?.id ?? item?.slug ?? item?.title;
+        const cached = key ? detailCache[key] : null;
+        if (cached && (cached.content || cached.summary)) {
+            setArticleDetail({ title: cached.title || item?.title || '文章详情', createdAt: cached.createdAt || item?.createdAt, content: cached.content || cached.summary, contentFormat: cached.contentFormat });
+            return;
+        }
         let detail = null;
         const normalize = (d) => {
             try {
@@ -558,13 +703,24 @@ const UserHome = () => {
             return d;
         };
         const tryFetch = async (url) => {
+            try { console.log('GET', url); } catch(_){ }
             const r = await fetch(url, { credentials:'same-origin', cache:'no-store' });
             const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
-            return normalize(d);
+            d = normalize(d);
+            try {
+                if (d && Array.isArray(d.content)) {
+                    const found = d.content.find(x => x && (x.id===item.id || x.slug===item.slug));
+                    if (found) d = found;
+                }
+            } catch(_){}
+            return d;
         };
         try {
-            if(item && item.slug){ detail = await tryFetch(`/api/articles/${encodeURIComponent(item.slug)}?t=${Date.now()}`); }
-            if(!detail || !detail.content){ detail = await tryFetch(`/api/articles/admin/${item.id}?t=${Date.now()}`); }
+            if(item && item.toolId){ detail = await tryFetch(`/api/tools/${encodeURIComponent(item.toolId)}?t=${Date.now()}`); }
+            if(item && item.id && (!detail || !detail.content)){ detail = await tryFetch(`/api/articles?id=${encodeURIComponent(item.id)}&t=${Date.now()}`); }
+            if(item && item.slug && (!detail || !detail.content)){ detail = await tryFetch(`/api/articles/${encodeURIComponent(item.slug)}?t=${Date.now()}`); }
+            if(item && item.id && (!detail || !detail.content)){ detail = await tryFetch(`/api/articles/admin/${encodeURIComponent(item.id)}?t=${Date.now()}`); }
+        
             if(!detail || (!detail.content && !detail.summary)){
                 if(item && item.content && String(item.content).trim().length>0){
                     detail = { title:item.title, createdAt:item.createdAt, content:item.content };
@@ -578,11 +734,12 @@ const UserHome = () => {
                 }
             }
         } catch(_) { detail = { title:item?.title||'加载失败', content:'' }; }
-        setArticleDetail(detail && (detail.content || detail.summary)
-            ? { title: detail.title||item?.title||'文章详情', createdAt: detail.createdAt||item?.createdAt, content: detail.content||detail.summary, contentFormat: detail.contentFormat }
-            : { title: item?.title||'文章详情', createdAt: item?.createdAt, content: item?.summary||'暂无内容' }
-    );
-};
+        const finalDetail = (detail && (detail.content || detail.summary || detail.text))
+            ? { title: detail.title||item?.title||'文章详情', createdAt: detail.createdAt||item?.createdAt, content: detail.content||detail.summary||detail.text, contentFormat: detail.contentFormat, text: detail.text }
+            : { title: item?.title||'文章详情', createdAt: item?.createdAt, content: item?.summary||'加载失败，请稍后重试' };
+        setArticleDetail(finalDetail);
+        if (key) setDetailCache(prev => ({ ...prev, [key]: finalDetail }));
+    };
 
     const submitVipMessage = async () => {
         if(!currentUser || Number(currentUser.vipLevel)!==99){ setMsgTip('仅VIP99可留言'); return; }
@@ -636,11 +793,12 @@ const UserHome = () => {
                     }).catch(()=>{});
                 } catch(_) {}
             } }),
-            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement(HeroSection,{ onOpenRegister: ()=>openAuth('register'), onOpenLogin: ()=>openAuth('login') }),
+            (activePage==='articles') && React.createElement(ArticlesPage,null),
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement(HeroSection,{ onOpenRegister: ()=>openAuth('register'), onOpenLogin: ()=>openAuth('login') }),
 
             // 核心功能区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'features-section', className:'py-24 px-6 max-w-7xl mx-auto'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'features-section', className:'py-24 px-6 max-w-7xl mx-auto'}, 
                 // 🎯 优化 2: 增加留白 mb-16
                 React.createElement('div',{className:'text-center mb-16'}, 
                     React.createElement('h2',{className:'text-4xl tracking-tight text-slate-900 mb-4 font-extrabold'}, '核心功能与服务'), 
@@ -708,14 +866,14 @@ const UserHome = () => {
 
             // 文章预览区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'articles-preview', className:'py-24 px-6 bg-slate-50'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'articles-preview', className:'py-24 px-6 bg-slate-50'}, 
                 React.createElement('div',{className:'max-w-7xl mx-auto'},
                     // 🎯 优化 2: 增加留白 gap-12
                     React.createElement('div',{className:'grid lg:grid-cols-2 gap-12 items-center'}, 
                         React.createElement('div',null,
                             // 🎯 优化 2: 增加留白 mb-4
                             React.createElement('div',{className:'inline-flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full text-blue-700 mb-4'}, 
-                                React.createElement(Newspaper,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm'}, '前沿咨询')
+                                React.createElement(Newspaper,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm'}, 'AI资讯')
                             ),
                             // 🎯 优化 2: 增加留白 mb-4
                             React.createElement('h3',{className:'text-4xl text-slate-900 mb-4 font-extrabold'}, '获取前沿AI资讯与技术干货'),
@@ -727,11 +885,13 @@ const UserHome = () => {
                                 articlesLoading ? (
                                     Array.from({length:3}).map((_, i) => React.createElement('div',{key:i, className:'h-5 bg-slate-200 rounded animate-pulse w-full'})) 
                                 ) : (
-                                    (articles||[]).map(a => React.createElement('div',{key:a.id, className:'block group hover:bg-white p-3 rounded-lg transition-colors border-b border-slate-100 last:border-b-0 cursor-pointer', onClick:()=>openArticle(a)},
+                                    (articles||[]).map(a => React.createElement('div',{key:a.id, className:'block group hover:bg-white p-3 rounded-lg transition-colors border-b border-slate-100 last:border-b-0 cursor-pointer', onClick:()=>{ try{ const q=new URLSearchParams(); if(a.id) q.set('id', a.id); else if(a.slug) q.set('slug', a.slug); history.pushState({ page:'articles', id:a.id, slug:a.slug }, '', `/articles?${q.toString()}`); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } setActivePage('articles'); }},
                                         React.createElement('div',{className:'flex items-center gap-3'},
                                             React.createElement('div',{className:'w-2 h-2 bg-blue-600 rounded-full flex-shrink-0'}),
                                             React.createElement('span',{className:'text-slate-800 font-medium truncate group-hover:text-blue-600 transition-colors text-base'}, a.title),
-                                            React.createElement(ArrowRight,{className:'w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0'})
+                                            React.createElement('button',{className:'ml-auto p-1 rounded hover:bg-slate-100 text-slate-600 flex-shrink-0', onClick:(e)=>{ e.stopPropagation(); try{ const q=new URLSearchParams(); if(a.id) q.set('id', a.id); else if(a.slug) q.set('slug', a.slug); history.pushState({ page:'articles', id:a.id, slug:a.slug }, '', `/articles?${q.toString()}`); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } setActivePage('articles'); }, 'aria-label':'查看文章详情'},
+                                                React.createElement(ArrowRight,{className:'w-5 h-5'})
+                                            )
                                         )
                                     ))
                                 )
@@ -753,7 +913,7 @@ const UserHome = () => {
 
             // 技术学习区
             // 轻量模块，提供学习资料入口
-            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'tech-learning', className:'py-24 px-6 max-w-7xl mx-auto bg-white'},
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'tech-learning', className:'py-24 px-6 max-w-7xl mx-auto bg-white'},
                 React.createElement('div',{className:'text-center mb-12'},
                     React.createElement('h2',{className:'text-4xl tracking-tight text-slate-900 mb-4 font-extrabold'}, '技术学习'),
                     React.createElement('p',{className:'text-lg text-slate-600'}, '精选学习资料与教程，快速上手与进阶')
@@ -766,13 +926,13 @@ const UserHome = () => {
                     ].map((c,i)=>React.createElement('div',{key:i,className:'bg-white rounded-2xl p-6 shadow-xl border hover:shadow-2xl transition'},
                         React.createElement('h3',{className:'text-xl font-semibold text-slate-900'}, c.title),
                         React.createElement('p',{className:'text-slate-600 text-sm mt-2 mb-4'}, c.desc),
-                        React.createElement('button',{className:'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700', onClick:()=>{ if(c.href.startsWith('http')) window.open(c.href,'_blank'); else { const el=document.querySelector(c.href); if(el) el.scrollIntoView({behavior:'smooth'}); } }}, '进入')
+                        React.createElement('button',{className:'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700', onClick:()=>{ if(c.href.startsWith('http')) { window.open(c.href,'_blank'); } else if (c.href==='#articles-preview') { try{ history.pushState({ page:'articles' }, '', '/articles'); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} } else { const el=document.querySelector(c.href); if(el) el.scrollIntoView({behavior:'smooth'}); } }}, '进入')
                     ))
                 )
             ),
 
             // Platform (iframe modal) - 逻辑保持，但点击功能卡片时在新窗口打开，所以 modal 不会显示
-            (activePage!=='tools' && activePage!=='prompt-engineering' && showIframe) && React.createElement('div',{className:'fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-4', onClick:()=>setShowIframe(false)},
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && showIframe) && React.createElement('div',{className:'fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-4', onClick:()=>setShowIframe(false)},
                 React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] overflow-hidden', onClick:(e)=>e.stopPropagation()},
                     React.createElement('div',{className:'flex items-center justify-between p-3 border-b border-slate-100'},
                         React.createElement('div',{className:'inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 rounded-full text-indigo-700'}, React.createElement(Terminal,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm font-semibold'}, '开发平台')),
@@ -784,7 +944,7 @@ const UserHome = () => {
 
             // VIP服务留言区
             // 🎯 优化 2: 增加留白 my-24
-            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'vip-section', className:'bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 md:p-16 my-24 max-w-7xl mx-auto shadow-xl border border-amber-200'},
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'vip-section', className:'bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 md:p-16 my-24 max-w-7xl mx-auto shadow-xl border border-amber-200'},
                 React.createElement('div',{className:'max-w-4xl mx-auto text-center'},
                     // 🎯 优化 2: 增加留白 mb-6
                     React.createElement('div',{className:'inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full text-amber-700 font-semibold mb-6 shadow-md'}, React.createElement(Star,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm'}, 'VIP专属服务')),
@@ -818,7 +978,7 @@ const UserHome = () => {
 
             // 开源区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools' && activePage!=='prompt-engineering') && React.createElement('section',{id:'opensource', className:'py-24 px-6 max-w-7xl mx-auto bg-white'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'opensource', className:'py-24 px-6 max-w-7xl mx-auto bg-white'}, 
                 // 🎯 优化 2: 增加留白 gap-12
                 React.createElement('div',{className:'grid lg:grid-cols-2 gap-12 items-center'},
                     React.createElement('div',{className:'order-2 lg:order-1'},
@@ -875,15 +1035,15 @@ const UserHome = () => {
                 )
                 ),
 
-            showArticle && React.createElement('div',{className:'fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4', onClick:()=>setShowArticle(false)},
-                React.createElement('div',{className:'bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden', onClick:(e)=>e.stopPropagation()},
-                        React.createElement('div',{className:'p-6 space-y-4 max-h-[70vh] overflow-auto'},
-                            React.createElement('h3',{className:'text-xl font-semibold text-slate-900'}, (articleDetail&&articleDetail.title)||'文章详情'),
-                            React.createElement('div',{className:'text-sm text-slate-500'}, (articleDetail&&articleDetail.createdAt) ? new Date(articleDetail.createdAt).toLocaleString() : ''),
-                            React.createElement(ArticleContent,{detail:articleDetail})
+            React.createElement('div',{className:'fixed bottom-0 left-0 right-0 z-[1000] pointer-events-none'},
+                React.createElement('div',{className:`mx-auto max-w-7xl px-4 transition-all duration-300 transform ${showArticle?'translate-y-0 opacity-100 pointer-events-auto':'translate-y-full opacity-0'}`, style:{ transform: showArticle ? 'translateY(0)' : 'translateY(100%)', opacity: showArticle ? 1 : 0, transition: 'transform .3s ease, opacity .3s ease' }},
+                    React.createElement('div',{className:'bg-white rounded-t-2xl shadow-2xl border border-slate-200 overflow-hidden'},
+                        React.createElement('div',{className:'flex items-center justify-between px-6 pt-4'},
+                            React.createElement('h3',{className:'text-lg font-semibold text-slate-900 truncate'}, (articleDetail&&articleDetail.title)||'文章详情'),
+                            React.createElement('button',{className:'px-2 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200', onClick:()=>{ setShowArticle(false); setActiveArticleId(null); }, 'aria-label':'关闭详情'}, '×')
                         ),
-                    React.createElement('div',{className:'px-6 pb-6'},
-                        React.createElement('button',{className:'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700', onClick:()=>setShowArticle(false)}, '关闭')
+                        React.createElement('div',{className:'px-6 pb-6 text-sm text-slate-500'}, (articleDetail&&articleDetail.createdAt) ? new Date(articleDetail.createdAt).toLocaleString() : ''),
+                        React.createElement('div',{className:'px-6 pb-6 max-h-[40vh] md:max-h-[50vh] overflow-auto'}, React.createElement(ArticleContent,{detail:articleDetail}))
                     )
                 )
             ),

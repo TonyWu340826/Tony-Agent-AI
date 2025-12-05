@@ -26,6 +26,8 @@ public class UserDTO {
     private BigDecimal balance;
     private Boolean isActive;
     private LocalDateTime registrationDate;
+    private String userType = "0";
+
 
     public static UserDTO fromEntity(User user) {
         return new UserDTO(
@@ -36,7 +38,8 @@ public class UserDTO {
                 user.getVipLevel(),
                 user.getBalance(),
                 user.getIsActive(),
-                user.getRegistrationDate()
+                user.getRegistrationDate(),
+                user.getUserType()
         );
     }
 }

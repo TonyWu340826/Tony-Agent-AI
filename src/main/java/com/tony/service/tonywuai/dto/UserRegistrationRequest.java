@@ -20,4 +20,6 @@ public class UserRegistrationRequest {
 
     @Size(max = 50, message = "昵称长度不能超过50个字符")
     private String nickname;
+
+    private String userType = "0";
 }

@@ -40,13 +40,40 @@ public class ArticleController {
      * @param size 每页大小 (默认 10)
      * @return 文章分页列表
      */
-    @GetMapping
+    @GetMapping(params = {"page", "size"})
     public ResponseEntity<Page<ArticleDTO>> getPublishedArticles(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Page<ArticleDTO> articles = articleService.getPublishedArticles(page, size);
         return ResponseEntity.ok(articles);
+    }
+
+
+
+    /**
+     * 根据文章ID查文章详情
+     * @param id
+     * @return
+     */
+    @GetMapping(params = "id")
+    public ResponseEntity<?> getPublishedArticlesById(@RequestParam Long id) {
+        Optional<Article> optional = articleRepository.findById(id);
+        if (optional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "文章未找到: " + id));
+        }
+        Article article = optional.get();
+        return ResponseEntity.ok(toDTO(article));
+    }
+
+    @GetMapping("/{id:\\d+}")
+    public ResponseEntity<?> getArticleDetailByIdPath(@PathVariable Long id) {
+        Optional<Article> optional = articleRepository.findById(id);
+        if (optional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "文章未找到: " + id));
+        }
+        Article article = optional.get();
+        return ResponseEntity.ok(toDTO(article));
     }
 
     /**

@@ -20,4 +20,6 @@ public class UserLoginRequest {
      */
     @NotBlank(message = "密码不能为空")
     private String password;
+
+    private String userType = "0";
 }

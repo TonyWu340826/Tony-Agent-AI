@@ -47,6 +47,14 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    /** 用户类型(0:PC用户,1:后管用户,3:超级用户) */
+    @Column(name = "user_type")
+    private String userType = "0";
+
+    /** dify信息，是一个json结构 */
+    @Column(name = "dify_desc")
+    private String difyDesc = "0";
+
     /** 注册时间 */
     @Column(name = "registration_date", nullable = false, updatable = false)
     private LocalDateTime registrationDate = LocalDateTime.now();
