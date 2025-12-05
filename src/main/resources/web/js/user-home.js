@@ -86,7 +86,11 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                                 {name:'技术学习', anchor:'#tech-learning', icon:BookOpen},
                                 {name:'VIP服务', anchor:'#vip-section', icon:Crown},
                                 {name:'代码开源', anchor:'#opensource', icon:GitBranch}
-                            ].map((a,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer', onClick:()=>{ if(a.anchor==='#articles-preview'){ try{ history.pushState({ page:'articles' }, '', '/articles'); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} } else { const el=document.querySelector(a.anchor); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); } }},
+                            ].map((a,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer', onClick:()=>{ 
+                                if(a.anchor==='#articles-preview'){ try{ history.pushState({ page:'articles' }, '', '/articles'); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} } 
+                                else if(a.anchor==='#tech-learning'){ try{ history.pushState({ page:'tech-learning' }, '', '/tech-learning'); }catch(_){ try{ window.location.hash='tech-learning'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} }
+                                else { const el=document.querySelector(a.anchor); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); } 
+                            }},
                                 React.createElement(a.icon,{className:'w-5 h-5 text-slate-700'}),
                                 React.createElement('span',{className:'text-slate-900 font-medium'}, a.name)
                             ))
@@ -387,6 +391,8 @@ const ArticlesPage = () => {
   );
 };
 
+
+
 // =============================================================================
 // 3. 智能客服组件（浮动按钮 + 弹窗）
 // =============================================================================
@@ -503,6 +509,7 @@ const UserHome = () => {
     const [showModule, setShowModule] = useState(null);
     const [toolsReady, setToolsReady] = useState(!!(window.Components && window.Components.UserToolsExplorer));
     const [promptReady, setPromptReady] = useState(!!(window.Components && window.Components.PromptEngineeringPage));
+    const [techLearningReady, setTechLearningReady] = useState(!!(window.Components && window.Components.TechLearningPage));
     const [activePage, setActivePage] = useState(null);
     const [agentList, setAgentList] = useState([]);
     const [agentLoading, setAgentLoading] = useState(false);
@@ -516,6 +523,21 @@ const UserHome = () => {
                 if (h === 'articles' || (!h && p.startsWith('/articles'))) {
                     setActivePage('articles');
                     setShowModule(null);
+                } else if (h === 'tech-learning' || (!h && (p.startsWith('/tech-learning') || p.startsWith('/learn')))) {
+                    setActivePage('tech-learning');
+                    setShowModule(null);
+                    try {
+                        const loaded = !!(window.Components && window.Components.TechLearningPage);
+                        if (!loaded) {
+                            const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+                            loadScriptOnce('/js/home/tech-learning.js').then(()=>{
+                                setTechLearningReady(!!(window.Components && window.Components.TechLearningPage));
+                                try { window.dispatchEvent(new Event('modules:loaded')); } catch(e) { }
+                            }).catch(()=>{ });
+                        } else {
+                            setTechLearningReady(true);
+                        }
+                    } catch(_){ }
                 } else if (p.endsWith('/home.html') || (!h && (p==='/' || p.endsWith('/home.html')))) {
                     setActivePage(null);
                     setShowModule(null);
@@ -794,11 +816,12 @@ const UserHome = () => {
                 } catch(_) {}
             } }),
             (activePage==='articles') && React.createElement(ArticlesPage,null),
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement(HeroSection,{ onOpenRegister: ()=>openAuth('register'), onOpenLogin: ()=>openAuth('login') }),
+            (activePage==='tech-learning') && ((window.Components && window.Components.TechLearningPage) ? React.createElement(window.Components.TechLearningPage,null) : React.createElement('div',null, techLearningReady ? '组件加载中...' : '正在加载组件脚本...')),
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement(HeroSection,{ onOpenRegister: ()=>openAuth('register'), onOpenLogin: ()=>openAuth('login') }),
 
             // 核心功能区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'features-section', className:'py-24 px-6 max-w-7xl mx-auto'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement('section',{id:'features-section', className:'py-24 px-6 max-w-7xl mx-auto'}, 
                 // 🎯 优化 2: 增加留白 mb-16
                 React.createElement('div',{className:'text-center mb-16'}, 
                     React.createElement('h2',{className:'text-4xl tracking-tight text-slate-900 mb-4 font-extrabold'}, '核心功能与服务'), 
@@ -866,7 +889,7 @@ const UserHome = () => {
 
             // 文章预览区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'articles-preview', className:'py-24 px-6 bg-slate-50'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement('section',{id:'articles-preview', className:'py-24 px-6 bg-slate-50'}, 
                 React.createElement('div',{className:'max-w-7xl mx-auto'},
                     // 🎯 优化 2: 增加留白 gap-12
                     React.createElement('div',{className:'grid lg:grid-cols-2 gap-12 items-center'}, 
@@ -911,28 +934,10 @@ const UserHome = () => {
                 )
             ),
 
-            // 技术学习区
-            // 轻量模块，提供学习资料入口
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'tech-learning', className:'py-24 px-6 max-w-7xl mx-auto bg-white'},
-                React.createElement('div',{className:'text-center mb-12'},
-                    React.createElement('h2',{className:'text-4xl tracking-tight text-slate-900 mb-4 font-extrabold'}, '技术学习'),
-                    React.createElement('p',{className:'text-lg text-slate-600'}, '精选学习资料与教程，快速上手与进阶')
-                ),
-                React.createElement('div',{className:'grid md:grid-cols-3 gap-8'},
-                    [
-                        {title:'文档中心',desc:'平台使用指南与API参考',href:'https://agijuejin.feishu.cn/wiki/UvJPwhfkiitMzhkhEfycUnS9nAm'},
-                        {title:'示例项目',desc:'快速学习与二次开发',href:'https://github.com/TonyWu340826/Tony-Agent-AI'},
-                        {title:'社区文章',desc:'前沿实践与最佳实践',href:'#articles-preview'}
-                    ].map((c,i)=>React.createElement('div',{key:i,className:'bg-white rounded-2xl p-6 shadow-xl border hover:shadow-2xl transition'},
-                        React.createElement('h3',{className:'text-xl font-semibold text-slate-900'}, c.title),
-                        React.createElement('p',{className:'text-slate-600 text-sm mt-2 mb-4'}, c.desc),
-                        React.createElement('button',{className:'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700', onClick:()=>{ if(c.href.startsWith('http')) { window.open(c.href,'_blank'); } else if (c.href==='#articles-preview') { try{ history.pushState({ page:'articles' }, '', '/articles'); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} } else { const el=document.querySelector(c.href); if(el) el.scrollIntoView({behavior:'smooth'}); } }}, '进入')
-                    ))
-                )
-            ),
+
 
             // Platform (iframe modal) - 逻辑保持，但点击功能卡片时在新窗口打开，所以 modal 不会显示
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && showIframe) && React.createElement('div',{className:'fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-4', onClick:()=>setShowIframe(false)},
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning' && showIframe) && React.createElement('div',{className:'fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-4', onClick:()=>setShowIframe(false)},
                 React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] overflow-hidden', onClick:(e)=>e.stopPropagation()},
                     React.createElement('div',{className:'flex items-center justify-between p-3 border-b border-slate-100'},
                         React.createElement('div',{className:'inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 rounded-full text-indigo-700'}, React.createElement(Terminal,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm font-semibold'}, '开发平台')),
@@ -944,7 +949,7 @@ const UserHome = () => {
 
             // VIP服务留言区
             // 🎯 优化 2: 增加留白 my-24
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'vip-section', className:'bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 md:p-16 my-24 max-w-7xl mx-auto shadow-xl border border-amber-200'},
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement('section',{id:'vip-section', className:'bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 md:p-16 my-24 max-w-7xl mx-auto shadow-xl border border-amber-200'},
                 React.createElement('div',{className:'max-w-4xl mx-auto text-center'},
                     // 🎯 优化 2: 增加留白 mb-6
                     React.createElement('div',{className:'inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full text-amber-700 font-semibold mb-6 shadow-md'}, React.createElement(Star,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm'}, 'VIP专属服务')),
@@ -978,7 +983,7 @@ const UserHome = () => {
 
             // 开源区
             // 🎯 优化 2: 增加留白 py-24
-            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles') && React.createElement('section',{id:'opensource', className:'py-24 px-6 max-w-7xl mx-auto bg-white'}, 
+            (activePage!=='tools' && activePage!=='prompt-engineering' && activePage!=='articles' && activePage!=='tech-learning') && React.createElement('section',{id:'opensource', className:'py-24 px-6 max-w-7xl mx-auto bg-white'}, 
                 // 🎯 优化 2: 增加留白 gap-12
                 React.createElement('div',{className:'grid lg:grid-cols-2 gap-12 items-center'},
                     React.createElement('div',{className:'order-2 lg:order-1'},
