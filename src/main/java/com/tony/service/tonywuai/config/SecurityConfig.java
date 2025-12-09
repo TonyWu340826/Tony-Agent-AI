@@ -45,8 +45,23 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/articles").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/articles/**").permitAll()
 
-                        // 允许匿名访问静态资源
-                        .requestMatchers("/", "/index.html", "/home.html", "/assets/**", "/favicon.ico", "/js/**", "/image/**", "/web/**", "/tools/**", "/css/**", "/api/interview/items**", "/api/articles**", "/api/exams/**").permitAll()
+                        // 允许匿名访问静态资源和页面
+                        .requestMatchers("/", "/home.html", "/index.html").permitAll()  // 根路径、用户主页、后台管理页面
+                        .requestMatchers("/assets/**", "/favicon.ico", "/js/**", "/image/**", "/web/**", "/tools/**", "/css/**").permitAll()
+                        
+                        // 后台管理API需要认证（通过API来保护后台功能）
+                        .requestMatchers("/api/admin/**", "/api/interview/admin/**", "/api/*/admin/**").authenticated()
+                        
+                        // 允许匿名访问所有非 API 前端路由（SPA刷新支持）
+                        .requestMatchers(
+                            request -> {
+                                String path = request.getRequestURI();
+                                // 排除 API 接口
+                                return !path.startsWith("/api/") &&
+                                       !path.startsWith("/swagger-ui") &&
+                                       !path.startsWith("/v3/api-docs");
+                            }
+                        ).permitAll()
 
                         // 允许匿名访问 AI 工具激活列表（用户端）
                         .requestMatchers(HttpMethod.GET, "/api/tools/active").permitAll()
@@ -55,6 +70,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
 
+                        // 允许匿名访问面试题目接口
+                        .requestMatchers(HttpMethod.GET, "/api/interview/items").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/interview/items/**").permitAll()
+
+                        // 允许匿名访问开放接口
                         .requestMatchers(HttpMethod.GET, "/api/open/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/open/**").permitAll()
 
@@ -63,13 +83,20 @@ public class SecurityConfig {
                         .requestMatchers("/api/visit/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/captcha/**").permitAll()
 
-                        // 其他请求需要认证
+                        // 考试接口公开
+                        .requestMatchers(HttpMethod.GET, "/api/exams/**").permitAll()
+
+                        // Swagger / OpenAPI 文档免登录访问
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
+                        // 其他请求需要认证（仅 /api/admin/** 等后台接口）
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new CaptchaValidationFilter(), UsernamePasswordAuthenticationFilter.class)
                 // 配置表单登录
                 .formLogin(form -> form
-                        .loginProcessingUrl("/api/auth/login")
+                        .loginPage("/index.html")  // 登录页面路径
+                        .loginProcessingUrl("/api/auth/login")  // 登录处理URL
                         .successHandler((request, response, authentication) -> {
                             response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"success\": true, \"message\": \"登录成功\"}");

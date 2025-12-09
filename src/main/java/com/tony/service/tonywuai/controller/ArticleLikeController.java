@@ -4,6 +4,9 @@ import com.tony.service.tonywuai.service.UserService;
 import com.tony.service.tonywuai.repository.ArticleRepository;
 import com.tony.service.tonywuai.repository.ArticleLikeRepository;
 import com.tony.service.tonywuai.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/likes")
 @RequiredArgsConstructor
+@Tag(name = "文章点赞", description = "文章点赞相关接口，包括点赞计数、状态查询、切换点赞等")
 public class ArticleLikeController {
 
     private final ArticleLikeService articleLikeService;
@@ -44,7 +48,9 @@ public class ArticleLikeController {
      * @return 点赞总数
      */
     @GetMapping("/article/{articleId}/count")
-    public ResponseEntity<Map<String, Long>> getLikeCount(@PathVariable Long articleId) {
+    @Operation(summary = "获取点赞数", description = "获取指定文章的点赞总数")
+    public ResponseEntity<Map<String, Long>> getLikeCount(
+            @Parameter(description = "文章ID", required = true) @PathVariable Long articleId) {
         long count = articleLikeService.getLikeCount(articleId);
         return ResponseEntity.ok(Map.of("articleId", articleId, "likeCount", count));
     }
@@ -56,10 +62,11 @@ public class ArticleLikeController {
      * 路径: GET /api/likes/admin/articles
      */
     @GetMapping("/admin/articles")
+    @Operation(summary = "管理员点赞统计", description = "管理员分页获取文章点赞统计信息")
     public ResponseEntity<?> adminListArticles(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String search
+            @Parameter(description = "页码 (0开始)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String search
     ) {
         var pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), size);
         var all = articleRepository.findAll();
@@ -86,7 +93,9 @@ public class ArticleLikeController {
      * 路径: GET /api/likes/admin/article/{articleId}/users
      */
     @GetMapping("/admin/article/{articleId}/users")
-    public ResponseEntity<?> adminArticleLikeUsers(@PathVariable Long articleId) {
+    @Operation(summary = "管理员点赞详情", description = "管理员获取指定文章的点赞用户列表")
+    public ResponseEntity<?> adminArticleLikeUsers(
+            @Parameter(description = "文章ID", required = true) @PathVariable Long articleId) {
         var likes = articleLikeRepository.findAllByArticleIdOrderByCreatedAtDesc(articleId);
         var list = likes.stream().map(l -> {
             var map = new java.util.LinkedHashMap<String,Object>();
@@ -109,9 +118,10 @@ public class ArticleLikeController {
      * @return 是否已点赞
      */
     @GetMapping("/article/{articleId}/status")
+    @Operation(summary = "检查点赞状态", description = "检查当前登录用户是否已点赞指定文章")
     public ResponseEntity<Map<String, Object>> getLikeStatus(
-            @PathVariable Long articleId,
-            @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(description = "文章ID", required = true) @PathVariable Long articleId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
 
         boolean isLiked = false;
         if (principal != null) {
@@ -136,9 +146,10 @@ public class ArticleLikeController {
      * @return 切换后的状态和最新的点赞数
      */
     @PostMapping("/article/{articleId}/toggle")
+    @Operation(summary = "切换点赞状态", description = "登录用户切换文章的点赞状态（点赞/取消）")
     public ResponseEntity<?> toggleLike(
-            @PathVariable Long articleId,
-            @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(description = "文章ID", required = true) @PathVariable Long articleId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
 
         try {
             Long userId = getUserId(principal);

@@ -7,6 +7,9 @@ import com.tony.service.tonywuai.repository.CategoryRepository;
 import com.tony.service.tonywuai.repository.UserRepository;
 import com.tony.service.tonywuai.entity.User;
 import com.tony.service.tonywuai.repository.InterviewItemRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/interview")
 @RequiredArgsConstructor
+@Tag(name = "面试题目管理", description = "面试题目的增删改查及展示接口")
 public class InterviewItemController {
 
     private final InterviewItemRepository interviewItemRepository;
@@ -29,11 +33,12 @@ public class InterviewItemController {
     private final UserRepository userRepository;
 
     @GetMapping("/admin/items")
+    @Operation(summary = "题目列表(管理)", description = "管理员分页查询题目列表")
     public ResponseEntity<Page<Map<String,Object>>> adminList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String search
+            @Parameter(description = "页码 (0开始)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "分类ID") @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String search
     ) {
         var pageable = PageRequest.of(Math.max(0, page), size);
         List<InterviewItem> all = interviewItemRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc();
@@ -60,6 +65,7 @@ public class InterviewItemController {
     }
 
     @PostMapping("/admin/items")
+    @Operation(summary = "创建题目", description = "管理员创建新的面试题目")
     public ResponseEntity<?> adminCreate(@RequestBody InterviewItemCreateRequest req) {
         try {
             if (req.getCategoryId() == null || categoryRepository.findById(req.getCategoryId()).isEmpty()) {
@@ -79,7 +85,10 @@ public class InterviewItemController {
     }
 
     @PutMapping("/admin/items/{id}")
-    public ResponseEntity<?> adminUpdate(@PathVariable Long id, @RequestBody InterviewItemUpdateRequest req) {
+    @Operation(summary = "更新题目", description = "管理员更新面试题目信息")
+    public ResponseEntity<?> adminUpdate(
+            @Parameter(description = "题目ID") @PathVariable Long id, 
+            @RequestBody InterviewItemUpdateRequest req) {
         InterviewItem i = interviewItemRepository.findById(id).orElse(null);
         if (i == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "未找到"));
         if (req.getCategoryId() != null) {
@@ -97,7 +106,9 @@ public class InterviewItemController {
     }
 
     @DeleteMapping("/admin/items/{id}")
-    public ResponseEntity<?> adminDelete(@PathVariable Long id) {
+    @Operation(summary = "删除题目", description = "管理员删除面试题目")
+    public ResponseEntity<?> adminDelete(
+            @Parameter(description = "题目ID") @PathVariable Long id) {
         InterviewItem i = interviewItemRepository.findById(id).orElse(null);
         if (i == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "未找到"));
         i.setIsDeleted(true);
@@ -105,13 +116,14 @@ public class InterviewItemController {
         return ResponseEntity.ok(Map.of("success", true));
     }
     @GetMapping("/items")
+    @Operation(summary = "题目列表(公开)", description = "公开查询面试题目列表，支持多种筛选")
     public ResponseEntity<Page<Map<String,Object>>> publicList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String type,
-            org.springframework.security.core.Authentication authentication
+            @Parameter(description = "页码 (0开始)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "分类ID") @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String search,
+            @Parameter(description = "题目类型") @RequestParam(required = false) String type,
+            @Parameter(hidden = true) org.springframework.security.core.Authentication authentication
     ) {
         var pageable = PageRequest.of(Math.max(0, page), size);
         List<InterviewItem> all = interviewItemRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc();

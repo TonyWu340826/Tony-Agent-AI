@@ -4,13 +4,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TonyWu AI 用户主页</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>html,body{height:100%;background:#f6f7fb}</style>
+    <!-- 预连接CDN加速资源加载 -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <!-- 异步加载React和Babel -->
+    <script defer src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script defer src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html,body{height:100%;background:#f6f7fb;margin:0;padding:0}
+      /* 加载动画 */
+      .page-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f6f7fb;z-index:9999}
+      .spinner{border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;width:40px;height:40px;animation:spin 0.8s linear infinite}
+      @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
   </head>
 <body>
+    <!-- 页面加载动画 -->
+    <div class="page-loader" id="page-loader">
+      <div class="spinner"></div>
+    </div>
     <div id="root" class="min-h-screen"></div>
     <div id="fixed-footer" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:1200;background:#0f172a;color:#fff;border-top:1px solid #334155;text-align:center;padding:8px 0;">
       <div style="font-size:12px;">© 2025 TonyWu AI 平台. All rights reserved.</div>
@@ -29,8 +43,20 @@
       const render = () => {
         const Comp = window.Components && window.Components.UserHome
         root.render(Comp ? React.createElement(Comp) : React.createElement('div', {className:'p-6'}, '组件加载中...'))
+        // 隐藏加载动画
+        const loader = document.getElementById('page-loader')
+        if (loader && Comp) {
+          loader.style.opacity = '0'
+          loader.style.transition = 'opacity 0.3s'
+          setTimeout(() => loader.remove(), 300)
+        }
       }
-      render()
+      // 等待React和其他资源加载完成
+      if (window.React && window.ReactDOM) {
+        render()
+      } else {
+        window.addEventListener('load', render)
+      }
       try { window.addEventListener('modules:loaded', render) } catch(e) {}
     </script>
     <script>

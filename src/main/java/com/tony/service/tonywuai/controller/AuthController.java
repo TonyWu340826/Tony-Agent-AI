@@ -3,6 +3,9 @@ import com.tony.service.tonywuai.dto.UserLoginRequest;
 import com.tony.service.tonywuai.dto.UserRegisterRequest;
 import com.tony.service.tonywuai.entity.User;
 import com.tony.service.tonywuai.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "用户认证", description = "用户注册、登录及当前用户信息获取接口")
 public class AuthController {
 
     private final UserService userService;
@@ -28,6 +32,7 @@ public class AuthController {
      * @return 注册结果
      */
     @PostMapping("/register")
+    @Operation(summary = "用户注册", description = "新用户注册接口，需要验证码")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegisterRequest request, jakarta.servlet.http.HttpSession session) {
         try {
             String expected = (String) session.getAttribute(com.tony.service.tonywuai.controller.CaptchaController.getSessionKey());
@@ -66,8 +71,19 @@ public class AuthController {
      * @param request 登录请求体 (仅用于接收数据，不执行实际认证逻辑)
      * @return 登录处理结果 (由 SecurityFilterChain 中的 Handler 返回 JSON)
      */
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserLoginRequest request) {
+    @PostMapping(value = "/login", consumes = "application/x-www-form-urlencoded")
+    @Operation(summary = "用户登录", description = "用户登录接口 (实际由Spring Security处理)，使用表单格式提交")
+    public ResponseEntity<?> loginUser(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/x-www-form-urlencoded"
+                )
+            )
+            @RequestParam(required = true) String username,
+            @RequestParam(required = true) String password,
+            @RequestParam(required = true) String captcha,
+            @RequestParam(required = false, defaultValue = "0") String userType
+    ) {
         // 这个方法在 Spring Security 拦截器前不会执行到，
         // 这里的返回值只是为了 API 文档和清晰度。
         return ResponseEntity.ok(Map.of("success", true, "message", "登录请求已提交到 Spring Security 处理"));
@@ -80,7 +96,9 @@ public class AuthController {
      * @return 用户信息 DTO
      */
     @GetMapping("/user")
-    public ResponseEntity<?> getCurrentUser(@org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails principal) {
+    @Operation(summary = "获取当前用户", description = "获取当前已登录用户的详细信息")
+    public ResponseEntity<?> getCurrentUser(
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "未登录"));
         }
@@ -103,6 +121,7 @@ public class AuthController {
 
 
     @GetMapping("/hello")
+    @Operation(summary = "Hello测试", description = "简单的Hello World测试接口")
     public String hello() {
         return "Hello, World!";
     }

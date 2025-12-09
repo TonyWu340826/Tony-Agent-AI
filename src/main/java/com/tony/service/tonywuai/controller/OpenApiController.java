@@ -1,11 +1,15 @@
 package com.tony.service.tonywuai.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.tony.service.tonywuai.dto.request.AliyunCreateImage;
 import com.tony.service.tonywuai.dto.request.CozeWorkFlowRequest;
 import com.tony.service.tonywuai.dto.request.ModelRequest;
 import com.tony.service.tonywuai.dto.request.PromptBaseRequest;
 import com.tony.service.tonywuai.openapi.PythonOpenApiClient;
 import com.tony.service.tonywuai.utils.PlaceholderUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -29,12 +33,14 @@ import static com.tony.service.tonywuai.com.ComStatus.TYPE_AUTO_CASE;
 @RequestMapping("/api/open")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "OpenAPI 聚合服务", description = "提供对话、SQL生成、考试分析、工作流等AI能力")
 public class OpenApiController {
 
     private final PythonOpenApiClient pythonOpenApiClient;
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @PostMapping("/chat")
+    @Operation(summary = "基础对话", description = "简单的问答对话接口")
     public ResponseEntity<?> chat(@RequestBody Map<String, Object> body) {
         String prompt = body != null ? String.valueOf(body.getOrDefault("prompt", "")).trim() : "";
         if (prompt.isEmpty()) {
@@ -49,6 +55,7 @@ public class OpenApiController {
     }
 
     @PostMapping("/sql/dba")
+    @Operation(summary = "SQL生成助手", description = "根据表结构和需求生成SQL语句")
     public ResponseEntity<?> sqlDba(@RequestBody Map<String, Object> body) {
         logger.info("开始调用AI生成SQL-------------------------------");
         try {
@@ -112,6 +119,7 @@ public class OpenApiController {
 
 
     @PostMapping("/exam/insights")
+    @Operation(summary = "考试结果分析", description = "生成考试成绩的深度分析报告")
     public ResponseEntity<?> examInsights(@RequestBody Map<String, Object> body) {
         logger.info("开始调用AI总结考试结果--------------------------------");
         try {
@@ -159,6 +167,7 @@ public class OpenApiController {
 
 
     @PostMapping("/coze/workflow")
+    @Operation(summary = "Coze工作流", description = "执行Coze工作流")
     public ResponseEntity<?> workflow(@RequestBody CozeWorkFlowRequest request) {
         try {
             if (request == null || StringUtils.isEmpty(request.getType())) {
@@ -190,6 +199,7 @@ public class OpenApiController {
      * @return
      */
     @PostMapping("/deeoSeekChat/model")
+    @Operation(summary = "DeepSeek模型对话", description = "直接调用DeepSeek模型进行对话")
     public ResponseEntity<?> deeoSeekChat(@RequestBody ModelRequest request) {
         logger.info("直接调用seepseek模型：request>>>{}", JSON.toJSONString(request));
         try {
@@ -211,6 +221,7 @@ public class OpenApiController {
      * @return
      */
     @PostMapping("/prompt/optimizePrompt")
+    @Operation(summary = "提示词优化", description = "使用AI优化提示词")
     public ResponseEntity<?> optimizePrompt(@RequestBody PromptBaseRequest request) {
         logger.info("开始执行提示词优化，请求参数: {}", JSON.toJSONString(request));
 
@@ -320,6 +331,26 @@ public class OpenApiController {
 
 
 
+
+
+    /**
+     * 直接调用seepseek模型，没有任何
+     * @param request
+     * @return
+     */
+    @PostMapping("/aliyunCreateImage")
+    @Operation(summary = "调用阿里的文生图接口", description = "调用阿里的文生图接口")
+    public ResponseEntity<?> aliyunCreateImage(@RequestBody AliyunCreateImage request) {
+        try {
+            String resp = pythonOpenApiClient.aliyunCreateImage(request);
+            logger.info("工作流执行结束--------------------------------{}", resp);
+            if (resp == null) resp = "";
+            return ResponseEntity.ok(Map.of("message", resp));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", e.getMessage()));
+        }
+
+    }
 
 
 

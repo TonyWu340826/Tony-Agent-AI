@@ -1,29 +1,18 @@
 package com.tony.service.tonywuai.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "模型请求")
 public class ModelRequest {
 
-    /**
-     * 用户的对话
-     * 角色：user
-     */
+    @Schema(description = "用户的对话,角色:user")
     String message;
 
-    /**
-     * 提示词
-     * 角色：system
-     */
+    @Schema(description = "提示词,角色:system")
     String prompt;
 
-    /**
-     * 上下文
-     * 角色：assistant
-     */
+    @Schema(description = "上下文,角色:assistant")
     String context;
-
-
-
-
 
     public ModelRequest() {
     }
@@ -57,4 +46,3 @@ public class ModelRequest {
         this.context = context;
     }
 }
-

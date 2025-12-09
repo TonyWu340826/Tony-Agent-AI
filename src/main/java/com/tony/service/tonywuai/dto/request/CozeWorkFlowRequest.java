@@ -1,36 +1,26 @@
 package com.tony.service.tonywuai.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * AI用例的入参
  */
+@Schema(description = "Coze工作流请求")
 public class CozeWorkFlowRequest {
 
-    /**
-     * autoCase： 生成用例
-     * caseCheck： 检查用例
-     */
+    @Schema(description = "请求类型:autoCase(生成用例)|caseCheck(检查用例)")
     private String type;
 
-    /**
-     * 收件邮箱地址
-     */
+    @Schema(description = "收件邮箱地址")
     private String mail;
 
-
-    /**
-     *  autoCase 专用，需求在飞书的标识，有了input1就不需要传
-     */
+    @Schema(description = "需求在飞书的标识,autoCase专用")
     private String documentId;
 
-    /**
-     * autoCase 专用。输入需求
-     */
+    @Schema(description = "输入需求,autoCase专用")
     private String input;
 
-    /**
-     * caseCheck 专用 用例在飞书的标识
-     */
+    @Schema(description = "用例在飞书的标识,caseCheck专用")
     private String caseToken;
 
     public CozeWorkFlowRequest() {

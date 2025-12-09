@@ -122,7 +122,7 @@
                             React.createElement(ArrowRight, { className: 'w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors' })
                         ),
                         React.createElement('h3', { className: 'text-xl font-bold text-slate-900 mb-2' }, c.name),
-                        React.createElement('p', { className: 'text-slate-500 text-sm mb-4 line-clamp-2 h-10' }, c.description || '暂无描述'),
+                        React.createElement('p', { className: 'text-slate-500 text-sm mb-4 break-words whitespace-pre-wrap' }, c.description || '暂无描述'),
                         React.createElement('div', { className: 'flex items-center gap-4 text-xs text-slate-400' },
                             React.createElement('span', null, '包含子分类')
                         )
@@ -178,7 +178,7 @@
                             React.createElement(ArrowRight, { className: 'w-4 h-4 text-gray-300 group-hover:text-indigo-500 transition-colors' })
                         ),
                         React.createElement('h3', { className: 'text-lg font-bold text-slate-900 mb-1' }, c.name),
-                        React.createElement('p', { className: 'text-slate-500 text-xs mb-0 line-clamp-2' }, c.description || '暂无描述')
+                        React.createElement('p', { className: 'text-slate-500 text-xs mb-0 break-words whitespace-pre-wrap' }, c.description || '暂无描述')
                     ))
                 ),
                 categories.length === 0 && React.createElement('div', { className: 'text-center text-gray-500 py-20' }, '该分类下暂无内容')
@@ -247,9 +247,18 @@
                                 React.createElement('div', { className: 'flex items-start gap-3' },
                                     React.createElement('span', { className: 'bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded mt-1 shrink-0' }, `Q${idx+1}`),
                                     React.createElement('div', { className: 'flex-1' },
-                                        React.createElement('h3', { className: 'text-lg font-bold text-slate-800 mb-3' }, item.title || item.question),
-                                        React.createElement('div', { className: 'prose prose-slate max-w-none bg-slate-50 p-4 rounded-lg text-slate-600 text-sm leading-relaxed' }, 
-                                            (item.solution || '暂无详解').split('\n').map((line, i) => React.createElement('p', { key: i, className: 'mb-1 last:mb-0' }, line))
+                                        React.createElement('h3', { className: 'text-lg font-bold text-slate-800 mb-3 break-words', style: { wordBreak: 'break-word', overflowWrap: 'anywhere' } }, item.title || item.question),
+                                        React.createElement('div', { 
+                                            className: 'max-w-none bg-slate-50 p-4 rounded-lg text-slate-600 text-sm leading-relaxed overflow-x-auto',
+                                            style: { whiteSpace: 'pre-wrap', wordBreak: 'break-word' }
+                                        }, 
+                                            (item.solution || '暂无详解').split('\n').map((line, i) => 
+                                                React.createElement('p', { 
+                                                    key: i, 
+                                                    className: 'mb-2 last:mb-0',
+                                                    style: { whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'anywhere' }
+                                                }, line)
+                                            )
                                         )
                                     )
                                 )

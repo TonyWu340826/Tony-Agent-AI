@@ -4,6 +4,9 @@ import com.tony.service.tonywuai.dto.SystemConfigCreateRequest;
 import com.tony.service.tonywuai.dto.SystemConfigDto;
 import com.tony.service.tonywuai.entity.SystemConfig;
 import com.tony.service.tonywuai.service.SystemConfigService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/configs")
 @Slf4j
+@Tag(name = "系统配置管理", description = "系统全局配置参数的增删改查接口")
 public class SystemConfigController {
 
     private final SystemConfigService systemConfigService;
@@ -61,6 +65,7 @@ public class SystemConfigController {
      * GET /api/v1/configs : 获取所有系统配置
      */
     @GetMapping
+    @Operation(summary = "所有配置", description = "获取系统所有配置项列表")
     public ResponseEntity<List<SystemConfigDto>> getAllConfigs() {
         log.info("Fetching all system configurations.");
         List<SystemConfig> configs = systemConfigService.findAll();
@@ -74,7 +79,8 @@ public class SystemConfigController {
      * GET /api/v1/configs/{id} : 根据 ID 获取单个配置
      */
     @GetMapping("/{id}")
-    public ResponseEntity<SystemConfigDto> getConfigById(@PathVariable Long id) throws Exception {
+    @Operation(summary = "获取配置", description = "根据ID获取单个配置详情")
+    public ResponseEntity<SystemConfigDto> getConfigById(@Parameter(description = "配置ID") @PathVariable Long id) throws Exception {
         log.info("Fetching system configuration by ID: {}", id);
         SystemConfig config = systemConfigService.findById(id);
         return ResponseEntity.ok(convertToDto(config));
@@ -84,6 +90,7 @@ public class SystemConfigController {
      * POST /api/v1/configs : 创建新的系统配置
      */
     @PostMapping
+    @Operation(summary = "创建配置", description = "添加新的系统配置项")
     public ResponseEntity<SystemConfigDto> createConfig(@Valid @RequestBody SystemConfigCreateRequest request) {
         log.info("Creating new system configuration with key: {}", request.getConfigKey());
 
@@ -101,8 +108,9 @@ public class SystemConfigController {
      * PUT /api/v1/configs/{id} : 更新现有配置
      */
     @PutMapping("/{id}")
+    @Operation(summary = "更新配置", description = "更新现有的系统配置信息")
     public ResponseEntity<SystemConfigDto> updateConfig(
-            @PathVariable Long id,
+            @Parameter(description = "配置ID") @PathVariable Long id,
             @Valid @RequestBody SystemConfigCreateRequest request) throws Exception {
 
         log.info("Updating system configuration ID: {}", id);
@@ -128,7 +136,8 @@ public class SystemConfigController {
      * DELETE /api/v1/configs/{id} : 删除指定 ID 的配置
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteConfig(@PathVariable Long id) {
+    @Operation(summary = "删除配置", description = "根据ID删除系统配置")
+    public ResponseEntity<Void> deleteConfig(@Parameter(description = "配置ID") @PathVariable Long id) {
         log.warn("Deleting system configuration ID: {}", id);
         systemConfigService.deleteById(id);
         return ResponseEntity.noContent().build();
@@ -139,9 +148,10 @@ public class SystemConfigController {
      * 示例: /api/v1/configs/value?key=MAX_RETRIES&default=5
      */
     @GetMapping("/value")
+    @Operation(summary = "获取配置值", description = "快速获取配置值的辅助接口")
     public ResponseEntity<String> getConfigValue(
-            @RequestParam("key") String configKey,
-            @RequestParam(value = "default", required = false, defaultValue = "") String defaultValue) {
+            @Parameter(description = "配置Key") @RequestParam("key") String configKey,
+            @Parameter(description = "默认值") @RequestParam(value = "default", required = false, defaultValue = "") String defaultValue) {
 
         log.debug("Quickly fetching config value for key: {}", configKey);
         String value = systemConfigService.getConfigValue(configKey, defaultValue);

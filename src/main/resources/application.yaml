@@ -2,9 +2,9 @@ spring:
   # 数据库连接配置 (使用您提供的外部服务器信息)
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: xxxx
-    username: xxx
-    password: xxxx
+    url: jdbc:mysql://116.62.120.101:13306/tonyai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: wzx@@213
 
   # JPA (Hibernate) 配置
   jpa:
@@ -20,15 +20,20 @@ spring:
 logging:
   level:
     com.example: DEBUG # 调整您应用包下的日志级别
-    org.springframework.web: INFO
+    org.springframework.web: DEBUG
+
+
+
 openapi:
   python:
-    url: xxxx
+    url: http://116.62.120.101:8889
   tongyi:
     agent:
-      path_agent_01: /xxxx
+      path_agent_01: /api/user/user/aliyun/chat
+    image:
+      path_01: /api/user/user/aliyun/image_create
   deepseek:
     api:
-      ask_base_path: /xxxx
+      ask_base_path: /api/chat/ask-base
   coze:
-    workflow_path: /xxxx
+    workflow_path: /api/coze/run-workflow

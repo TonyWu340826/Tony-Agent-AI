@@ -4,6 +4,9 @@ import com.tony.service.tonywuai.dto.UserRegisterRequest;
 import com.tony.service.tonywuai.dto.UserUpdateStatusRequest;
 import com.tony.service.tonywuai.entity.User;
 import com.tony.service.tonywuai.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
+@Tag(name = "用户管理(后台)", description = "管理员用户管理接口")
 // 假设 Spring Security 已配置，只有具有 ADMIN 角色的用户才能访问这些接口
 // @PreAuthorize("hasRole('ADMIN')")
 public class UserAdminController {
@@ -39,10 +43,11 @@ public class UserAdminController {
      * @return 分页的用户DTO列表
      */
     @GetMapping
+    @Operation(summary = "获取用户列表", description = "管理员分页查询用户列表")
     public ResponseEntity<Page<UserDTO>> listUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam Optional<String> search) {
+            @Parameter(description = "页码 (默认0)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页数量 (默认10)") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "搜索关键词") @RequestParam Optional<String> search) {
 
         Page<User> userPage = userService.findUsersByCriteria(page, size, search);
 
@@ -60,7 +65,8 @@ public class UserAdminController {
      */
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<UserDTO> addNewUser(@Valid @RequestBody UserRegisterRequest request) {
+    @Operation(summary = "新增用户", description = "管理员新增用户")
+    public ResponseEntity<UserDTO> addNewUser(@Parameter(description = "注册请求信息") @Valid @RequestBody UserRegisterRequest request) {
         User newUser = userService.registerNewUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserDTO.fromEntity(newUser));
     }
@@ -73,7 +79,8 @@ public class UserAdminController {
      * @return 更新后的用户DTO
      */
     @PutMapping("/status")
-    public ResponseEntity<UserDTO> updateStatus(@Valid @RequestBody UserUpdateStatusRequest request) {
+    @Operation(summary = "更新用户状态", description = "管理员更新用户激活状态")
+    public ResponseEntity<UserDTO> updateStatus(@Parameter(description = "状态更新请求") @Valid @RequestBody UserUpdateStatusRequest request) {
         User updatedUser = userService.updateUserActiveStatus(request.getUserId(), request.getIsActive());
         return ResponseEntity.ok(UserDTO.fromEntity(updatedUser));
     }
@@ -87,7 +94,10 @@ public class UserAdminController {
      * @return 更新后的用户DTO
      */
     @PutMapping("/{userId}")
-    public ResponseEntity<UserDTO> updateUserInfo(@PathVariable Long userId, @RequestBody UserDTO userDto) {
+    @Operation(summary = "修改用户信息", description = "管理员修改用户信息")
+    public ResponseEntity<UserDTO> updateUserInfo(
+            @Parameter(description = "用户ID") @PathVariable Long userId,
+            @Parameter(description = "用户信息") @RequestBody UserDTO userDto) {
         // 确保ID匹配，防止前端误传
         userDto.setId(userId);
         User updatedUser = userService.updateUserInfoByAdmin(userDto);
@@ -103,7 +113,8 @@ public class UserAdminController {
      */
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+    @Operation(summary = "删除用户", description = "管理员删除用户")
+    public ResponseEntity<Void> deleteUser(@Parameter(description = "用户ID") @PathVariable Long userId) {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }

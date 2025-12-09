@@ -6,6 +6,9 @@ import com.tony.service.tonywuai.entity.Article;
 import com.tony.service.tonywuai.service.ArticleService;
 import com.tony.service.tonywuai.repository.ArticleRepository;
 import com.tony.service.tonywuai.com.ArticleStatus;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
+@Tag(name = "文章管理", description = "文章的增删改查、发布、下架等接口")
 public class ArticleController {
 
     private final ArticleService articleService;
@@ -41,9 +45,10 @@ public class ArticleController {
      * @return 文章分页列表
      */
     @GetMapping(params = {"page", "size"})
+    @Operation(summary = "获取已发布文章", description = "分页获取所有已发布的文章列表")
     public ResponseEntity<Page<ArticleDTO>> getPublishedArticles(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @Parameter(description = "页码 (0开始)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size) {
 
         Page<ArticleDTO> articles = articleService.getPublishedArticles(page, size);
         return ResponseEntity.ok(articles);
@@ -57,7 +62,9 @@ public class ArticleController {
      * @return
      */
     @GetMapping(params = "id")
-    public ResponseEntity<?> getPublishedArticlesById(@RequestParam Long id) {
+    @Operation(summary = "根据ID获取文章", description = "根据ID获取已发布的文章详情")
+    public ResponseEntity<?> getPublishedArticlesById(
+            @Parameter(description = "文章ID", required = true) @RequestParam Long id) {
         Optional<Article> optional = articleRepository.findById(id);
         if (optional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "文章未找到: " + id));
@@ -67,7 +74,9 @@ public class ArticleController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public ResponseEntity<?> getArticleDetailByIdPath(@PathVariable Long id) {
+    @Operation(summary = "根据路径ID获取文章", description = "通过路径参数获取已发布的文章详情")
+    public ResponseEntity<?> getArticleDetailByIdPath(
+            @Parameter(description = "文章ID", required = true) @PathVariable Long id) {
         Optional<Article> optional = articleRepository.findById(id);
         if (optional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "文章未找到: " + id));
@@ -83,7 +92,9 @@ public class ArticleController {
      * @return 文章详情
      */
     @GetMapping("/{slug}")
-    public ResponseEntity<?> getArticleDetail(@PathVariable String slug) {
+    @Operation(summary = "根据Slug获取文章", description = "根据URL别名(Slug)获取已发布的文章详情")
+    public ResponseEntity<?> getArticleDetail(
+            @Parameter(description = "文章别名", required = true) @PathVariable String slug) {
         try {
             ArticleDTO article = articleService.getPublishedArticleDetail(slug);
             return ResponseEntity.ok(article);
@@ -101,6 +112,7 @@ public class ArticleController {
      * @return 创建成功的文章
      */
     @PostMapping
+    @Operation(summary = "创建文章", description = "管理员创建新的文章")
     public ResponseEntity<?> createArticle(@Valid @RequestBody ArticleCreateRequest request) {
         try {
             Article newArticle = articleService.createArticle(request);
@@ -118,7 +130,10 @@ public class ArticleController {
      * @return 更新后的文章
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateArticle(@PathVariable Long id, @Valid @RequestBody ArticleUpdateRequest request) {
+    @Operation(summary = "更新文章", description = "管理员更新文章内容")
+    public ResponseEntity<?> updateArticle(
+            @Parameter(description = "文章ID", required = true) @PathVariable Long id, 
+            @Valid @RequestBody ArticleUpdateRequest request) {
         try {
             Article updatedArticle = articleService.updateArticle(id, request);
             return ResponseEntity.ok(updatedArticle);
@@ -134,7 +149,9 @@ public class ArticleController {
      * @return 成功信息
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteArticle(@PathVariable Long id) {
+    @Operation(summary = "删除文章", description = "管理员删除文章")
+    public ResponseEntity<?> deleteArticle(
+            @Parameter(description = "文章ID", required = true) @PathVariable Long id) {
         try {
             articleService.deleteArticle(id);
             return ResponseEntity.ok(Map.of("success", true, "message", "文章删除成功"));
@@ -148,10 +165,11 @@ public class ArticleController {
      * 路径: GET /api/articles/admin?page=0&size=10&search=xxx
      */
     @GetMapping("/admin")
+    @Operation(summary = "管理员文章列表", description = "管理员分页获取所有文章（含草稿），支持关键词搜索")
     public ResponseEntity<Page<ArticleDTO>> adminListArticles(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam Optional<String> search
+            @Parameter(description = "页码 (0开始)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "搜索关键词") @RequestParam Optional<String> search
     ) {
         Pageable pageable = PageRequest.of(Math.max(0, page), size);
 
@@ -184,7 +202,9 @@ public class ArticleController {
      * 路径: GET /api/articles/admin/{id}
      */
     @GetMapping("/admin/{id}")
-    public ResponseEntity<?> adminGetDetail(@PathVariable Long id) {
+    @Operation(summary = "管理员获取文章详情", description = "管理员获取任意状态的文章详情")
+    public ResponseEntity<?> adminGetDetail(
+            @Parameter(description = "文章ID", required = true) @PathVariable Long id) {
         Optional<Article> opt = articleRepository.findById(id);
         if (opt.isPresent()) {
             return ResponseEntity.ok(toDTO(opt.get()));
@@ -197,7 +217,9 @@ public class ArticleController {
      * 路径: PUT /api/articles/{id}/publish
      */
     @PutMapping("/{id}/publish")
-    public ResponseEntity<?> publishArticle(@PathVariable Long id) {
+    @Operation(summary = "发布文章", description = "将文章状态修改为已发布")
+    public ResponseEntity<?> publishArticle(
+            @Parameter(description = "文章ID", required = true) @PathVariable Long id) {
         Optional<Article> optional = articleRepository.findById(id);
         if (optional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "文章未找到: " + id));
@@ -213,7 +235,9 @@ public class ArticleController {
      * 路径: PUT /api/articles/{id}/unpublish
      */
     @PutMapping("/{id}/unpublish")
-    public ResponseEntity<?> unpublishArticle(@PathVariable Long id) {
+    @Operation(summary = "下架文章", description = "将文章状态修改为草稿")
+    public ResponseEntity<?> unpublishArticle(
+            @Parameter(description = "文章ID", required = true) @PathVariable Long id) {
         Optional<Article> optional = articleRepository.findById(id);
         if (optional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "文章未找到: " + id));

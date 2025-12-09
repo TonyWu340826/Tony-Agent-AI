@@ -1,32 +1,23 @@
 package com.tony.service.tonywuai.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "提示词基础请求")
 public class PromptBaseRequest {
 
-
-    /**
-     * 参数
-     */
+    @Schema(description = "参数模式")
     private String paramSchema;
 
-    /**
-     * 提示词
-     * 角色：system
-     */
+    @Schema(description = "提示词,角色:system")
     private String promt;
 
-    /**
-     * 用户话术
-     * 角色：user
-     */
+    @Schema(description = "用户话术,角色:user")
     private String message;
 
-    /**
-     * 上下文
-     * 角色：assistant
-     */
+    @Schema(description = "上下文,角色:assistant")
     String context;
 
-
+    @Schema(description = "角色类型")
     private String roleType;
 
     public PromptBaseRequest() {

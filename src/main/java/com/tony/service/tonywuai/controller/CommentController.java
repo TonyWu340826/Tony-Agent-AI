@@ -7,6 +7,9 @@ import com.tony.service.tonywuai.service.UserService;
 import com.tony.service.tonywuai.repository.CommentRepository;
 import com.tony.service.tonywuai.repository.ArticleRepository;
 import com.tony.service.tonywuai.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +26,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/comments")
 @RequiredArgsConstructor
+@Tag(name = "评论管理", description = "评论的发布、查询、删除等接口")
 public class CommentController {
 
     private final CommentService commentService;
@@ -51,7 +55,9 @@ public class CommentController {
      * @return 评论树列表
      */
     @GetMapping("/article/{articleId}")
-    public ResponseEntity<?> getCommentsByArticleId(@PathVariable Long articleId) {
+    @Operation(summary = "获取文章评论", description = "获取指定文章的所有评论（嵌套结构）")
+    public ResponseEntity<?> getCommentsByArticleId(
+            @Parameter(description = "文章ID", required = true) @PathVariable Long articleId) {
         try {
             List<CommentDTO> comments = commentService.getCommentsByArticleId(articleId);
             return ResponseEntity.ok(comments);
@@ -70,9 +76,10 @@ public class CommentController {
      * @return 创建成功的评论实体
      */
     @PostMapping
+    @Operation(summary = "发表评论", description = "登录用户发表评论或回复")
     public ResponseEntity<?> createComment(
             @Valid @RequestBody CommentCreateRequest request,
-            @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
 
         try {
             Long userId = getUserId(principal);
@@ -86,11 +93,12 @@ public class CommentController {
     // --- 管理员接口：评论列表与删除 ---
 
     @GetMapping("/admin")
+    @Operation(summary = "管理员评论列表", description = "管理员分页获取所有评论，支持搜索和筛选")
     public ResponseEntity<?> adminList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long articleId,
-            @RequestParam(required = false) String search
+            @Parameter(description = "页码 (0开始)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "文章ID筛选") @RequestParam(required = false) Long articleId,
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String search
     ) {
         var pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), size);
         var all = commentRepository.findAll();
@@ -124,7 +132,9 @@ public class CommentController {
     }
 
     @DeleteMapping("/admin/{id}")
-    public ResponseEntity<?> adminDelete(@PathVariable Long id) {
+    @Operation(summary = "管理员删除评论", description = "管理员逻辑删除指定评论")
+    public ResponseEntity<?> adminDelete(
+            @Parameter(description = "评论ID", required = true) @PathVariable Long id) {
         var comment = commentRepository.findById(id).orElse(null);
         if (comment == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "评论未找到: " + id));
@@ -142,9 +152,10 @@ public class CommentController {
      * @return 成功信息
      */
     @DeleteMapping("/{commentId}")
+    @Operation(summary = "删除评论", description = "用户删除自己的评论（或管理员操作）")
     public ResponseEntity<?> deleteComment(
-            @PathVariable Long commentId,
-            @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(description = "评论ID", required = true) @PathVariable Long commentId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
 
         try {
             Long userId = getUserId(principal);

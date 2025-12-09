@@ -1,5 +1,6 @@
 package com.tony.service.tonywuai.dto;
 import com.tony.service.tonywuai.entity.User;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,16 +17,34 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "用户数据传输对象")
 public class UserDTO {
 
+    @Schema(description = "用户ID")
     private Long id;
+    
+    @Schema(description = "用户名")
     private String username;
+    
+    @Schema(description = "邮箱")
     private String email;
+    
+    @Schema(description = "昵称")
     private String nickname;
+    
+    @Schema(description = "VIP等级")
     private Integer vipLevel;
+    
+    @Schema(description = "账户余额")
     private BigDecimal balance;
+    
+    @Schema(description = "是否激活")
     private Boolean isActive;
+    
+    @Schema(description = "注册日期")
     private LocalDateTime registrationDate;
+    
+    @Schema(description = "用户类型", defaultValue = "0")
     private String userType = "0";
 
 

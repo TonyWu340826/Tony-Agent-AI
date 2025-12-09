@@ -1,4 +1,6 @@
 package com.tony.service.tonywuai.openapi;
+import com.alibaba.fastjson.JSON;
+import com.tony.service.tonywuai.dto.request.AliyunCreateImage;
 import com.tony.service.tonywuai.dto.request.CozeWorkFlowRequest;
 import com.tony.service.tonywuai.dto.request.ReplyData;
 import org.slf4j.Logger;
@@ -8,6 +10,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import java.util.*;
@@ -26,6 +30,8 @@ public class PythonOpenApiClient {
     private String deepSeekPath;
     @Value("${openapi.coze.workflow_path:/api/coze/run-workflow}")
     private String workFlowPath;
+    @Value("${openapi.tongyi.image.path_01:/api/user/user/aliyun/image_create}")
+    private String imageCreatePath;
     @Value("${openapi.python.connect-timeout-ms:600000}")
     private int connectTimeoutMs;
     @Value("${openapi.python.read-timeout-ms:600000}")
@@ -182,11 +188,44 @@ public class PythonOpenApiClient {
     }
 
 
+    /**
+     * 调用阿里的文生图接口
+     *
+     * @param aliyunCreateImage 包含prompt, negative_prompt, size等信息的对象
+     * @return 生成的图片URL
+     * @throws Exception 若请求失败或返回错误
+     */
+    public String aliyunCreateImage(AliyunCreateImage aliyunCreateImage) throws Exception {
+        // 记录请求日志
+        System.out.println("开始调用阿里云同义文生图request>>>>>>" + JSON.toJSONString(aliyunCreateImage));
 
+        // 完整请求URL
+        String url = baseUrl + imageCreatePath;
 
+        // 设置请求头
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
+        // 创建请求体
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("prompt", aliyunCreateImage.getPrompt());
+        requestBody.add("negative_prompt", aliyunCreateImage.getNegativePrompt());
+        requestBody.add("size", aliyunCreateImage.getSize());
 
+       // 创建HttpEntity对象，包含请求体和请求头
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
+        // 发送POST请求并接收响应
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+        // 解析响应体获取image_url
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody != null && responseBody.containsKey("image_url")) {
+            return (String) responseBody.get("image_url");
+        } else {
+            throw new Exception("未能从响应中获取'image_url'");
+        }
+    }
 
 
 

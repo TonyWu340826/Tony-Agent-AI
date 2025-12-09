@@ -1,5 +1,7 @@
 package com.tony.service.tonywuai.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,12 +17,14 @@ import javax.imageio.ImageIO;
 
 @RestController
 @RequestMapping("/api/captcha")
+@Tag(name = "验证码", description = "图形验证码生成接口")
 public class CaptchaController {
 
     private static final String SESSION_KEY = "CAPTCHA_CODE";
     private static final SecureRandom RANDOM = new SecureRandom();
 
     @GetMapping(value = "/image", produces = MediaType.IMAGE_PNG_VALUE)
+    @Operation(summary = "获取图形验证码", description = "生成PNG格式的图形验证码，并将验证码存储在Session中")
     public void getCaptcha(HttpSession session, HttpServletResponse response) throws IOException {
         String code = generateCode(5);
         session.setAttribute(SESSION_KEY, code);

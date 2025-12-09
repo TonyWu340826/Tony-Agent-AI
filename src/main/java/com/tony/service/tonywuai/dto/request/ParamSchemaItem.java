@@ -1,7 +1,13 @@
 package com.tony.service.tonywuai.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "参数模式项")
 class ParamSchemaItem {
+    @Schema(description = "参数名称")
     public String name;
+    
+    @Schema(description = "参数标签")
     public String label;
 
 

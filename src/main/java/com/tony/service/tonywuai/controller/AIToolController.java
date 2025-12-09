@@ -3,6 +3,9 @@ package com.tony.service.tonywuai.controller;
 import com.tony.service.tonywuai.dto.AIToolCreateRequest;
 import com.tony.service.tonywuai.dto.AIToolDTO;
 import com.tony.service.tonywuai.service.AIToolService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tools")
 @RequiredArgsConstructor
+@Tag(name = "AI工具管理", description = "AI工具的创建、更新、查询等接口")
 public class AIToolController {
 
     private final AIToolService aiToolService;
@@ -26,7 +30,9 @@ public class AIToolController {
      * GET /api/tools/active
      */
     @GetMapping("/active")
-    public ResponseEntity<List<AIToolDTO>> getActiveTools(@RequestParam(value = "type", required = false) Integer type) {
+    @Operation(summary = "获取已激活工具", description = "获取所有已激活的 AI 工具列表，用于前端菜单展示")
+    public ResponseEntity<List<AIToolDTO>> getActiveTools(
+            @Parameter(description = "工具类型筛选") @RequestParam(value = "type", required = false) Integer type) {
         List<AIToolDTO> tools = (type == null)
                 ? aiToolService.getActiveTools()
                 : aiToolService.searchTools(type, true, null);
@@ -40,6 +46,7 @@ public class AIToolController {
      * POST /api/tools
      */
     @PostMapping
+    @Operation(summary = "创建AI工具", description = "管理员创建新的 AI 工具")
     public ResponseEntity<AIToolDTO> createTool(@Valid @RequestBody AIToolCreateRequest request) {
         AIToolDTO createdTool = aiToolService.createTool(request);
         // 返回 201 Created
@@ -51,8 +58,10 @@ public class AIToolController {
      * PUT /api/tools/{id}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<AIToolDTO> updateTool(@PathVariable Long id,
-                                                @Valid @RequestBody AIToolCreateRequest request) {
+    @Operation(summary = "更新AI工具", description = "管理员更新 AI 工具信息")
+    public ResponseEntity<AIToolDTO> updateTool(
+            @Parameter(description = "工具ID", required = true) @PathVariable Long id,
+            @Valid @RequestBody AIToolCreateRequest request) {
         AIToolDTO updatedTool = aiToolService.updateTool(id, request);
         return ResponseEntity.ok(updatedTool);
     }
@@ -62,7 +71,9 @@ public class AIToolController {
      * DELETE /api/tools/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTool(@PathVariable Long id) {
+    @Operation(summary = "删除AI工具", description = "管理员删除 AI 工具")
+    public ResponseEntity<Void> deleteTool(
+            @Parameter(description = "工具ID", required = true) @PathVariable Long id) {
         aiToolService.deleteTool(id);
         // 返回 204 No Content
         return ResponseEntity.noContent().build();
@@ -73,9 +84,11 @@ public class AIToolController {
      * GET /api/tools/admin?search=&type=&active=
      */
     @GetMapping("/admin")
-    public ResponseEntity<List<AIToolDTO>> searchAdminTools(@RequestParam(value = "search", required = false) String search,
-                                                            @RequestParam(value = "type", required = false) Integer type,
-                                                            @RequestParam(value = "active", required = false) Boolean active) {
+    @Operation(summary = "管理员搜索工具", description = "管理员根据条件搜索/过滤工具列表")
+    public ResponseEntity<List<AIToolDTO>> searchAdminTools(
+            @Parameter(description = "搜索关键词") @RequestParam(value = "search", required = false) String search,
+            @Parameter(description = "工具类型") @RequestParam(value = "type", required = false) Integer type,
+            @Parameter(description = "是否激活") @RequestParam(value = "active", required = false) Boolean active) {
         List<AIToolDTO> tools = aiToolService.searchTools(type, active, search);
         return ResponseEntity.ok(tools);
     }

@@ -1,6 +1,7 @@
 package com.tony.service.tonywuai.dto;
 
 import com.tony.service.tonywuai.dto.UserDTO;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,14 +10,11 @@ import lombok.Data;
  */
 @Data
 @Builder
+@Schema(description = "认证响应")
 public class AuthResponse {
-    /**
-     * 成功生成的 JWT Token
-     */
+    @Schema(description = "成功生成的JWT Token", requiredMode = Schema.RequiredMode.REQUIRED)
     private String token;
 
-    /**
-     * 用户信息
-     */
+    @Schema(description = "用户信息", requiredMode = Schema.RequiredMode.REQUIRED)
     private UserDTO user;
 }

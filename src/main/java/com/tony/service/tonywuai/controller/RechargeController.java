@@ -5,6 +5,9 @@ import com.tony.service.tonywuai.entity.RechargeRecord;
 import com.tony.service.tonywuai.service.RechargeService;
 import com.tony.service.tonywuai.repository.RechargeRecordRepository;
 import com.tony.service.tonywuai.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/recharge")
 @RequiredArgsConstructor
+@Tag(name = "充值管理", description = "充值订单创建、回调及管理接口")
 public class RechargeController {
 
     private final RechargeService rechargeService;
@@ -34,8 +38,10 @@ public class RechargeController {
      * @return 订单创建结果
      */
     @PostMapping("/order")
-    public ResponseEntity<RechargeResponse> createOrder(@AuthenticationPrincipal UserDetails principal,
-                                                        @Valid @RequestBody RechargeRequest request) {
+    @Operation(summary = "创建充值订单", description = "用户创建充值订单，返回支付信息")
+    public ResponseEntity<RechargeResponse> createOrder(
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal,
+            @Valid @RequestBody RechargeRequest request) {
         // 实际应用中需要从 UserDetails 或 UserService 获取真正的用户ID
         // 这里为了简化，我们假设用户名为 Long 类型的 ID
         Long userId = Long.parseLong(principal.getUsername());
@@ -65,11 +71,12 @@ public class RechargeController {
 
     /** 列表分页（简单过滤） */
     @GetMapping("/admin")
+    @Operation(summary = "充值记录列表", description = "管理员查询充值记录")
     public ResponseEntity<?> adminList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String tradeNo
+            @Parameter(description = "页码 (0开始)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "交易流水号") @RequestParam(required = false) String tradeNo
     ) {
         var pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), size);
         var all = (userId != null) ? rechargeRecordRepository.findAllByUserIdOrderByRechargeDateDesc(userId) : rechargeRecordRepository.findAllByOrderByRechargeDateDesc();
@@ -94,6 +101,7 @@ public class RechargeController {
 
     /** 管理员手工新增成功记录（触发VIP5） */
     @PostMapping("/admin/manual")
+    @Operation(summary = "手工充值", description = "管理员手工添加充值记录（可触发VIP升级）")
     public ResponseEntity<?> adminManualAdd(@RequestBody java.util.Map<String,Object> body) {
         try {
             Long userId = Long.valueOf(String.valueOf(body.get("userId")));
@@ -118,7 +126,9 @@ public class RechargeController {
      * @return 交易处理结果
      */
     @GetMapping("/callback/success")
-    public ResponseEntity<?> paymentSuccessCallback(@RequestParam("trade_no") String tradeNo) {
+    @Operation(summary = "支付成功回调", description = "模拟支付网关支付成功回调")
+    public ResponseEntity<?> paymentSuccessCallback(
+            @Parameter(description = "交易流水号") @RequestParam("trade_no") String tradeNo) {
         try {
             rechargeService.handlePaymentSuccess(tradeNo);
             return ResponseEntity.ok(Map.of("success", true, "message", "支付成功，账户/VIP已更新。", "tradeNo", tradeNo));
@@ -134,7 +144,9 @@ public class RechargeController {
      * @return 交易处理结果
      */
     @GetMapping("/callback/fail")
-    public ResponseEntity<?> paymentFailureCallback(@RequestParam("trade_no") String tradeNo) {
+    @Operation(summary = "支付失败回调", description = "模拟支付网关支付失败回调")
+    public ResponseEntity<?> paymentFailureCallback(
+            @Parameter(description = "交易流水号") @RequestParam("trade_no") String tradeNo) {
         try {
             rechargeService.handlePaymentFailure(tradeNo);
             return ResponseEntity.ok(Map.of("success", true, "message", "支付失败，订单状态已更新。", "tradeNo", tradeNo));
