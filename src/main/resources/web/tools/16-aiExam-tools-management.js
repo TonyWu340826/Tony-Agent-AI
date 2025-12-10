@@ -37,15 +37,53 @@
     const Field = (label, el) => React.createElement('div', { className:'space-y-1' }, React.createElement('div', { className:'text-xs text-slate-500' }, label), el);
     const Sel = (value, onChange, opts) => React.createElement('select', { className:'border border-slate-300 rounded-lg px-3 py-2', value, onChange }, opts.map(x=>React.createElement('option',{ key:x, value:x }, x)));
 
+    const startRandomExam = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set('subject', subject);
+        params.set('grade', grade);
+        params.set('page', 0);
+        params.set('size', 100);
+        const r = await fetch(`/api/exams/questions?${params.toString()}`, { credentials:'same-origin' });
+        const t = await r.text();
+        let d={};
+        try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
+        const arr = Array.isArray(d.content) ? d.content : (Array.isArray(d) ? d : []);
+        if (arr.length === 0) { alert('暂无题目，无法开始考试'); setLoading(false); return; }
+        const shuffled = arr.slice().sort(()=>Math.random()-0.5).slice(0, Math.min(20, arr.length));
+        const mockExam = {
+          id: 'random-' + Date.now(),
+          paperName: `随机考试 - ${subject} ${grade}年级`,
+          subject: subject,
+          grade: grade,
+          questionIds: shuffled.map(q=>q.id).join(','),
+          code: 'RANDOM-' + Date.now()
+        };
+        setExam(mockExam);
+        setExamQuestions(shuffled);
+        setExamIdx(0);
+        setExamAnswers({});
+        setExamPendingAnswers({});
+        setExamConfirmed({});
+        setRemainSec(examDurationMin * 60);
+        setTimerOn(true);
+        setStep('examRun');
+      } catch(e) {
+        alert('加载失败，请稍后再试');
+      }
+      setLoading(false);
+    };
+
     const fetchPractice = async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams(); params.set('subject', subject); params.set('grade', grade); params.set('page', 0); params.set('size', 50);
+        const params = new URLSearchParams(); params.set('subject', subject); params.set('grade', grade); params.set('page', 0); params.set('size', 100);
         const r = await fetch(`/api/exams/questions?${params.toString()}`, { credentials:'same-origin' });
         const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
         const arr = Array.isArray(d.content) ? d.content : (Array.isArray(d) ? d : []);
-        const shuffled = arr.slice().sort(()=>Math.random()-0.5).slice(0, Math.min(10, arr.length));
-        setQuestions(shuffled); setPracticeIdx(0); setPracticeAnswers({}); setShowAnswer(false);
+        const shuffled = arr.slice().sort(()=>Math.random()-0.5).slice(0, Math.min(20, arr.length));
+        setQuestions(shuffled); setPracticeIdx(0); setPracticeAnswers({}); setPracticePendingAnswers({}); setPracticeConfirmed({}); setShowAnswer(false);
       } catch(_){ setQuestions([]); }
       setLoading(false); setStep('practice');
     };
@@ -164,67 +202,115 @@
 
     const PracticeCard = () => {
       const q = questions[practiceIdx]; if (!q) return React.createElement('div',{className:'text-sm text-slate-500'}, '暂无题目');
-      const opts = (()=>{ try{ const j = JSON.parse(q.optionsJson||'[]'); if(Array.isArray(j)) return j; }catch(_){} return []; })();
+      const qType = String(q.type||q.q_type||'');
+      const opts = (()=>{ 
+        try{ 
+          if(qType.includes('选') && q.content && String(q.content).trim().startsWith('[')){
+            const j = JSON.parse(q.content); if(Array.isArray(j)) return j;
+          }
+          const j = JSON.parse(q.optionsJson||'[]'); 
+          if(Array.isArray(j)) return j;
+          if(j && typeof j==='object') return Object.entries(j).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))).map(([k,v])=>({value:k, label:v}));
+        }catch(_){} 
+        return []; 
+      })();
       const pending = practicePendingAnswers[q.id] || '';
       const confirmed = !!practiceConfirmed[q.id];
       const chosen = practiceAnswers[q.id] || '';
+      const answeredCount = Object.keys(practiceAnswers).filter(id=>practiceAnswers[id]).length;
       const setPending = (v) => setPracticePendingAnswers(prev=>({ ...prev, [q.id]: v }));
       const confirm = () => { const v = String(pending||'').trim(); if(!v) return; setPracticeAnswers(prev=>({ ...prev, [q.id]: v })); setPracticeConfirmed(prev=>({ ...prev, [q.id]: true })); setShowAnswer(true); };
-      const isChoice = opts.length>0 && String(q.type||'').includes('选');
-      const isJudge = !opts.length && String(q.type||'').includes('判');
+      const isChoice = opts.length>0 && qType.includes('选');
+      const isJudge = !isChoice && qType.includes('判');
       const isFill = !isChoice && !isJudge;
       const match = (a,b) => String(a||'').trim() === String(b||'').trim();
       const ok = confirmed && match(chosen, q.correctAnswer);
-      return React.createElement('div',{className:'p-6 bg-white rounded-2xl shadow border space-y-4'},
-          React.createElement('div',{className:'text-sm text-rose-600 font-semibold'}, q.type||'题目'),
-          React.createElement('div',{className:'text-lg font-bold text-slate-900'}, q.content||''),
-          (isChoice ? React.createElement('div',{className:'space-y-2'}, opts.map((opt,i)=>{
-            const optLabel = (typeof opt==='string') ? opt : (opt.label || opt.value || String.fromCharCode(65+i));
-            const optValue = (typeof opt==='string') ? opt : (opt.value ?? opt.label ?? String.fromCharCode(65+i));
-            return React.createElement('button',{
-              key:i,
-              className:(pending===optValue? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200')+' w-full text-left px-4 py-3 rounded-lg border',
-              onClick:()=>{ if(!confirmed) setPending(String(optValue)); }
-            }, `${String.fromCharCode(65+i)}  ${optLabel}`);
-          })) : null),
-          (isJudge ? React.createElement('div',{className:'grid grid-cols-2 gap-3'}, ['正确','错误'].map((label,i)=>React.createElement('button',{key:i,className:(pending===label? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200')+' w-full text-center px-4 py-3 rounded-lg border', onClick:()=>{ if(!confirmed) setPending(label); }}, (i===0?'✓ ':'X ')+label))) : null),
-          (isFill ? React.createElement('div',{className:'space-y-2'}, React.createElement('textarea',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', rows:3, placeholder:'请输入你的答案…', value:pending, onChange:(e)=>{ if(!confirmed) setPending(e.target.value); }})) : null),
-          React.createElement('div',{className:'flex items-center justify-between'},
-              React.createElement('div',{className:'text-xs text-slate-500'}, `第 ${practiceIdx+1} / ${questions.length} 题`),
-              React.createElement('div',{className:'flex items-center gap-2'},
-                  React.createElement('button',{className:'px-3 py-2 rounded bg-indigo-600 text-white disabled:opacity-50', disabled: confirmed || !String(pending||'').trim(), onClick:confirm}, '确认'),
-                  React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50', disabled: practiceIdx>=questions.length-1 || !confirmed, onClick:()=>setPracticeIdx(i=>Math.min(i+1, questions.length-1))}, '下一题')
+      
+      const questionText = (isChoice && q.content && String(q.content).trim().startsWith('[')) ? (q.title||'请选择正确答案：') : (q.content||'');
+
+      return React.createElement('div',{className:'grid md:grid-cols-4 gap-6'},
+          React.createElement('div',{className:'md:col-span-3'},
+              React.createElement('div',{className:'p-6 bg-white rounded-2xl shadow border space-y-4'},
+                  React.createElement('div',{className:'flex items-center justify-between'},
+                      React.createElement('div',{className:'text-sm text-rose-600 font-semibold'}, qType||'题目'),
+                      React.createElement('div',{className:'text-xs text-slate-500'}, `第 ${practiceIdx+1} / ${questions.length} 题 · 已答 ${answeredCount}`)
+                  ),
+                  React.createElement('div',{className:'text-lg font-bold text-slate-900'}, questionText),
+                  (isChoice ? React.createElement('div',{className:'space-y-2'}, opts.map((opt,i)=>{
+                    const optLabel = (typeof opt==='string') ? opt : (opt.label || opt.value || String.fromCharCode(65+i));
+                    const optValue = (typeof opt==='string') ? opt : (opt.value ?? opt.label ?? String.fromCharCode(65+i));
+                    return React.createElement('button',{
+                      key:i,
+                      className:(pending===optValue? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200')+' w-full text-left px-4 py-3 rounded-lg border',
+                      onClick:()=>{ if(!confirmed) setPending(String(optValue)); }
+                    }, `${String.fromCharCode(65+i)}  ${optLabel}`);
+                  })) : null),
+                  (isJudge ? React.createElement('div',{className:'grid grid-cols-2 gap-3'}, ['正确','错误'].map((label,i)=>React.createElement('button',{key:i,className:(pending===label? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200')+' w-full text-center px-4 py-3 rounded-lg border', onClick:()=>{ if(!confirmed) setPending(label); }}, (i===0?'✓ ':'X ')+label))) : null),
+                  (isFill ? React.createElement('div',{className:'space-y-2'}, React.createElement('textarea',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', rows:3, placeholder:'请输入你的答案…', value:pending, onChange:(e)=>{ if(!confirmed) setPending(e.target.value); }})) : null),
+                  React.createElement('div',{className:'flex items-center justify-between'},
+                      React.createElement('div',{className:'flex items-center gap-2'},
+                          React.createElement('button',{className:'px-3 py-2 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: practiceIdx<=0, onClick:()=>setPracticeIdx(i=>Math.max(0,i-1))}, '上一题'),
+                          React.createElement('button',{className:'px-3 py-2 rounded bg-indigo-600 text-white disabled:opacity-50', disabled: confirmed || !String(pending||'').trim(), onClick:confirm}, '确认')
+                      ),
+                      React.createElement('div',{className:'flex items-center gap-2'},
+                          React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50', disabled: practiceIdx>=questions.length-1 || !confirmed, onClick:()=>setPracticeIdx(i=>Math.min(i+1, questions.length-1))}, '下一题'),
+                          React.createElement('button',{className:'px-4 py-2 rounded bg-rose-600 text-white', onClick:()=>{ setStep('mode'); }}, '返回')
+                      )
+                  ),
+                  (confirmed ? React.createElement('div',{className:(ok?'text-emerald-600':'text-rose-600')+' text-sm font-semibold'}, ok?'回答正确':'回答错误') : null),
+                  (confirmed ? React.createElement('div',{className:'text-xs text-slate-500'}, `你的答案：${chosen||'-'} · 正确答案：${q.correctAnswer||'-'}`) : null),
+                  (confirmed ? React.createElement('div',{className:'text-sm text-slate-500'}, q.explanation||'') : null),
+                  React.createElement('div',{className:'space-y-2'},
+                      React.createElement('div',{className:'h-1 bg-slate-200 rounded-full overflow-hidden'}, React.createElement('div',{className:'h-1 bg-blue-600', style:{ width: `${Math.round(((practiceIdx+1)/Math.max(1,questions.length))*100)}%` }}))
+                  )
               )
           ),
-          (confirmed ? React.createElement('div',{className:(ok?'text-emerald-600':'text-rose-600')+' text-sm font-semibold'}, ok?'回答正确':'回答错误') : null),
-          (confirmed ? React.createElement('div',{className:'text-xs text-slate-500'}, `你的答案：${chosen||'-'} · 正确答案：${q.correctAnswer||'-'}`) : null),
-          (showAnswer ? React.createElement('div',{className:'text-sm text-slate-700'}, `正确答案：${q.correctAnswer||'-'}`) : null),
-          (showAnswer ? React.createElement('div',{className:'text-sm text-slate-500'}, q.explanation||'') : null)
-      );
+          React.createElement('div',null,
+              React.createElement('div',{className:'p-4 bg-white rounded-2xl border shadow space-y-3'},
+                  React.createElement('div',{className:'text-sm font-semibold text-slate-700'}, '答题卡'),
+                  React.createElement('div',{className:'grid grid-cols-5 gap-2'}, questions.map((qq,idx)=>React.createElement('button',{key:qq.id,className:(idx===practiceIdx?'bg-blue-600 text-white':'bg-slate-100 text-slate-700')+' rounded px-3 py-1', onClick:()=>setPracticeIdx(idx)}, String(idx+1))),
+                      React.createElement('div',{className:'text-xs text-slate-500'}, `总题数 ${questions.length} · 已答 ${answeredCount} · 未答 ${Math.max(0, questions.length-answeredCount)}`)
+                  )
+              )
+          ));
     };
 
     const ExamRunCard = () => {
       const q = examQuestions[examIdx]; if (!q) return React.createElement('div',{className:'text-sm text-slate-500'}, '暂无题目');
-      const opts = (()=>{ try{ const j = JSON.parse(q.optionsJson||'[]'); if(Array.isArray(j)) return j; }catch(_){} return []; })();
+      const qType = String(q.type||q.q_type||'');
+      const opts = (()=>{ 
+        try{ 
+          if(qType.includes('选') && q.content && String(q.content).trim().startsWith('[')){
+            const j = JSON.parse(q.content); if(Array.isArray(j)) return j;
+          }
+          const j = JSON.parse(q.optionsJson||'[]'); 
+          if(Array.isArray(j)) return j;
+          if(j && typeof j==='object') return Object.entries(j).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))).map(([k,v])=>({value:k, label:v}));
+        }catch(_){} 
+        return []; 
+      })();
       const pending = examPendingAnswers[q.id] || '';
       const confirmed = !!examConfirmed[q.id];
       const chosen = examAnswers[q.id] || '';
       const answeredCount = Object.keys(examAnswers).filter(id=>examAnswers[id]).length;
       const setPending = (v) => setExamPendingAnswers(prev=>({ ...prev, [q.id]: v }));
       const confirmAnswer = () => { const v = String(pending||'').trim(); if(!v) return; setExamAnswers(prev=>({ ...prev, [q.id]: v })); setExamConfirmed(prev=>({ ...prev, [q.id]: true })); };
-      const isChoice = opts.length>0 && String(q.type||'').includes('选');
-      const isJudge = !opts.length && String(q.type||'').includes('判');
+      const isChoice = opts.length>0 && qType.includes('选');
+      const isJudge = !isChoice && qType.includes('判');
       const isFill = !isChoice && !isJudge;
       const match = (a,b) => String(a||'').trim() === String(b||'').trim();
       const isCorrect = confirmed && match(chosen, q.correctAnswer);
+      
+      const questionText = (isChoice && q.content && String(q.content).trim().startsWith('[')) ? (q.title||'请选择正确答案：') : (q.content||'');
+
       return React.createElement('div',{className:'grid md:grid-cols-4 gap-6'},
           React.createElement('div',{className:'md:col-span-3'},
               React.createElement('div',{className:'p-6 bg-white rounded-2xl shadow border space-y-4'},
                   React.createElement('div',{className:'flex items-center justify-between'},
-                      React.createElement('div',{className:'text-sm text-indigo-600 font-semibold'}, q.type||'题目'),
+                      React.createElement('div',{className:'text-sm text-indigo-600 font-semibold'}, qType||'题目'),
                       React.createElement('div',{className:'text-xs text-rose-600 font-semibold'}, `${String(Math.floor(remainSec/60)).padStart(2,'0')}:${String(remainSec%60).padStart(2,'0')}`)
                   ),
-                  React.createElement('div',{className:'text-lg font-bold text-slate-900'}, q.content||''),
+                  React.createElement('div',{className:'text-lg font-bold text-slate-900'}, questionText),
                   (isChoice ? React.createElement('div',{className:'space-y-2'}, opts.map((opt,i)=>{
                     const optLabel = (typeof opt==='string') ? opt : (opt.label || opt.value || String.fromCharCode(65+i));
                     const optValue = (typeof opt==='string') ? opt : (opt.value ?? opt.label ?? String.fromCharCode(65+i));
@@ -280,24 +366,63 @@
 
     const ModeSelect = () => React.createElement('div',{className:'space-y-6'},
         React.createElement('div',{className:'text-lg font-bold text-slate-900 text-center'}, '选择学习模式'),
-        React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-6'},
-            React.createElement('div',{className:'bg-white rounded-2xl border shadow p-6 space-y-2'},
-                React.createElement('div',{className:'text-lg font-bold text-slate-900'}, '随机练习'),
-                React.createElement('div',{className:'text-xs text-slate-500'}, '不限时 · 即时反馈 · 查看解析'),
-                React.createElement('button',{className:'px-4 py-2 rounded bg-pink-500 text-white hover:bg-pink-600', onClick:fetchPractice}, '开始练习')
-            ),
-            React.createElement('div',{className:'bg-white rounded-2xl border shadow p-6 space-y-2'},
-                React.createElement('div',{className:'text-lg font-bold text-slate-900'}, '正式考试'),
-                React.createElement('div',{className:'text-xs text-slate-500'}, '限时考试 · AI批改 · 成绩记录'),
-                React.createElement('div',{className:'flex items-center gap-2'},
-                    React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700', onClick:openCodePrompt}, '按编号选择'),
-                    React.createElement('button',{className:'px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700', onClick:openNamePrompt}, '按用户名选择')
+        React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-3 gap-6'},
+            React.createElement('div',{className:'bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl border-2 border-pink-300 shadow-lg p-6 space-y-3 relative overflow-hidden'},
+                // 装饰效果
+                React.createElement('div',{className:'absolute top-0 right-0 w-20 h-20 bg-pink-400/10 rounded-full -mr-10 -mt-10'}),
+                React.createElement('div',{className:'absolute bottom-0 left-0 w-16 h-16 bg-rose-400/10 rounded-full -ml-8 -mb-8'}),
+                React.createElement('div',{className:'relative'},
+                    React.createElement('div',{className:'flex items-center gap-2 mb-2'},
+                        React.createElement('div',{className:'text-lg font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent'}, '📚 随机练习'),
+                        React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-white font-bold shadow-md'}, '推荐')
+                    ),
+                    React.createElement('div',{className:'text-xs text-slate-600 mb-3'}, '不限时 · 即时反馈 · 查看解析'),
+                    React.createElement('button',{className:'w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-pink-600 to-rose-600 text-white font-semibold hover:shadow-xl hover:shadow-pink-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2', onClick:fetchPractice}, 
+                        React.createElement('span',null, '开始练习'),
+                        React.createElement('svg',{className:'w-4 h-4', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2'}, React.createElement('path',{d:'M5 12h14M12 5l7 7-7 7'}))
+                    )
                 )
-                , (inlineNameOpen ? React.createElement('div',{className:'mt-3 flex items-center gap-2'},
-                    React.createElement('input',{className:'flex-1 border border-slate-300 rounded-lg px-3 py-2', value:inlineNameValue, onChange:(e)=>setInlineNameValue(e.target.value), placeholder:'请输入用户名'}),
-                    React.createElement('button',{className:'px-3 py-2 rounded bg-slate-100 text-slate-700', onClick:()=>{ setInlineNameOpen(false); }}, '取消'),
-                    React.createElement('button',{className:'px-3 py-2 rounded bg-blue-600 text-white disabled:opacity-50', disabled:!String(inlineNameValue||'').trim(), onClick:()=>{ const v=String(inlineNameValue||'').trim(); setExamUserName(v); setInlineNameOpen(false); setNamePromptOpen(false); fetchSessionsByUser(v); }}, '确定')
-                ) : null)
+            ),
+            React.createElement('div',{className:'bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border-2 border-purple-300 shadow-lg p-6 space-y-3 relative overflow-hidden'},
+                // 装饰效果
+                React.createElement('div',{className:'absolute top-0 right-0 w-20 h-20 bg-purple-400/10 rounded-full -mr-10 -mt-10'}),
+                React.createElement('div',{className:'absolute bottom-0 left-0 w-16 h-16 bg-indigo-400/10 rounded-full -ml-8 -mb-8'}),
+                React.createElement('div',{className:'relative'},
+                    React.createElement('div',{className:'flex items-center gap-2 mb-2'},
+                        React.createElement('div',{className:'text-lg font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent'}, '🎲 随机考试'),
+                        React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold shadow-md'}, 'NEW')
+                    ),
+                    React.createElement('div',{className:'text-xs text-slate-600 mb-3'}, '随机生成试卷 · 模拟真实考试 · AI批改'),
+                    React.createElement('button',{className:'w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:shadow-xl hover:shadow-purple-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2', onClick:startRandomExam}, 
+                        React.createElement('span',null, '开始考试'),
+                        React.createElement('svg',{className:'w-4 h-4', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2'}, React.createElement('path',{d:'M5 12h14M12 5l7 7-7 7'}))
+                    )
+                )
+            ),
+            React.createElement('div',{className:'bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-300 shadow-lg p-6 space-y-3 relative overflow-hidden'},
+                // 装饰效果
+                React.createElement('div',{className:'absolute top-0 right-0 w-20 h-20 bg-blue-400/10 rounded-full -mr-10 -mt-10'}),
+                React.createElement('div',{className:'absolute bottom-0 left-0 w-16 h-16 bg-cyan-400/10 rounded-full -ml-8 -mb-8'}),
+                React.createElement('div',{className:'relative'},
+                    React.createElement('div',{className:'flex items-center gap-2 mb-2'},
+                        React.createElement('div',{className:'text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent'}, '📝 正式考试'),
+                        React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-violet-400 to-purple-500 text-white font-bold shadow-md'}, '正式')
+                    ),
+                    React.createElement('div',{className:'text-xs text-slate-600 mb-3'}, '限时考试 · AI批改 · 成绩记录'),
+                    React.createElement('div',{className:'flex items-center gap-2'},
+                        React.createElement('button',{className:'w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold hover:shadow-xl hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2', onClick:openCodePrompt}, 
+                            React.createElement('span',null, '按编号选择')
+                        ),
+                        React.createElement('button',{className:'w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold hover:shadow-xl hover:shadow-indigo-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2', onClick:openNamePrompt}, 
+                            React.createElement('span',null, '按用户名选择')
+                        )
+                    ),
+                    (inlineNameOpen ? React.createElement('div',{className:'mt-3 flex items-center gap-2'},
+                        React.createElement('input',{className:'flex-1 border border-slate-300 rounded-lg px-3 py-2', value:inlineNameValue, onChange:(e)=>setInlineNameValue(e.target.value), placeholder:'请输入用户名'}),
+                        React.createElement('button',{className:'px-3 py-2 rounded bg-slate-100 text-slate-700', onClick:()=>{ setInlineNameOpen(false); }}, '取消'),
+                        React.createElement('button',{className:'px-3 py-2 rounded bg-blue-600 text-white disabled:opacity-50', disabled:!String(inlineNameValue||'').trim(), onClick:()=>{ const v=String(inlineNameValue||'').trim(); setExamUserName(v); setInlineNameOpen(false); setNamePromptOpen(false); fetchSessionsByUser(v); }}, '确定')
+                    ) : null)
+                )
             )
         )
     );
@@ -324,31 +449,152 @@
         )
     );
 
+    const downloadExamReport = () => {
+      const wrongQuestions = examQuestions.filter(q=>String(examAnswers[q.id]||'')!==String(q.correctAnswer||''));
+      const timestamp = new Date().toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      
+      // 生成 HTML 格式内容（可以被 Word 打开）
+      let html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding: 40px; line-height: 1.8; }
+.title { text-align: center; font-size: 28px; font-weight: bold; color: #1e40af; margin-bottom: 30px; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; }
+.section { margin: 30px 0; padding: 20px; background: #f8fafc; border-left: 4px solid #3b82f6; border-radius: 8px; }
+.section-title { font-size: 20px; font-weight: bold; color: #1e3a8a; margin-bottom: 15px; }
+.info-row { margin: 8px 0; font-size: 14px; }
+.label { font-weight: bold; color: #475569; }
+.score { font-size: 32px; font-weight: bold; color: #10b981; }
+.correct { color: #10b981; font-weight: bold; }
+.wrong { color: #ef4444; font-weight: bold; }
+.stats { display: flex; justify-content: space-around; text-align: center; margin: 20px 0; }
+.stat-item { padding: 15px; }
+.ai-summary { background: #eff6ff; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #bfdbfe; }
+.question { margin: 20px 0; padding: 15px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; }
+.question-header { font-weight: bold; color: #991b1b; margin-bottom: 10px; font-size: 15px; }
+.question-content { margin: 10px 0; font-size: 14px; }
+.answer { margin: 8px 0; font-size: 14px; }
+.explanation { margin-top: 10px; padding: 10px; background: #fefce8; border-left: 3px solid #facc15; font-style: italic; color: #713f12; }
+.success-msg { text-align: center; font-size: 24px; color: #10b981; font-weight: bold; padding: 40px; background: #d1fae5; border-radius: 12px; }
+</style>
+</head>
+<body>
+`;
+      
+      // 标题
+      html += `<div class="title">📋 考试报告</div>\n`;
+      
+      // 基本信息
+      html += `<div class="section">\n`;
+      html += `<div class="section-title">📝 考试信息</div>\n`;
+      html += `<div class="info-row"><span class="label">考试时间：</span>${timestamp}</div>\n`;
+      html += `<div class="info-row"><span class="label">科目：</span>${subject}</div>\n`;
+      html += `<div class="info-row"><span class="label">年级：</span>${grade}年级</div>\n`;
+      html += `<div class="info-row"><span class="label">试卷名称：</span>${exam?.paperName || '随机考试'}</div>\n`;
+      html += `</div>\n`;
+      
+      // 成绩
+      html += `<div class="section">\n`;
+      html += `<div class="section-title">🎯 考试成绩</div>\n`;
+      html += `<div class="stats">\n`;
+      html += `<div class="stat-item"><div class="score">${doneStats.score}</div><div>分数</div></div>\n`;
+      html += `<div class="stat-item"><div class="correct" style="font-size:32px;">${doneStats.correct}</div><div>正确</div></div>\n`;
+      html += `<div class="stat-item"><div class="wrong" style="font-size:32px;">${doneStats.wrong}</div><div>错误</div></div>\n`;
+      html += `<div class="stat-item"><div style="font-size:32px; font-weight:bold;">${examQuestions.length}</div><div>总题数</div></div>\n`;
+      html += `</div>\n`;
+      html += `</div>\n`;
+      
+      // AI评价
+      html += `<div class="section">\n`;
+      html += `<div class="section-title">🤖 AI老师的评价</div>\n`;
+      html += `<div class="ai-summary">${(aiSummary||'暂无评价').replace(/\n/g, '<br>')}</div>\n`;
+      html += `</div>\n`;
+      
+      // 错题详情
+      if (wrongQuestions.length > 0) {
+        html += `<div class="section">\n`;
+        html += `<div class="section-title">❌ 错题详情 (共 ${wrongQuestions.length} 题)</div>\n`;
+        
+        wrongQuestions.forEach((q, idx) => {
+          html += `<div class="question">\n`;
+          html += `<div class="question-header">第 ${idx + 1} 题 - ${q.type || '题目'} | ${q.subject || ''} | ${q.grade || ''}年级</div>\n`;
+          html += `<div class="question-content"><strong>题目：</strong>${q.content || ''}</div>\n`;
+          html += `<div class="answer"><span class="wrong">❌ 你的答案：</span>${examAnswers[q.id] || '-'}</div>\n`;
+          html += `<div class="answer"><span class="correct">✓ 正确答案：</span>${q.correctAnswer || '-'}</div>\n`;
+          if (q.explanation) {
+            html += `<div class="explanation">💡 解析：${q.explanation}</div>\n`;
+          }
+          html += `</div>\n`;
+        });
+        html += `</div>\n`;
+      } else {
+        html += `<div class="success-msg">🎉 恰喜你！所有题目都答对了！</div>\n`;
+      }
+      
+      html += `</body>\n</html>`;
+      
+      const blob = new Blob([html], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `考试报告_${subject}_${grade}年级_${Date.now()}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
     const ExamDone = () => React.createElement('div',{className:'space-y-6'},
-        React.createElement('div',{className:'p-5 bg-white rounded-2xl border shadow'},
-            React.createElement('div',{className:'text-lg font-bold text-slate-900'}, '考试完成！'),
+        React.createElement('div',{className:'p-5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-300 shadow-lg'},
+            React.createElement('div',{className:'flex items-center gap-2 mb-3'},
+                React.createElement('div',{className:'text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent'}, '🎉 考试完成！'),
+                React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-violet-400 to-purple-500 text-white font-bold shadow-md'}, '完成')
+            ),
             React.createElement('div',{className:'grid grid-cols-3 gap-4 mt-3'},
                 React.createElement('div',{className:'text-center'}, React.createElement('div',{className:'text-3xl font-bold text-slate-900'}, doneStats.score), React.createElement('div',{className:'text-xs text-slate-500'}, '分数')),
                 React.createElement('div',{className:'text-center'}, React.createElement('div',{className:'text-3xl font-bold text-emerald-600'}, doneStats.correct), React.createElement('div',{className:'text-xs text-slate-500'}, '正确')),
                 React.createElement('div',{className:'text-center'}, React.createElement('div',{className:'text-3xl font-bold text-rose-600'}, doneStats.wrong), React.createElement('div',{className:'text-xs text-slate-500'}, '错误'))
             )
         ),
-        React.createElement('div',{className:'p-5 bg-white rounded-2xl border shadow'},
-            React.createElement('div',{className:'text-sm font-semibold text-slate-700 mb-2'}, 'AI老师的评价'),
-            React.createElement('div',{className:'text-sm text-slate-600'}, aiSummary||'')
+        React.createElement('div',{className:'p-5 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-300 shadow-lg'},
+            React.createElement('div',{className:'flex items-center gap-2 mb-2'},
+                React.createElement('div',{className:'text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent'}, '🤖 AI老师的评价'),
+                React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold shadow-md'}, '智能')
+            ),
+            React.createElement('div',{className:'text-sm text-slate-600 bg-white/50 rounded-lg p-3 border border-indigo-100'}, aiSummary||'')
         ),
-        React.createElement('div',{className:'p-5 bg-white rounded-2xl border shadow space-y-3'},
-            React.createElement('div',{className:'text-sm font-semibold text-slate-700'}, '错题详情'),
-            examQuestions.filter(q=>String(examAnswers[q.id]||'')!==String(q.correctAnswer||'')).map(q=>React.createElement('div',{key:q.id,className:'border rounded-xl p-3 bg-rose-50 border-rose-200'},
+        React.createElement('div',{className:'p-5 bg-gradient-to-br from-rose-50 to-red-50 rounded-2xl border-2 border-rose-300 shadow-lg space-y-3'},
+            React.createElement('div',{className:'flex items-center gap-2 mb-2'},
+                React.createElement('div',{className:'text-sm font-bold bg-gradient-to-r from-rose-600 to-red-600 bg-clip-text text-transparent'}, '❌ 错题详情'),
+                React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-pink-400 to-rose-500 text-white font-bold shadow-md'}, '重点')
+            ),
+            examQuestions.filter(q=>String(examAnswers[q.id]||'')!==String(q.correctAnswer||'')).map(q=>React.createElement('div',{key:q.id,className:'border rounded-xl p-3 bg-white border-rose-200 shadow-sm'},
                 React.createElement('div',{className:'text-xs text-rose-600 font-semibold'}, `${q.type||'题目'} · ${q.subject||''} · ${q.grade||''}年级`),
                 React.createElement('div',{className:'text-sm text-slate-900 mt-1'}, q.content||''),
                 React.createElement('div',{className:'text-xs text-slate-600 mt-1'}, `你的答案：${examAnswers[q.id]||'-'} · 正确答案：${q.correctAnswer||'-'}`),
-                React.createElement('div',{className:'text-xs text-slate-500 mt-1'}, q.explanation||'')
+                React.createElement('div',{className:'text-xs text-slate-500 mt-1 bg-amber-50/50 p-2 rounded border border-amber-100'}, q.explanation||'')
             ))
         ),
-        React.createElement('div',{className:'flex items-center justify-end gap-2'},
-            React.createElement('button',{className:'px-4 py-2 rounded bg-pink-500 text-white', onClick:()=>{ setStep('practice'); setQuestions(examQuestions.slice(0, Math.min(10, examQuestions.length))); setPracticeIdx(0); setPracticeAnswers({}); setShowAnswer(true); }}, '继续练习'),
-            React.createElement('button',{className:'px-4 py-2 rounded bg-slate-100 text-slate-700', onClick:()=>{ setStep('home'); setExam(null); setExamQuestions([]); setExamAnswers({}); }}, '返回首页')
+        React.createElement('div',{className:'flex items-center justify-between gap-2'},
+            React.createElement('div',{className:'flex items-center gap-2'},
+                React.createElement('button',{className:'px-4 py-2 rounded-lg bg-gradient-to-r from-pink-600 to-rose-600 text-white font-semibold hover:shadow-xl hover:shadow-pink-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2', onClick:()=>{ setStep('practice'); setQuestions(examQuestions.slice(0, Math.min(20, examQuestions.length))); setPracticeIdx(0); setPracticeAnswers({}); setPracticePendingAnswers({}); setPracticeConfirmed({}); setShowAnswer(true); }}, 
+                    React.createElement('svg',{className:'w-4 h-4', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2'}, React.createElement('path',{d:'M4 4h16v16H4z'})),
+                    React.createElement('span',null, '继续练习')
+                ),
+                React.createElement('button',{className:'px-4 py-2 rounded-lg bg-gradient-to-r from-slate-600 to-gray-600 text-white font-semibold hover:shadow-xl hover:shadow-slate-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2', onClick:()=>{ setStep('home'); setExam(null); setExamQuestions([]); setExamAnswers({}); }}, 
+                    React.createElement('svg',{className:'w-4 h-4', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2'}, React.createElement('path',{d:'M3 12h18'})),
+                    React.createElement('span',null, '返回首页')
+                )
+            ),
+            React.createElement('button',{className:'px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2', onClick:downloadExamReport},
+                React.createElement('svg',{className:'w-4 h-4', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round'},
+                    React.createElement('path',{d:'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4'}),
+                    React.createElement('polyline',{points:'7 10 12 15 17 10'}),
+                    React.createElement('line',{x1:'12', y1:'15', x2:'12', y2:'3'})
+                ),
+                React.createElement('span',null, '下载报告')
+            )
         )
     );
 

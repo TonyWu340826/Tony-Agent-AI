@@ -75,23 +75,10 @@
             box.querySelector('#don-x').onclick=close; box.querySelector('#don-c').onclick=close;
             bg.addEventListener('click',(e)=>{ if(e.target===bg) close(); });
             box.querySelector('#don-ok').onclick=async()=>{
-              const body=box.querySelector('#don-body'); body.innerHTML='<div style="color:#334155">加载收款码中...</div>';
-              try{
-                const r1=await fetch('/api/v1/configs/value?key=PAY_QR_WECHAT',{credentials:'same-origin'}); const we=await r1.text();
-                const r2=await fetch('/api/v1/configs/value?key=PAY_QR_ALIPAY',{credentials:'same-origin'}); const al=await r2.text();
-                const asDataUrl = (raw) => {
-                  const v0 = (raw||'').trim();
-                  if (/^\s*<\s*(?:!doctype|html)/i.test(v0)) return '';
-                  const v = v0.replace(/^["'`]+|["'`]+$/g,'').replace(/\s+/g,'');
-                  if (!v) return '';
-                  if (/^data:/i.test(v) || /^https?:/i.test(v)) return v;
-                  if (/^iVBOR/.test(v)) return 'data:image/png;base64,'+v;
-                  if (/^\/9j\//.test(v)) return 'data:image/jpeg;base64,'+v;
-                  return 'data:image/png;base64,'+v;
-                };
-                const w=asDataUrl(we); const a=asDataUrl(al);
-                body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px"><div style="font-weight:700;color:#0f172a;margin-bottom:6px">微信收款码</div>'+(w?('<img src="'+w+'" alt="微信收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/>'):'<div style="font-size:12px;color:#475569">未配置</div>')+'</div><div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px"><div style="font-weight:700;color:#0f172a;margin-bottom:6px">支付宝收款码</div>'+(a?('<img src="'+a+'" alt="支付宝收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/>'):'<div style="font-size:12px;color:#475569">未配置</div>')+'</div></div><div style="font-size:12px;color:#475569;margin-top:4px">感谢您的支持！长按保存后在对应 App 识别。</div>';
-              }catch(e){ body.innerHTML='<div style="color:#ef4444">加载失败，请稍后重试</div>'; }
+              const body=box.querySelector('#don-body'); 
+              const w='/image/weixin.png'; 
+              const a='/image/zhifubao.jpg';
+              body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px"><div style="font-weight:700;color:#0f172a;margin-bottom:6px">微信收款码</div><img src="'+w+'" alt="微信收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/></div><div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px"><div style="font-weight:700;color:#0f172a;margin-bottom:6px">支付宝收款码</div><img src="'+a+'" alt="支付宝收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/></div></div><div style="font-size:12px;color:#475569;margin-top:4px">感谢您的支持！长按保存后在对应 App 识别。</div>';
             };
           };
           btn.addEventListener('click', show);

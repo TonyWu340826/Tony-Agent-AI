@@ -120,7 +120,25 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                     user ? (
                         React.createElement(React.Fragment,null,
                             React.createElement('span',{className:'hidden md:inline text-slate-700'}, `你好，${user.nickname||user.username}`),
-                            (Number(user.vipLevel)===99 ? React.createElement('span',{className:'inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-white text-xs font-semibold shadow-md border border-amber-300'}, React.createElement(Crown,{className:'w-4 h-4 text-white'}), 'VIP 99') : null),
+                            (Number(user.vipLevel)===99 ? 
+                                React.createElement('div',{className:'relative group cursor-default ml-2'},
+                                    // 1. 动态流光背景 (Cosmic Glow)
+                                    React.createElement('div',{className:'absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-500 group-hover:duration-200 animate-tilt'}),
+                                    // 2. 主体容器 (Black Glass with Border)
+                                    React.createElement('div',{className:'relative flex items-center gap-2 px-4 py-1.5 bg-black rounded-full ring-1 ring-white/10 shadow-2xl'},
+                                        // 3. 皇冠图标 (Glowing Crown)
+                                        React.createElement(Crown,{className:'w-4 h-4 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)] animate-[bounce_2s_infinite]'}),
+                                        // 4. 文字 (Golden Gradient Text)
+                                        React.createElement('span',{className:'text-xs font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-400 to-yellow-200'}, 'VIP 99'),
+                                        // 5. 钻石闪光 (Sparkle)
+                                        React.createElement(Sparkles,{className:'w-3 h-3 text-blue-400 animate-pulse'}),
+                                        // 6. 扫光特效 (Shine Effect)
+                                        React.createElement('div',{className:'absolute inset-0 rounded-full overflow-hidden'},
+                                            React.createElement('div',{className:'absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 -translate-x-full animate-[shimmer_2s_infinite]'})
+                                        )
+                                    )
+                                )
+                            : null),
                             React.createElement('button',{className:'px-4 py-2 text-slate-700 hover:text-blue-600 transition-colors', onClick:onLogout}, '登出')
                         )
                     ) : (
