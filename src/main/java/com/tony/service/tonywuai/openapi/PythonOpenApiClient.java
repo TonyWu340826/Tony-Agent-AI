@@ -196,34 +196,32 @@ public class PythonOpenApiClient {
      * @throws Exception 若请求失败或返回错误
      */
     public String aliyunCreateImage(AliyunCreateImage aliyunCreateImage) throws Exception {
-        // 记录请求日志
-        System.out.println("开始调用阿里云同义文生图request>>>>>>" + JSON.toJSONString(aliyunCreateImage));
-
-        // 完整请求URL
+        logger.info("开始调用阿里文生图接口{}",JSON.toJSONString(aliyunCreateImage));
         String url = baseUrl + imageCreatePath;
 
-        // 设置请求头
+        // 手动构建 JSON 字符串（确保是标准 JSON）
+        Map<String, String> param = new HashMap<>();
+        param.put("prompt", aliyunCreateImage.getPrompt());
+        param.put("negative_prompt", aliyunCreateImage.getNegativePrompt());
+        param.put("size", aliyunCreateImage.getSize());
+
+        String jsonBody = JSON.toJSONString(param); // FastJSON 序列化为字符串
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-        // 创建请求体
-        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-        requestBody.add("prompt", aliyunCreateImage.getPrompt());
-        requestBody.add("negative_prompt", aliyunCreateImage.getNegativePrompt());
-        requestBody.add("size", aliyunCreateImage.getSize());
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonBody, headers);
 
-       // 创建HttpEntity对象，包含请求体和请求头
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+        logger.info("发送的 JSON: {}", jsonBody);
 
-        // 发送POST请求并接收响应
         ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
-        // 解析响应体获取image_url
+
         Map<String, Object> responseBody = response.getBody();
         if (responseBody != null && responseBody.containsKey("image_url")) {
             return (String) responseBody.get("image_url");
         } else {
-            throw new Exception("未能从响应中获取'image_url'");
+            throw new Exception("响应中无 image_url: " + responseBody);
         }
     }
 

@@ -238,7 +238,19 @@ window.Components.AIToolManagement = window.Components.AIToolManagement || AIToo
   const [loading, setLoading] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
   const [toolReady, setToolReady] = useState(false);
+  const [showFullScreenModal, setShowFullScreenModal] = useState(false);
   const loadScriptOnce = (src) => new Promise((resolve, reject) => { if ([...document.scripts].some(s => s.src.endsWith(src))) { resolve(); return; } const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag); });
+
+  // 监听关闭模态框事件
+  useEffect(() => {
+    const handleCloseModal = () => {
+      setShowFullScreenModal(false);
+      setActiveTool(null);
+      setToolReady(false);
+    };
+    window.addEventListener('closeToolModal', handleCloseModal);
+    return () => window.removeEventListener('closeToolModal', handleCloseModal);
+  }, []);
 
   const load = async (type) => {
     setLoading(true);
@@ -284,6 +296,27 @@ window.Components.AIToolManagement = window.Components.AIToolManagement || AIToo
     const lt = String(ltRaw).toUpperCase();
     const api = String(tool.apiPath ?? tool.api_path ?? '');
     if (lt === '1' || lt === 'EXTERNAL') { if (api) { window.open(api, '_blank'); } return; }
+    
+    // 图像生成工具（ID=8）使用全屏模态框
+    if (String(tool.id) === '8') {
+      setActiveTool(tool);
+      setShowFullScreenModal(true);
+      const pageExists = !!(window.ToolsPages && window.ToolsPages['8']);
+      setToolReady(pageExists);
+      if (!pageExists) {
+        loadScriptOnce('/tools/17-createImage-tools-management.js').then(()=>{
+          setToolReady(!!(window.ToolsPages && window.ToolsPages['8']));
+        }).catch(()=>{});
+      }
+      // 将关闭函数保存到 window 以便子组件调用
+      window.__closeImageGenModal = () => {
+        setShowFullScreenModal(false);
+        setActiveTool(null);
+        setToolReady(false);
+      };
+      return;
+    }
+    
     if (String(tool.id) === '10') {
       setActiveTool(tool);
       const pageExists10 = !!(window.ToolsPages && window.ToolsPages['10']);
@@ -382,6 +415,10 @@ window.Components.AIToolManagement = window.Components.AIToolManagement || AIToo
           )
         )
       )
+      ,
+      // 全屏模态框渲染
+      showFullScreenModal && activeTool && toolReady && window.ToolsPages && window.ToolsPages[String(activeTool.id)] && 
+        React.createElement(window.ToolsPages[String(activeTool.id)], null)
     )
   );
 };

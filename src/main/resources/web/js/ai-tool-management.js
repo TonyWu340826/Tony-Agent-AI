@@ -212,15 +212,21 @@ const UserToolsExplorer = ({ currentUser }) => {
   };
 
   const Card = (tool) => (
-    React.createElement('div',{className:'bg-white rounded-2xl p-5 shadow border hover:shadow-lg transition cursor-pointer', onClick:()=>openTool(tool)},
-      React.createElement('div',{className:'flex items-center gap-3'},
-        tool.iconUrl ? React.createElement('img',{src:tool.iconUrl, className:'w-8 h-8 rounded', alt:tool.toolName}) : React.createElement('div',{className:'w-8 h-8 bg-slate-200 rounded'}),
-        React.createElement('div',{className:'flex items-center gap-2'},
-          React.createElement('span',{className:'font-semibold text-slate-900'}, tool.toolName),
-          (String(tool.vipAllow||'').toUpperCase()==='VIP' ? React.createElement('span',{className:'inline-block px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-700 border border-amber-200'}, 'VIP') : null)
-        )
+    React.createElement('div',{className:'bg-white rounded-2xl p-6 shadow border hover:shadow-lg transition cursor-pointer flex flex-col items-center justify-center text-center h-[240px] relative overflow-hidden group', onClick:()=>openTool(tool)},
+      // VIP Badge
+      (String(tool.vipAllow||'').toUpperCase()==='VIP' ? 
+        React.createElement('span',{className:'absolute top-3 right-3 px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-700 border border-amber-200 font-bold'}, 'VIP') : null
       ),
-      React.createElement('div',{className:'text-xs text-slate-600 mt-2'}, tool.description || '')
+      // Icon
+      tool.iconUrl ? 
+        React.createElement('img',{src:tool.iconUrl, className:'w-14 h-14 rounded-xl mb-4 shadow-sm object-cover', alt:tool.toolName}) : 
+        React.createElement('div',{className:'w-14 h-14 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-slate-400'}, 'Logo'),
+      
+      // Title
+      React.createElement('div',{className:'font-bold text-lg text-slate-900 mb-2 line-clamp-1'}, tool.toolName),
+      
+      // Description
+      React.createElement('div',{className:'text-xs text-slate-500 line-clamp-3 leading-relaxed px-2'}, tool.description || '暂无描述')
     )
   );
 
