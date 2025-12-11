@@ -349,9 +349,39 @@
     };
 
     const Home = () => React.createElement('div',{className:'space-y-6'},
-        React.createElement('div',{className:'p-4 bg-white rounded-2xl border shadow'},
-            React.createElement('div',{className:'text-lg font-bold text-slate-900 mb-3'}, '你好，小朋友！'),
-            React.createElement('div',{className:'text-sm text-slate-600'}, '选择你的年级和科目，开始学习吧')
+        React.createElement('div',{className:'p-4 bg-white rounded-2xl border shadow flex items-center justify-between'},
+            React.createElement('div', null,
+                React.createElement('div',{className:'text-lg font-bold text-slate-900 mb-1'}, '欢迎来到AI学习系统'),
+                React.createElement('div',{className:'text-sm text-slate-600'}, '选择你的年级和科目，开始学习吧')
+            ),
+            // Simple user avatar with VIP effect
+            React.createElement('div', { 
+                className: 'flex items-center gap-3'
+            },
+                React.createElement('div', { 
+                    className: 'text-right'
+                },
+                    React.createElement('div', { 
+                        className: 'text-lg font-bold text-slate-900'
+                    }, '你好，root'),
+                    React.createElement('div', { 
+                        className: 'text-xs text-orange-500 font-bold'
+                    }, '👑 VIP99用户')
+                ),
+                React.createElement('div', { 
+                    className: 'relative w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold cursor-pointer transform transition-transform hover:scale-105 shadow-md',
+                    onClick: () => alert('用户名: root (VIP99)')
+                },
+                    'R',
+                    React.createElement('div', { 
+                        className: 'absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center border-2 border-white'
+                    },
+                        React.createElement('span', { 
+                            className: 'text-[8px] font-bold text-white'
+                        }, 'V')
+                    )
+                )
+            )
         ),
         React.createElement('div',{className:'space-y-3'},
             React.createElement('div',{className:'text-sm text-slate-700 font-semibold'}, '选择你的年级'),
@@ -422,6 +452,45 @@
                         React.createElement('button',{className:'px-3 py-2 rounded bg-slate-100 text-slate-700', onClick:()=>{ setInlineNameOpen(false); }}, '取消'),
                         React.createElement('button',{className:'px-3 py-2 rounded bg-blue-600 text-white disabled:opacity-50', disabled:!String(inlineNameValue||'').trim(), onClick:()=>{ const v=String(inlineNameValue||'').trim(); setExamUserName(v); setInlineNameOpen(false); setNamePromptOpen(false); fetchSessionsByUser(v); }}, '确定')
                     ) : null)
+                )
+            )
+        ),
+        // New modules: Homework Grading and Difficult Problem Assistance
+        React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'},
+            React.createElement('div',{className:'bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 shadow-lg p-6 space-y-3 relative overflow-hidden'},
+                React.createElement('div',{className:'absolute top-0 right-0 w-20 h-20 bg-amber-400/10 rounded-full -mr-10 -mt-10'}),
+                React.createElement('div',{className:'absolute bottom-0 left-0 w-16 h-16 bg-orange-400/10 rounded-full -ml-8 -mb-8'}),
+                React.createElement('div',{className:'relative'},
+                    React.createElement('div',{className:'flex items-center gap-2 mb-2'},
+                        React.createElement('div',{className:'text-lg font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent'}, '📖 作业批改'),
+                        React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 text-white font-bold shadow-md'}, 'AI')
+                    ),
+                    React.createElement('div',{className:'text-xs text-slate-600 mb-3'}, '拍照上传作业 · AI智能批改 · 详细解析'),
+                    React.createElement('div',{className:'space-y-3'},
+                        React.createElement('input',{type:'file', accept:'image/*,.pdf,.doc,.docx', className:'w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700', onChange:handleHomeworkFileUpload}),
+                        React.createElement('button',{className:'w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold hover:shadow-xl hover:shadow-amber-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2', onClick:startHomeworkGrading}, 
+                            React.createElement('span',null, '开始批改'),
+                            React.createElement('svg',{className:'w-4 h-4', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2'}, React.createElement('path',{d:'M5 12h14M12 5l7 7-7 7'}))
+                        )
+                    )
+                )
+            ),
+            React.createElement('div',{className:'bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl border-2 border-emerald-300 shadow-lg p-6 space-y-3 relative overflow-hidden'},
+                React.createElement('div',{className:'absolute top-0 right-0 w-20 h-20 bg-emerald-400/10 rounded-full -mr-10 -mt-10'}),
+                React.createElement('div',{className:'absolute bottom-0 left-0 w-16 h-16 bg-green-400/10 rounded-full -ml-8 -mb-8'}),
+                React.createElement('div',{className:'relative'},
+                    React.createElement('div',{className:'flex items-center gap-2 mb-2'},
+                        React.createElement('div',{className:'text-lg font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent'}, '❓ 难题辅助'),
+                        React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-purple-400 to-pink-500 text-white font-bold shadow-md'}, 'AI')
+                    ),
+                    React.createElement('div',{className:'text-xs text-slate-600 mb-3'}, '拍照上传难题 · AI详细讲解 · 解题思路'),
+                    React.createElement('div',{className:'space-y-3'},
+                        React.createElement('input',{type:'file', accept:'image/*,.pdf,.doc,.docx', className:'w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700', onChange:handleProblemFileUpload}),
+                        React.createElement('button',{className:'w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold hover:shadow-xl hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2', onClick:startProblemAssistance}, 
+                            React.createElement('span',null, '开始辅助'),
+                            React.createElement('svg',{className:'w-4 h-4', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2'}, React.createElement('path',{d:'M5 12h14M12 5l7 7-7 7'}))
+                        )
+                    )
                 )
             )
         )
@@ -598,21 +667,444 @@ body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding: 40px; line-he
         )
     );
 
+    // Add new state variables for homework and problem assistance
+    const [homeworkFile, setHomeworkFile] = useState(null);
+    const [problemFile, setProblemFile] = useState(null);
+    const [homeworkResult, setHomeworkResult] = useState(null);
+    const [problemResult, setProblemResult] = useState(null);
+    const [showLoadingModal, setShowLoadingModal] = useState(false);
+
+    // File upload handlers
+    const handleHomeworkFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setHomeworkFile(file);
+        }
+    };
+
+    const handleProblemFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setProblemFile(file);
+        }
+    };
+
+    // Functions to start homework grading and problem assistance
+    const startHomeworkGrading = async () => {
+        if (!homeworkFile) {
+            alert('请先选择要批改的作业文件');
+            return;
+        }
+        
+        // Show loading modal with animation
+        setShowLoadingModal(true);
+        
+        try {
+            // Create FormData to send file and other parameters
+            const formData = new FormData();
+            formData.append('file', homeworkFile);
+            formData.append('message', '请批改这份作业');
+            formData.append('prompt', '请识别文件的内容，按照里面的内容进行批改，并返回每一次的批改结果，错误分析，题目解析。不要有多余的废话，返回的结构只包含批改的内容，因为需要导出这个批改结果。');
+            
+            console.log('Sending request to /api/open/aliyunUnderstandImage with file:', homeworkFile);
+            
+            // Call the backend API endpoint
+            const response = await fetch('/api/open/aliyunUnderstandImage', {
+                method: 'POST',
+                body: formData
+            });
+            
+            console.log('Received response from server:', response);
+            
+            const contentType = response.headers.get('content-type');
+            console.log('Response content type:', contentType);
+            
+            let result;
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                const text = await response.text();
+                console.log('Response text:', text);
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    result = { message: text };
+                }
+            }
+            
+            console.log('Parsed result:', result);
+            
+            if (response.ok) {
+                // Use the actual AI response
+                const aiFeedback = result.message || '作业批改完成';
+                
+                console.log('AI Feedback:', aiFeedback);
+                
+                // Try to parse structured data from AI response if it's in JSON format
+                let parsedData = null;
+                try {
+                    // If the AI returns JSON data, parse it
+                    if (typeof aiFeedback === 'string') {
+                        // Try to parse as JSON
+                        parsedData = JSON.parse(aiFeedback);
+                    } else if (typeof aiFeedback === 'object') {
+                        // If it's already an object, use it directly
+                        parsedData = aiFeedback;
+                    }
+                } catch (parseError) {
+                    // If parsing fails, we'll use the raw response
+                    console.log('Could not parse AI response as JSON');
+                }
+                
+                // Create homework result data
+                const homeworkResultData = {
+                    score: parsedData && (parsedData.score || parsedData.Score) ? (parsedData.score || parsedData.Score) : 0,
+                    totalQuestions: parsedData && (parsedData.totalQuestions || parsedData.TotalQuestions) ? (parsedData.totalQuestions || parsedData.TotalQuestions) : 0,
+                    correct: parsedData && (parsedData.correct || parsedData.Correct) ? (parsedData.correct || parsedData.Correct) : 0,
+                    wrong: parsedData && (parsedData.wrong || parsedData.Wrong) ? (parsedData.wrong || parsedData.Wrong) : 0,
+                    feedback: aiFeedback,
+                    detailedAnalysis: aiFeedback
+                };
+                
+                console.log('Homework result data:', homeworkResultData);
+                
+                setHomeworkResult(homeworkResultData);
+                setStep('homeworkResult');
+            } else {
+                throw new Error(result.message || '作业批改失败');
+            }
+        } catch (error) {
+            console.error('作业批改失败:', error);
+            alert('作业批改失败: ' + (error.message || '请稍后重试'));
+        } finally {
+            // Always hide loading modal when done
+            setShowLoadingModal(false);
+        }
+    };
+
+    const startProblemAssistance = async () => {
+        if (!problemFile) {
+            alert('请先选择需要辅助的难题文件');
+            return;
+        }
+        
+        // Show loading modal with animation
+        setShowLoadingModal(true);
+        
+        try {
+            // Create FormData to send file and other parameters
+            const formData = new FormData();
+            formData.append('file', problemFile);
+            formData.append('message', '请解答这道题');
+            formData.append('prompt', '请识别文件的内容，按照里面的内容进行解答，并返回详细的解题过程和知识点解析。不要有多余的废话，返回的结构只包含解题的内容，因为需要导出这个解题结果。');
+            
+            console.log('Sending request to /api/open/aliyunUnderstandImage with file:', problemFile);
+            
+            // Call the backend API endpoint
+            const response = await fetch('/api/open/aliyunUnderstandImage', {
+                method: 'POST',
+                body: formData
+            });
+            
+            console.log('Received response from server:', response);
+            
+            const contentType = response.headers.get('content-type');
+            console.log('Response content type:', contentType);
+            
+            let result;
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                const text = await response.text();
+                console.log('Response text:', text);
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    result = { message: text };
+                }
+            }
+            
+            console.log('Parsed result:', result);
+            
+            if (response.ok) {
+                // Use the actual AI response
+                const aiFeedback = result.message || '题目解答完成';
+                
+                console.log('AI Feedback:', aiFeedback);
+                
+                // For problem assistance, we'll structure the data differently
+                const problemResultData = {
+                    problem: '题目解析',
+                    solution: aiFeedback,
+                    explanation: '知识点解析'
+                };
+                
+                console.log('Problem result data:', problemResultData);
+                
+                setProblemResult(problemResultData);
+                setStep('problemResult');
+            } else {
+                throw new Error(result.message || '题目解答失败');
+            }
+        } catch (error) {
+            console.error('题目解答失败:', error);
+            alert('题目解答失败: ' + (error.message || '请稍后重试'));
+        } finally {
+            // Always hide loading modal when done
+            setShowLoadingModal(false);
+        }
+    };
+
+    // Download functions for saving results
+    const downloadHomeworkResult = () => {
+        // Create content for the file
+        const content = `作业批改结果
+==============
+
+得分: ${homeworkResult?.score || 0}
+正确: ${homeworkResult?.correct || 0}
+错误: ${homeworkResult?.wrong || 0}
+总题数: ${homeworkResult?.totalQuestions || 0}
+
+AI老师点评:
+${homeworkResult?.feedback || ''}
+
+详细分析:
+${homeworkResult?.detailedAnalysis || ''}`;
+        
+        // Create a Blob with the content
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        
+        // Create download link
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `作业批改结果_${new Date().toLocaleDateString('zh-CN')}.txt`;
+        
+        // Trigger download
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+    
+    const downloadProblemResult = () => {
+        // Create content for the file
+        const content = `难题解答结果
+==============
+
+题目:
+${problemResult?.problem || ''}
+
+解题过程:
+${problemResult?.solution || ''}
+
+知识点解析:
+${problemResult?.explanation || ''}`;
+        
+        // Create a Blob with the content
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        
+        // Create download link
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `难题解答结果_${new Date().toLocaleDateString('zh-CN')}.txt`;
+        
+        // Trigger download
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    // New components for displaying results
+    const HomeworkResult = () => React.createElement('div',{className:'space-y-6'},
+        React.createElement('div',{className:'p-5 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 shadow-lg'},
+            React.createElement('div',{className:'flex items-center gap-2 mb-3'},
+                React.createElement('div',{className:'text-lg font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent'}, '📖 作业批改结果'),
+                React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 text-white font-bold shadow-md'}, '完成')
+            ),
+            React.createElement('div',{className:'grid grid-cols-3 gap-4 mt-3'},
+                React.createElement('div',{className:'text-center'}, React.createElement('div',{className:'text-3xl font-bold text-slate-900'}, homeworkResult?.score), React.createElement('div',{className:'text-xs text-slate-500'}, '得分')),
+                React.createElement('div',{className:'text-center'}, React.createElement('div',{className:'text-3xl font-bold text-emerald-600'}, homeworkResult?.correct), React.createElement('div',{className:'text-xs text-slate-500'}, '正确')),
+                React.createElement('div',{className:'text-center'}, React.createElement('div',{className:'text-3xl font-bold text-rose-600'}, homeworkResult?.wrong), React.createElement('div',{className:'text-xs text-slate-500'}, '错误'))
+            )
+        ),
+        React.createElement('div',{className:'p-5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-300 shadow-lg'},
+            React.createElement('div',{className:'flex items-center gap-2 mb-2'},
+                React.createElement('div',{className:'text-sm font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent'}, '📝 AI老师点评'),
+                React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold shadow-md'}, '智能')
+            ),
+            React.createElement('div',{className:'text-sm text-slate-600 bg-white/50 rounded-lg p-3 border border-blue-100'}, homeworkResult?.feedback || '')
+        ),
+        React.createElement('div',{className:'p-5 bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl border-2 border-green-300 shadow-lg'},
+            React.createElement('div',{className:'flex items-center gap-2 mb-2'},
+                React.createElement('div',{className:'text-sm font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent'}, '🔍 详细分析'),
+                React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold shadow-md'}, '详尽')
+            ),
+            React.createElement('div',{className:'text-sm text-slate-600 bg-white/50 rounded-lg p-3 border border-green-100 whitespace-pre-wrap'}, homeworkResult?.detailedAnalysis || '')
+        ),
+        React.createElement('div',{className:'flex items-center justify-center gap-3 mt-6'},
+            React.createElement('button',{className:'px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 flex items-center gap-2', onClick:()=>downloadHomeworkResult()}, 
+                React.createElement('span',null, '📥 下载结果')
+            ),
+            React.createElement('button',{className:'px-4 py-2 rounded-lg bg-gray-600 text-white font-semibold hover:bg-gray-700 flex items-center gap-2', onClick:()=>setStep('mode')}, 
+                React.createElement('span',null, '返回学习模式')
+            )
+        )
+    );
+
+    const ProblemResult = () => React.createElement('div',{className:'space-y-6'},
+        React.createElement('div',{className:'p-5 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl border-2 border-emerald-300 shadow-lg'},
+            React.createElement('div',{className:'flex items-center gap-2 mb-3'},
+                React.createElement('div',{className:'text-lg font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent'}, '❓ 难题解答'),
+                React.createElement('span',{className:'px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-purple-400 to-pink-500 text-white font-bold shadow-md'}, '详解')
+            ),
+            React.createElement('div',{className:'space-y-4'},
+                React.createElement('div',{className:'bg-white/50 rounded-lg p-3 border border-emerald-100'},
+                    React.createElement('div',{className:'text-sm font-semibold text-slate-700 mb-2'}, '题目：'),
+                    React.createElement('div',{className:'text-sm text-slate-600'}, problemResult?.problem || '')
+                ),
+                React.createElement('div',{className:'bg-white/50 rounded-lg p-3 border border-emerald-100'},
+                    React.createElement('div',{className:'text-sm font-semibold text-slate-700 mb-2'}, '解题过程：'),
+                    React.createElement('div',{className:'text-sm text-slate-600 whitespace-pre-line'}, problemResult?.solution || '')
+                ),
+                React.createElement('div',{className:'bg-white/50 rounded-lg p-3 border border-emerald-100'},
+                    React.createElement('div',{className:'text-sm font-semibold text-slate-700 mb-2'}, '知识点解析：'),
+                    React.createElement('div',{className:'text-sm text-slate-600'}, problemResult?.explanation || '')
+                )
+            )
+        ),
+        React.createElement('div',{className:'flex items-center justify-center gap-3 mt-6'},
+            React.createElement('button',{className:'px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 flex items-center gap-2', onClick:()=>downloadProblemResult()}, 
+                React.createElement('span',null, '📥 下载结果')
+            ),
+            React.createElement('button',{className:'px-4 py-2 rounded-lg bg-gray-600 text-white font-semibold hover:bg-gray-700 flex items-center gap-2', onClick:()=>setStep('mode')}, 
+                React.createElement('span',null, '返回学习模式')
+            )
+        )
+    );
+    
+    // Loading modal component with animation
+    const LoadingModal = () => {
+        if (!showLoadingModal) return null;
+        
+        // Create a modal that can only be closed by clicking the close button (not by clicking outside)
+        return React.createElement('div', { 
+            className: 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1400]',
+            // Prevent closing when clicking outside - stop all click events on the backdrop
+            onClick: (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        },
+            React.createElement('div', { 
+                className: 'bg-white rounded-2xl shadow-2xl w-[90vw] max-w-md p-6 relative'
+            },
+                // Close button in top-right corner
+                React.createElement('button', {
+                    className: 'absolute top-4 right-4 text-slate-400 hover:text-slate-600',
+                    onClick: (e) => {
+                        e.stopPropagation();
+                        setShowLoadingModal(false);
+                    }
+                },
+                    React.createElement('svg', {
+                        className: 'w-6 h-6',
+                        fill: 'none',
+                        stroke: 'currentColor',
+                        viewBox: '0 0 24 24'
+                    },
+                        React.createElement('path', {
+                            strokeLinecap: 'round',
+                            strokeLinejoin: 'round',
+                            strokeWidth: 2,
+                            d: 'M6 18L18 6M6 6l12 12'
+                        })
+                    )
+                ),
+                React.createElement('div', { 
+                    className: 'flex flex-col items-center justify-center space-y-4 pt-4'
+                },
+                    // Spinning loader animation
+                    React.createElement('div', { 
+                        className: 'w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin'
+                    }),
+                    React.createElement('div', { 
+                        className: 'text-lg font-semibold text-slate-800'
+                    }, 'AI正在努力分析中...'),
+                    React.createElement('div', { 
+                        className: 'text-sm text-slate-500 text-center'
+                    }, '请耐心等待，这可能需要几秒钟时间'),
+                    // Progress indicator
+                    React.createElement('div', { 
+                        className: 'w-full bg-slate-200 rounded-full h-2'
+                    },
+                        React.createElement('div', { 
+                            className: 'bg-blue-600 h-2 rounded-full animate-pulse',
+                            style: { width: '70%' }
+                        })
+                    )
+                )
+            )
+        );
+    };
+
+    // Logout function
+    const handleLogout = async () => {
+        try {
+            const response = await fetch('/api/auth/logout', { 
+                method: 'POST',
+                credentials: 'include'
+            });
+            if (response.ok) {
+                // Redirect to login page or reload the page
+                window.location.reload();
+            } else {
+                console.error('Logout failed');
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+    
     return React.createElement('div',{className:'space-y-6'},
         React.createElement('div',{className:'flex items-center justify-between'},
             React.createElement('button',{className:'text-xs px-3 py-1 rounded bg-slate-100 text-slate-700', onClick:()=>{ setStep('home'); setTimerOn(false);} }, '返回'),
-            React.createElement('div',{className:'text-xs px-2 py-1 rounded bg-slate-100 text-slate-700'}, `${subject} · ${grade}年级`)
+            React.createElement('div',{className:'flex items-center gap-3'},
+                React.createElement('div',{className:'text-xs px-2 py-1 rounded bg-slate-100 text-slate-700'}, `${subject} · ${grade}年级`),
+                React.createElement('button',{className:'text-xs px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 transition-colors flex items-center gap-1', onClick:handleLogout}, 
+                    React.createElement('svg',{className:'w-3 h-3', fill:'none', stroke:'currentColor', viewBox:'0 0 24 24'},
+                        React.createElement('path',{strokeLinecap:'round', strokeLinejoin:'round', strokeWidth:2, d:'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'})
+                    ),
+                    '登出'
+                )
+            )
         ),
-        (loading ? React.createElement('div',{className:'text-sm text-slate-500'}, '加载中...') :
-            (step==='home' ? React.createElement(Home,null) :
-                step==='mode' ? React.createElement(ModeSelect,null) :
-                    step==='practice' ? React.createElement(PracticeCard,null) :
-                        step==='examList' ? React.createElement(ExamList,null) :
-                            step==='examRun' ? React.createElement(ExamRunCard,null) :
-                                step==='examDone' ? React.createElement(ExamDone,null) :
-                                    React.createElement(Home,null)))
+        (step==='home' ? React.createElement(Home,null) :
+            step==='mode' ? React.createElement(ModeSelect,null) :
+                step==='practice' ? React.createElement(PracticeCard,null) :
+                    step==='examList' ? React.createElement(ExamList,null) :
+                        step==='examRun' ? React.createElement(ExamRunCard,null) :
+                            step==='examDone' ? React.createElement(ExamDone,null) :
+                                step==='homeworkResult' ? React.createElement(HomeworkResult,null) :
+                                    step==='problemResult' ? React.createElement(ProblemResult,null) :
+                                        React.createElement(Home,null))
         ,
-        (namePromptOpen ? React.createElement('div',{className:'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1300]'},
+        React.createElement(LoadingModal, null),
+        (namePromptOpen ? React.createElement('div',{className:'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1300]',
+            onClick: (e) => {
+                // Only close if clicking on the backdrop itself
+                if (e.target === e.currentTarget) {
+                    cancelNamePrompt();
+                }
+            }},
             React.createElement('div',{className:'bg-white rounded-2xl shadow-2xl w-[92vw] max-w-md'},
                 React.createElement('div',{className:'px-5 py-4 border-b bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-2xl'},
                     React.createElement('div',{className:'text-white font-semibold'}, '按用户名选择考试')
@@ -627,7 +1119,13 @@ body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding: 40px; line-he
                 )
             )
         ) : null,
-        (codePromptOpen ? React.createElement('div',{className:'fixed inset-0 bg-black/30 flex items-center justify-center z-[1000]'},
+        (codePromptOpen ? React.createElement('div',{className:'fixed inset-0 bg-black/30 flex items-center justify-center z-[1000]',
+            onClick: (e) => {
+                // Only close if clicking on the backdrop itself
+                if (e.target === e.currentTarget) {
+                    cancelCodePrompt();
+                }
+            }},
             React.createElement('div',{className:'bg-white rounded-2xl border shadow p-5 w-80 space-y-3'},
                 React.createElement('div',{className:'text-sm font-semibold text-slate-700'}, '请输入考试编号'),
                 React.createElement('input',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', value:codeInput, onChange:(e)=>setCodeInput(e.target.value), placeholder:'如：1764315632367'}),

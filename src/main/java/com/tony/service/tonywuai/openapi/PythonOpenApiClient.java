@@ -2,6 +2,7 @@ package com.tony.service.tonywuai.openapi;
 import com.alibaba.fastjson.JSON;
 import com.tony.service.tonywuai.dto.request.AliyunCreateImage;
 import com.tony.service.tonywuai.dto.request.CozeWorkFlowRequest;
+import com.tony.service.tonywuai.dto.request.ImageUnderstanding;
 import com.tony.service.tonywuai.dto.request.ReplyData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,10 @@ public class PythonOpenApiClient {
     private String deepSeekPath;
     @Value("${openapi.coze.workflow_path:/api/coze/run-workflow}")
     private String workFlowPath;
-    @Value("${openapi.tongyi.image.path_01:/api/user/user/aliyun/image_create}")
+    @Value("${openapi.tongyi.image.path_agent_01:/api/user/user/aliyun/image_create}")
     private String imageCreatePath;
+    @Value("${openapi.tongyi.image.path_agent_02.:/api/user/user/aliyun/image_understanding_base64}")
+    private String understanding;
     @Value("${openapi.python.connect-timeout-ms:600000}")
     private int connectTimeoutMs;
     @Value("${openapi.python.read-timeout-ms:600000}")
@@ -230,7 +233,55 @@ public class PythonOpenApiClient {
 
 
 
-
+    /**
+     * 调用阿里的图片理解
+     *
+     * @param： ImageUnderstanding 包含image_content, prompt, model
+     * @return 生成的图片URL
+     * @throws Exception 若请求失败或返回错误
+     */
+    public String aliyunUnderstandImage(ImageUnderstanding request) throws Exception {
+        logger.info("开始调用阿里图片理解接口{}",JSON.toJSONString(request));
+        String url = baseUrl + understanding;
+        // 默认为 JPEG
+        String mime_type = "image/jpeg";
+        if (request.getImageType() != null) {
+            if (".jpg".equals(request.getImageType()) || ".jpeg".equals(request.getImageType())) {
+                mime_type = "image/jpeg";
+            } else if (".png".equals(request.getImageType())) {
+                mime_type = "image/png";
+            } else if (".webp".equals(request.getImageType())) {
+                mime_type = "image/webp";
+            } else if (".gif".equals(request.getImageType())) {
+                mime_type = "image/gif";
+            }
+        }
+        String image_content = "data:" + mime_type + ";base64," + request.getImageBase64();
+        // 手动构建 JSON 字符串（确保是标准 JSON）
+        Map<String, String> param = new HashMap<>();
+        param.put("image_content", image_content);
+        // Use the prompt from the request, or fallback to default if not provided
+        String prompt = request.getPrompt();
+        if (prompt == null || prompt.trim().isEmpty()) {
+            prompt = "请识别文件的内容，按照里面的内容进行批改，并返回每一次的批改结果，错误分析，题目解析。不要有多余的废话，返回的结构只包含批改的内容，因为需要导出这个批改结果。";
+        }
+        param.put("prompt", prompt);
+        param.put("model", "qwen-vl-plus");
+        String jsonBody = JSON.toJSONString(param);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonBody, headers);
+        logger.info("发送的 JSON: {}", jsonBody);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+        logger.info("阿里图片理解接口返回{}",JSON.toJSONString(response));
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody != null && responseBody.containsKey("response")) {
+            return (String) responseBody.get("response");
+        } else {
+            throw new Exception("响应中无 image_url: " + responseBody);
+        }
+    }
 
 
 

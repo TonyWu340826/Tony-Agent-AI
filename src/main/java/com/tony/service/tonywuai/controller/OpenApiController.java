@@ -1,10 +1,7 @@
 package com.tony.service.tonywuai.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.tony.service.tonywuai.dto.request.AliyunCreateImage;
-import com.tony.service.tonywuai.dto.request.CozeWorkFlowRequest;
-import com.tony.service.tonywuai.dto.request.ModelRequest;
-import com.tony.service.tonywuai.dto.request.PromptBaseRequest;
+import com.tony.service.tonywuai.dto.request.*;
 import com.tony.service.tonywuai.openapi.PythonOpenApiClient;
 import com.tony.service.tonywuai.utils.PlaceholderUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,7 +15,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -330,9 +330,6 @@ public class OpenApiController {
 
 
 
-
-
-
     /**
      * 直接调用seepseek模型，没有任何
      * @param request
@@ -351,6 +348,94 @@ public class OpenApiController {
         }
 
     }
+
+
+
+
+
+
+
+
+    /**
+     * 调用阿里的图片理解
+     * @param file 上传的图片文件
+     * @param message 用户消息
+     * @param role 角色
+     * @param context 上下文
+     * @param prompt 提示词
+     * @return
+     */
+    @PostMapping(value = "/aliyunUnderstandImage", consumes = "multipart/form-data")
+    @Operation(summary = "调用阿里的图片理解", description = "调用阿里的图片理解")
+    public ResponseEntity<?> aliyunUnderstandImage(
+            @RequestPart("file") MultipartFile file,
+            @RequestParam(required = false) String message,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String context,
+            @RequestParam(required = false) String prompt) {
+        logger.info("Received request to aliyunUnderstandImage with file: {}, message: {}, role: {}, context: {}, prompt: {}", 
+            file != null ? file.getOriginalFilename() : "null", message, role, context, prompt);
+        
+        try {
+            // 检查文件是否为空
+            if (file == null || file.isEmpty()) {
+                logger.warn("File is null or empty");
+                return ResponseEntity.badRequest().body(Map.of("message", "文件不能为空"));
+            }
+
+            // 获取文件类型
+            String imageType = getFileExtension(file);
+            logger.info("File extension: {}", imageType);
+            
+            // 将文件转换为Base64编码
+            String imageBase64 = Base64.getEncoder().encodeToString(file.getBytes());
+            logger.info("File converted to base64, size: {} bytes", imageBase64.length());
+            
+            // 创建ImageUnderstanding对象
+            ImageUnderstanding request = new ImageUnderstanding(message, role, context, prompt, imageType, imageBase64);
+            logger.info("Created ImageUnderstanding request");
+            
+            // 调用服务
+            String resp = pythonOpenApiClient.aliyunUnderstandImage(request);
+            logger.info("调用阿里的图片理解执行结束--------------------------------{}", resp);
+            if (resp == null) resp = "";
+            return ResponseEntity.ok(Map.of("message", resp));
+        } catch (IOException e) {
+            logger.error("文件处理异常", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "文件处理异常: " + e.getMessage()));
+        } catch (Exception e) {
+            logger.error("调用阿里图片理解服务异常", e);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", e.getMessage()));
+        }
+
+    }
+    
+    /**
+     * 获取文件扩展名
+     * @param file 上传的文件
+     * @return 文件扩展名
+     */
+    private String getFileExtension(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null && originalFilename.contains(".")) {
+            return originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        return "";
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

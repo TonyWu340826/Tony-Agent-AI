@@ -17,6 +17,9 @@ public class BaseDto {
     @Schema(description = "角色")
     String role;
 
+    @Schema(description = "模型")
+    String model;
+
     public BaseDto() {
     }
 
@@ -25,6 +28,14 @@ public class BaseDto {
         this.role = role;
         this.context = context;
         this.prompt = prompt;
+    }
+
+    public BaseDto(String message, String prompt, String context, String role, String model) {
+        this.message = message;
+        this.prompt = prompt;
+        this.context = context;
+        this.role = role;
+        this.model = model;
     }
 
     public String getMessage() {
@@ -57,5 +68,13 @@ public class BaseDto {
 
     public void setPrompt(String prompt) {
         this.prompt = prompt;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
     }
 }
