@@ -54,6 +54,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
     const { useEffect, useState } = React;
     const [agents, setAgents] = useState([]);
     const [loadingAgents, setLoadingAgents] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
     useEffect(()=>{
         const fetchAgents = async () => {
             setLoadingAgents(true);
@@ -67,6 +68,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
         fetchAgents();
     },[]);
     const isVipUser = !!(user && Number(user.vipLevel)===99);
+    const username = (user && (user.nickname||user.username)) || '用户';
     return (
     React.createElement('header',{className:'sticky top-0 z-[60] backdrop-blur-lg bg-white/90 border-b border-slate-100 shadow-sm'},
         React.createElement('div',{className:'max-w-7xl mx-auto px-3 lg:px-6 py-4'},
@@ -118,28 +120,118 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                 ),
                 React.createElement('div',{className:'flex items-center gap-4 ml-auto'},
                     user ? (
-                        React.createElement(React.Fragment,null,
-                            React.createElement('span',{className:'hidden md:inline text-slate-700'}, `你好，${user.nickname||user.username}`),
-                            (Number(user.vipLevel)===99 ? 
-                                React.createElement('div',{className:'relative group cursor-default ml-2'},
-                                    // 1. 动态流光背景 (Cosmic Glow)
-                                    React.createElement('div',{className:'absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-500 group-hover:duration-200 animate-tilt'}),
-                                    // 2. 主体容器 (Black Glass with Border)
-                                    React.createElement('div',{className:'relative flex items-center gap-2 px-4 py-1.5 bg-black rounded-full ring-1 ring-white/10 shadow-2xl'},
-                                        // 3. 皇冠图标 (Glowing Crown)
-                                        React.createElement(Crown,{className:'w-4 h-4 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)] animate-[bounce_2s_infinite]'}),
-                                        // 4. 文字 (Golden Gradient Text)
-                                        React.createElement('span',{className:'text-xs font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-400 to-yellow-200'}, 'VIP 99'),
-                                        // 5. 钻石闪光 (Sparkle)
-                                        React.createElement(Sparkles,{className:'w-3 h-3 text-blue-400 animate-pulse'}),
-                                        // 6. 扫光特效 (Shine Effect)
-                                        React.createElement('div',{className:'absolute inset-0 rounded-full overflow-hidden'},
-                                            React.createElement('div',{className:'absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 -translate-x-full animate-[shimmer_2s_infinite]'})
-                                        )
+                        React.createElement('div',{className:'relative'},
+                            React.createElement('div',{className:'flex items-center gap-2 cursor-pointer mr-4', onClick:()=>setUserMenuOpen(v=>!v)},
+                                React.createElement('div',{className:'w-8 h-8 rounded-full overflow-hidden border-2 relative', style:{ borderColor: isVipUser ? '#FFD700' : '#D1D5DB' }},
+                                    isVipUser && React.createElement('div', {className:'absolute inset-0 rounded-full', style:{ boxShadow: '0 0 10px rgba(255,215,0,0.8), 0 0 20px rgba(255,215,0,0.6)', zIndex: -1 }}),
+                                    user ? (
+                                        React.createElement('img', {
+                                            src: user.avatarUrl || (isVipUser ? '/image/头像4.jpeg' : ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'][Math.floor(Math.random() * 3)]),
+                                            alt: '用户头像',
+                                            className: 'w-full h-full object-cover',
+                                            onError: (e) => { 
+                                                // 根据用户VIP状态选择不同的备用头像
+                                                if (isVipUser) {
+                                                    e.target.src = '/image/头像4.jpeg';
+                                                } else {
+                                                    // 非VIP用户尝试其他头像文件
+                                                    const avatarFiles = ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'];
+                                                    e.target.src = avatarFiles[Math.floor(Math.random() * avatarFiles.length)];
+                                                }
+                                                e.target.onerror = () => { e.target.src = '/image/default-avatar.png'; };
+                                            },
+                                            style: { display: 'block', width: '100%', height: '100%', objectFit: 'cover' }
+                                        })
+                                    ) : (
+                                        React.createElement('div', {className: 'bg-gray-200 border-2 border-dashed rounded-xl w-full h-full'})
                                     )
+                                ),
+                                isVipUser && React.createElement('span',{className:'text-xs font-bold', style:{ background:'linear-gradient(45deg, #FFD700, #FFA500)', boxShadow:'0 0 15px rgba(255,215,0,0.6)', borderRadius:'50px', padding:'3px 10px', color:'#000' }},
+                                    React.createElement('span',{className:'inline-flex items-center gap-1'}, React.createElement(Crown,{className:'w-3 h-3'}), 'VIP 99')
                                 )
-                            : null),
-                            React.createElement('button',{className:'px-4 py-2 text-slate-700 hover:text-blue-600 transition-colors', onClick:onLogout}, '登出')
+                            ),
+                            userMenuOpen && React.createElement('div',{className:'absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-200 p-2 transition-opacity'},
+                                React.createElement('div',{className:'px-3 py-2 text-sm font-semibold text-slate-800'}, username),
+                                React.createElement('div',{className:'border-t border-slate-100 my-1'}),
+                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md'}, '个人资料'),
+                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md'}, '设置'),
+                                                                                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-pink-500 font-bold hover:bg-pink-50 rounded-md animate-bounce', onClick:()=>{
+                                    // 显示鼓励模态框
+                                    const showDonationModal = () => {
+                                        // 创建模态框背景
+                                        const backdrop = document.createElement('div');
+                                        backdrop.style.position = 'fixed';
+                                        backdrop.style.inset = '0';
+                                        backdrop.style.background = 'rgba(0,0,0,.35)';
+                                        backdrop.style.zIndex = '1350';
+                                        backdrop.style.display = 'flex';
+                                        backdrop.style.alignItems = 'center';
+                                        backdrop.style.justifyContent = 'center';
+                                        backdrop.style.padding = '16px';
+                                        
+                                        // 创建模态框主体
+                                        const box = document.createElement('div');
+                                        box.style.width = '88vw';
+                                        box.style.maxWidth = '420px';
+                                        box.style.background = '#fff';
+                                        box.style.borderRadius = '14px';
+                                        box.style.boxShadow = '0 20px 44px rgba(2,6,23,.18)';
+                                        box.style.overflow = 'hidden';
+                                        backdrop.appendChild(box);
+                                        
+                                        // 添加模态框内容
+                                        box.innerHTML = `
+                                          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#0ea5e9;color:#fff;font-weight:700">
+                                            <span>是否资助 UP 主</span>
+                                            <button id="don-x" style="padding:8px 12px;border-radius:10px;background:#eef2ff;color:#334155">关闭</button>
+                                          </div>
+                                          <div id="don-body" style="padding:16px;color:#0f172a">点击确认后，将展示微信与支付宝收款码,一分也是爱。</div>
+                                          <div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid #e2e8f0">
+                                            <button id="don-c" style="padding:8px 12px;border-radius:10px;background:#eef2ff;color:#334155;font-weight:600">取消</button>
+                                            <button id="don-ok" style="padding:8px 12px;border-radius:10px;background:#2563eb;color:#fff;font-weight:600">确认</button>
+                                          </div>
+                                        `;
+                                        
+                                        document.body.appendChild(backdrop);
+                                        
+                                        // 添加关闭事件
+                                        const close = () => { 
+                                            try { 
+                                                document.body.removeChild(backdrop); 
+                                            } catch(e) {}
+                                        };
+                                        
+                                        box.querySelector('#don-x').onclick = close;
+                                        box.querySelector('#don-c').onclick = close;
+                                        backdrop.addEventListener('click', (e) => { 
+                                            if (e.target === backdrop) close(); 
+                                        });
+                                        
+                                        // 确认按钮事件
+                                        box.querySelector('#don-ok').onclick = async () => {
+                                            const body = box.querySelector('#don-body');
+                                            const w = '/image/weixin.png';
+                                            const a = '/image/zhifubao.jpg';
+                                            body.innerHTML = `
+                                              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                                                <div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px">
+                                                  <div style="font-weight:700;color:#0f172a;margin-bottom:6px">微信收款码</div>
+                                                  <img src="${w}" alt="微信收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/>
+                                                </div>
+                                                <div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px">
+                                                  <div style="font-weight:700;color:#0f172a;margin-bottom:6px">支付宝收款码</div>
+                                                  <img src="${a}" alt="支付宝收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/>
+                                                </div>
+                                              </div>
+                                              <div style="font-size:12px;color:#475569;margin-top:4px">感谢您的支持！长按保存后在对应 App 识别。</div>
+                                            `;
+                                        };
+                                    };
+                                    
+                                    showDonationModal();
+                                }}, '鼓励'),
+                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-md', onClick:()=>{ if(confirm('确定要退出登录吗？')){ onLogout(); try{ window.location.href='/index.html'; }catch(_){ } alert('已退出登录'); } }}, '登出')
+                            )
                         )
                     ) : (
                         React.createElement(React.Fragment,null,
@@ -431,7 +523,7 @@ const SupportChat = () => {
             if (document.getElementById('sc-style')) return;
             const s = document.createElement('style');
             s.id = 'sc-style';
-            s.textContent = "@keyframes sc-blink{0%,45%,100%{opacity:1}46%,48%{opacity:0}}@keyframes sc-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}@keyframes sc-breathe{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.12);opacity:.2}}@keyframes sc-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px) scale(1.03)}}.sc-bot{animation:sc-float 6s ease-in-out infinite}.sc-eye{animation:sc-blink 4s infinite}.sc-pulse{animation:sc-breathe 1.8s ease-in-out infinite}.sc-bounce{animation:sc-bounce 1.6s ease-in-out infinite}";
+            s.textContent = "@keyframes sc-blink{0%,45%,100%{opacity:1}46%,48%{opacity:0}}@keyframes sc-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}@keyframes sc-breathe{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.12);opacity:.2}}@keyframes sc-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px) scale(1.03)}}@keyframes vipPulse{0%{box-shadow:0 0 15px rgba(255,215,0,0.8),0 0 25px rgba(255,215,0,0.6)}50%{box-shadow:0 0 20px rgba(255,215,0,0.9),0 0 35px rgba(255,215,0,0.7)}100%{box-shadow:0 0 15px rgba(255,215,0,0.8),0 0 25px rgba(255,215,0,0.6)}}.sc-bot{animation:sc-float 6s ease-in-out infinite}.sc-eye{animation:sc-blink 4s infinite}.sc-pulse{animation:sc-breathe 1.8s ease-in-out infinite}.sc-bounce{animation:sc-bounce 1.6s ease-in-out infinite}.vip-glow{animation:vipPulse 2s ease-in-out infinite}";
             document.head.appendChild(s);
         } catch(_) {}
     }, []);

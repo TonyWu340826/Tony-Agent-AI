@@ -64,24 +64,6 @@
         const init = () => {
           if (document.getElementById('don-btn-inline')) return;
           if (!document.body) return;
-          const s=document.createElement('style'); s.textContent='@keyframes d-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}'; document.head.appendChild(s);
-          const btn=document.createElement('button'); btn.id='don-btn-inline'; btn.innerText='鼓励'; btn.style.position='fixed'; btn.style.right='20px'; btn.style.top='14px'; btn.style.zIndex='1350'; btn.style.padding='8px 12px'; btn.style.borderRadius='9999px'; btn.style.color='#fff'; btn.style.background='#0ea5e9'; btn.style.boxShadow='0 6px 16px rgba(2,6,23,0.15)'; btn.style.fontWeight='700'; btn.style.letterSpacing='.3px'; btn.style.filter='saturate(1.05)'; document.body.appendChild(btn);
-          const show=()=>{
-            const bg=document.createElement('div'); bg.style.position='fixed'; bg.style.inset='0'; bg.style.background='rgba(0,0,0,.35)'; bg.style.zIndex='1350'; bg.style.display='flex'; bg.style.alignItems='center'; bg.style.justifyContent='center'; bg.style.padding='16px';
-            const box=document.createElement('div'); box.style.width='88vw'; box.style.maxWidth='420px'; box.style.background='#fff'; box.style.borderRadius='14px'; box.style.boxShadow='0 20px 44px rgba(2,6,23,.18)'; box.style.overflow='hidden'; bg.appendChild(box);
-            box.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#0ea5e9;color:#fff;font-weight:700"><span>是否资助 UP 主</span><button id="don-x" style="padding:8px 12px;border-radius:10px;background:#eef2ff;color:#334155">关闭</button></div><div id="don-body" style="padding:16px;color:#0f172a">点击确认后，将展示微信与支付宝收款码,一分也是爱。</div><div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid #e2e8f0"><button id="don-c" style="padding:8px 12px;border-radius:10px;background:#eef2ff;color:#334155;font-weight:600">取消</button><button id="don-ok" style="padding:8px 12px;border-radius:10px;background:#2563eb;color:#fff;font-weight:600">确认</button></div>';
-            document.body.appendChild(bg);
-            const close=()=>{ try{ document.body.removeChild(bg); }catch(e){} };
-            box.querySelector('#don-x').onclick=close; box.querySelector('#don-c').onclick=close;
-            bg.addEventListener('click',(e)=>{ if(e.target===bg) close(); });
-            box.querySelector('#don-ok').onclick=async()=>{
-              const body=box.querySelector('#don-body'); 
-              const w='/image/weixin.png'; 
-              const a='/image/zhifubao.jpg';
-              body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px"><div style="font-weight:700;color:#0f172a;margin-bottom:6px">微信收款码</div><img src="'+w+'" alt="微信收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/></div><div style="border:1px solid #e2e8f0;border-radius:12px;padding:8px"><div style="font-weight:700;color:#0f172a;margin-bottom:6px">支付宝收款码</div><img src="'+a+'" alt="支付宝收款码" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:#f8fafc"/></div></div><div style="font-size:12px;color:#475569;margin-top:4px">感谢您的支持！长按保存后在对应 App 识别。</div>';
-            };
-          };
-          btn.addEventListener('click', show);
         };
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
       })();
