@@ -1,6 +1,9 @@
 
 TonyWu AI 聚合平台是一个轻量级、高灵活度的 AI 工具接入和管理系统。我们致力于解决企业内部 AI 工具分散、接入复杂、权限管理混乱的问题，构建一个统一的、安全的 AI 应用生态。
 💻 功能模块概览
+<img width="1425" height="618" alt="image" src="https://github.com/user-attachments/assets/6dc0d134-f0ad-44ff-a655-c9ae050644d5" />
+<img width="1864" height="811" alt="image" src="https://github.com/user-attachments/assets/1a7b827e-e508-4edc-ad68-0f40cbc8ae99" />
+
 平台功能围绕“工具管理”和“安全使用”两大主线展开，为用户提供清晰的交互路径。
 <img width="1278" height="434" alt="image" src="https://github.com/user-attachments/assets/a61a2169-8ed9-4e23-b22c-0466089ffb3f" />
 1. 工具合集 (UserToolsExplorer)
