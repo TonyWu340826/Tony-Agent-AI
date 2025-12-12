@@ -59,6 +59,21 @@ public class User {
     @Column(name = "registration_date", nullable = false, updatable = false)
     private LocalDateTime registrationDate = LocalDateTime.now();
 
+
+    /** 注册类型  1：自主注册，2：管理员注册 3：委托注册 */
+    @Column(name = "register_type")
+    private String registerType;
+
+    /** 性别  0：女，1：男，2：第三性别 */
+    @Column(name = "sex")
+    private String sex;
+
+
+    /** 头像 */
+    @Column(name = "avatar ")
+    private String avatar ;
+
+
     /**
      * 在对象持久化前自动设置注册时间
      */

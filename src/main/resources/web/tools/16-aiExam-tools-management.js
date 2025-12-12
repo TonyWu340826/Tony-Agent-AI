@@ -354,31 +354,37 @@
                 React.createElement('div',{className:'text-lg font-bold text-slate-900 mb-1'}, '欢迎来到AI学习系统'),
                 React.createElement('div',{className:'text-sm text-slate-600'}, '选择你的年级和科目，开始学习吧')
             ),
-            // Simple user avatar with VIP effect
+            // Optimized Cool Avatar Frame (VIP99 Effect)
             React.createElement('div', { 
                 className: 'flex items-center gap-3'
             },
                 React.createElement('div', { 
-                    className: 'text-right'
-                },
-                    React.createElement('div', { 
-                        className: 'text-lg font-bold text-slate-900'
-                    }, '你好，root'),
-                    React.createElement('div', { 
-                        className: 'text-xs text-orange-500 font-bold'
-                    }, '👑 VIP99用户')
-                ),
-                React.createElement('div', { 
-                    className: 'relative w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold cursor-pointer transform transition-transform hover:scale-105 shadow-md',
-                    onClick: () => alert('用户名: root (VIP99)')
-                },
-                    'R',
-                    React.createElement('div', { 
-                        className: 'absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center border-2 border-white'
+                    className: 'relative group cursor-pointer',
+                    onClick: () => {
+                        const name = (currentUser && currentUser.username) || 'root';
+                        const level = (currentUser && currentUser.vipLevel) || 99;
+                        alert(`当前用户: ${name} (VIP${level})`);
                     },
-                        React.createElement('span', { 
-                            className: 'text-[8px] font-bold text-white'
-                        }, 'V')
+                    title: '点击查看用户信息'
+                },
+                    // Cool rotating glow effect (VIP99)
+                    React.createElement('div', {
+                        className: 'absolute -inset-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-purple-600 rounded-full blur opacity-75 animate-spin',
+                        style: { animationDuration: '4s' }
+                    }),
+                    // Avatar Container
+                    React.createElement('div', {
+                        className: 'relative w-12 h-12 rounded-full bg-slate-900 p-0.5 flex items-center justify-center z-10'
+                    },
+                        React.createElement('div', {
+                            className: 'w-full h-full rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-inner'
+                        }, (currentUser && currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'R'))
+                    ),
+                    // Crown Badge (VIP99)
+                    React.createElement('div', {
+                        className: 'absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg z-20 transform group-hover:scale-110 transition-transform duration-300'
+                    }, 
+                        React.createElement('span', { className: 'text-xs' }, '👑')
                     )
                 )
             )
@@ -529,7 +535,7 @@
 <meta charset="UTF-8">
 <style>
 body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding: 40px; line-height: 1.8; }
-.title { text-align: center; font-size: 28px; font-weight: bold; color: #1e40af; margin-bottom: 30px; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; }
+.title { text-align: center; font-size: 28px; font-weight: bold; color: #1e58af; margin-bottom: 30px; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; }
 .section { margin: 30px 0; padding: 20px; background: #f8fafc; border-left: 4px solid #3b82f6; border-radius: 8px; }
 .section-title { font-size: 20px; font-weight: bold; color: #1e3a8a; margin-bottom: 15px; }
 .info-row { margin: 8px 0; font-size: 14px; }

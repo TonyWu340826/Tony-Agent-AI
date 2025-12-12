@@ -68,7 +68,7 @@ public class AuthController {
      * 实际的身份验证是由 SecurityConfig 中配置的 .formLogin().loginProcessingUrl("/api/auth/login") 拦截器处理的。
      * 它会在成功或失败后调用我们配置的 successHandler 或 failureHandler。
      *
-     * @param request 登录请求体 (仅用于接收数据，不执行实际认证逻辑)
+     * @param： request 登录请求体 (仅用于接收数据，不执行实际认证逻辑)
      * @return 登录处理结果 (由 SecurityFilterChain 中的 Handler 返回 JSON)
      */
     @PostMapping(value = "/login", consumes = "application/x-www-form-urlencoded")
@@ -106,13 +106,15 @@ public class AuthController {
         try {
             User user = userService.getUserByUsername(principal.getUsername());
             // 转换为 DTO 返回给前端，隐藏密码哈希等敏感信息
-            Map<String, Object> userData = Map.of(
-                    "id", user.getId(),
-                    "username", user.getUsername(),
-                    "nickname", user.getNickname(),
-                    "vipLevel", user.getVipLevel(),
-                    "balance", user.getBalance()
-            );
+            Map<String, Object> userData = new java.util.HashMap<>();
+            userData.put("id", user.getId());
+            userData.put("username", user.getUsername());
+            userData.put("email", user.getEmail());
+            userData.put("nickname", user.getNickname());
+            userData.put("vipLevel", user.getVipLevel());
+            userData.put("balance", user.getBalance());
+            userData.put("registrationDate", user.getRegistrationDate());
+            
             return ResponseEntity.ok(Map.of("success", true, "user", userData));
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "用户不存在"));

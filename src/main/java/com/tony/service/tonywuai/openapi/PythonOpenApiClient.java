@@ -33,7 +33,7 @@ public class PythonOpenApiClient {
     private String workFlowPath;
     @Value("${openapi.tongyi.image.path_agent_01:/api/user/user/aliyun/image_create}")
     private String imageCreatePath;
-    @Value("${openapi.tongyi.image.path_agent_02.:/api/user/user/aliyun/image_understanding_base64}")
+    @Value("${openapi.tongyi.image.path_agent_02:/api/user/user/aliyun/image_understanding_base64}")
     private String understanding;
     @Value("${openapi.python.connect-timeout-ms:600000}")
     private int connectTimeoutMs;

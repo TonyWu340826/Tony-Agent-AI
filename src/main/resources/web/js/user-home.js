@@ -50,11 +50,65 @@ const ImageWithFallback = ({ src, alt, className }) => {
 // =============================================================================
 // 2. 头部组件 (必须在 UserHome 前定义)
 // =============================================================================
-const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, openModule, prefetchPrompt }) => {
+const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, openModule, prefetchPrompt, setShowProfile }) => {
     const { useEffect, useState } = React;
     const [agents, setAgents] = useState([]);
     const [loadingAgents, setLoadingAgents] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    
+    // 修复个人资料显示问题
+    const handleShowProfile = () => {
+        console.log('handleShowProfile called');
+        console.log('setShowProfile type:', typeof setShowProfile);
+        console.log('setShowProfile value:', setShowProfile);
+        // 正确调用传入的setShowProfile函数
+        if (typeof setShowProfile === 'function') {
+            console.log('Calling setShowProfile(true)');
+            setShowProfile(true);
+        } else {
+            console.error('setShowProfile is not a function:', setShowProfile);
+        }
+    };    
+    // 确保 currentUser 对象包含 registrationDate 字段
+    useEffect(() => {
+        if (user && !user.registrationDate) {
+            // 如果用户对象没有 registrationDate，尝试从服务器获取完整用户信息
+            const fetchFullUserInfo = async () => {
+                try {
+                    const response = await fetch('/api/auth/user');
+                    const data = await response.json();
+                    if (data && data.user && data.user.registrationDate) {
+                        // 更新用户对象以包含 registrationDate
+                        Object.assign(user, data.user);
+                    }
+                } catch (error) {
+                    console.error('获取完整用户信息失败:', error);
+                }
+            };
+            
+            fetchFullUserInfo();
+        }
+    }, [user]);
+    // 确保 currentUser 对象包含 registrationDate 字段
+    useEffect(() => {
+        if (user && !user.registrationDate) {
+            // 如果用户对象没有 registrationDate，尝试从服务器获取完整用户信息
+            const fetchFullUserInfo = async () => {
+                try {
+                    const response = await fetch('/api/auth/user');
+                    const data = await response.json();
+                    if (data && data.user && data.user.registrationDate) {
+                        // 更新用户对象以包含 registrationDate
+                        Object.assign(user, data.user);
+                    }
+                } catch (error) {
+                    console.error('获取完整用户信息失败:', error);
+                }
+            };
+            
+            fetchFullUserInfo();
+        }
+    }, [user]);
     useEffect(()=>{
         const fetchAgents = async () => {
             setLoadingAgents(true);
@@ -126,7 +180,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                                     isVipUser && React.createElement('div', {className:'absolute inset-0 rounded-full', style:{ boxShadow: '0 0 10px rgba(255,215,0,0.8), 0 0 20px rgba(255,215,0,0.6)', zIndex: -1 }}),
                                     user ? (
                                         React.createElement('img', {
-                                            src: user.avatarUrl || (isVipUser ? '/image/头像4.jpeg' : ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'][Math.floor(Math.random() * 3)]),
+                                            src: user.avatar || (isVipUser ? '/image/头像4.jpeg' : ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'][Math.floor(Math.random() * 3)]),
                                             alt: '用户头像',
                                             className: 'w-full h-full object-cover',
                                             onError: (e) => { 
@@ -153,8 +207,14 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                             userMenuOpen && React.createElement('div',{className:'absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-200 p-2 transition-opacity'},
                                 React.createElement('div',{className:'px-3 py-2 text-sm font-semibold text-slate-800'}, username),
                                 React.createElement('div',{className:'border-t border-slate-100 my-1'}),
-                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md'}, '个人资料'),
-                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md'}, '设置'),
+                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md', onClick: () => {
+                                    // 关闭用户菜单
+                                    setUserMenuOpen(false);
+                                    // 显示个人资料页面
+                                    if (typeof setShowProfile === 'function') {
+                                        setShowProfile(true);
+                                    }
+                                }}, '个人资料'),                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md'}, '设置'),
                                                                                                 React.createElement('button',{className:'block w-full text-left px-3 py-2 text-pink-500 font-bold hover:bg-pink-50 rounded-md animate-bounce', onClick:()=>{
                                     // 显示鼓励模态框
                                     const showDonationModal = () => {
@@ -236,7 +296,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                     ) : (
                         React.createElement(React.Fragment,null,
                             React.createElement('button',{className:'hidden md:block px-4 py-2 text-slate-700 font-medium hover:text-blue-600 transition-colors', onClick:onOpenLogin}, '登录'),
-                            React.createElement('button',{className:'px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-xl hover:shadow-blue-500/50 transition-all font-semibold', onClick:onOpenRegister}, '注册')
+                            React.createElement('button',{className:'px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-xl hover:shadow-blue-500/50 transition-all font-semibold hover:from-blue-700 hover:to-indigo-700', onClick:onOpenRegister}, '免费注册')
                         )
                     ),
                     React.createElement('button',{className:'md:hidden p-2'}, React.createElement(Menu,{className:'w-6 h-6 text-slate-700'}))
@@ -260,7 +320,7 @@ const HeroSection = ({ onOpenRegister, onOpenLogin }) => (
             React.createElement('div',{className:'grid lg:grid-cols-2 gap-12 items-center'}, // 🎯 优化 2: 增大 gap-12
                 React.createElement('div',{className:'space-y-8'}, // 🎯 优化 2: 增大 space-y-8
                     React.createElement('div',{className:'inline-flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full text-blue-700 font-semibold'}, React.createElement(Zap,{className:'w-4 h-4'}), React.createElement('span',{className:'text-sm'},'国内首个个人AI大模型平台')),
-                    React.createElement('h1',{className:'text-5xl md:text-6xl tracking-tight text-slate-900 font-extrabold'}, '阿波罗大模型应用平台', React.createElement('br'), React.createElement('span',{className:'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'}, '赋能智能未来')),
+                    React.createElement('h1',{className:'text-5xl md:text-6xl tracking-tight text-slate-900 font-extrabold'}, '大模型应用平台', React.createElement('br'), React.createElement('span',{className:'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'}, '赋能智能未来')),
                     React.createElement('p',{className:'text-lg md:text-xl text-slate-600 leading-relaxed'}, '领先的人工智能大语言模型平台，为开发者和企业提供强大的AI能力。'),
                     React.createElement('div',{className:'flex flex-wrap gap-4'},
                         React.createElement('button',{className:'px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-2xl hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5 flex items-center gap-2', onClick:()=>window.open(SIGNIN_URL,'_blank')}, '立即体验', React.createElement(ArrowRight,{className:'w-5 h-5'})),
@@ -611,6 +671,7 @@ const UserHome = () => {
     const [authTip, setAuthTip] = useState('');
     const [authLoading, setAuthLoading] = useState(false);
     const [captcha, setCaptcha] = useState('');
+    const [showProfile, setShowProfile] = useState(false); // 新增：控制个人资料页面显示
     const captchaUrl = () => `/api/captcha/image?t=${Date.now()}`;
     const [capSrc, setCapSrc] = useState(captchaUrl());
     const [loginForm, setLoginForm] = useState({ username:'', password:'' });
@@ -914,7 +975,7 @@ const UserHome = () => {
     // 🎯 优化 1: Platform iframe 逻辑保持，但点击功能卡片时在新窗口打开
     const openPlatform = () => window.open(SIGNIN_URL, '_blank'); 
     const openAuth = (mode='login') => { setAuthMode(mode); setShowAuth(true); setAuthTip(''); };
-    const logout = async () => { try { await fetch('/api/auth/logout', { method:'POST' }); setCurrentUser(null); } catch(_){} };
+    const logout = async () => { setCurrentUser(null); try { await fetch('/api/auth/logout', { method:'POST' }); } catch(_){} window.location.reload(); };
     const submitLogin = async () => {
         setAuthLoading(true); setAuthTip('');
         try {
@@ -953,7 +1014,7 @@ const UserHome = () => {
                         try { window.dispatchEvent(new Event('modules:loaded')); } catch(e) {}
                     }).catch(()=>{});
                 } catch(_) {}
-            } }),
+            }, setShowProfile }),
             (activePage==='articles') && React.createElement(ArticlesPage,null),
             (activePage==='tech-learning') && ((window.Components && window.Components.TechLearningPage) ? React.createElement(window.Components.TechLearningPage,null) : React.createElement('div',null, techLearningReady ? '组件加载中...' : '正在加载组件脚本...')),
             (activePage==='interview-home') && ((window.Components && window.Components.InterviewHomePage) ? React.createElement(window.Components.InterviewHomePage,null) : React.createElement('div',null, interviewReady ? '组件加载中...' : '正在加载组件脚本...')),
@@ -1155,33 +1216,114 @@ const UserHome = () => {
             ),
             showAuth && React.createElement('div',{className:'fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4', onClick:()=>setShowAuth(false)},
                 React.createElement('div',{className:'bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden', onClick:(e)=>e.stopPropagation()},
-                    React.createElement('div',{className:'flex border-b'},
-                        React.createElement('button',{className:`flex-1 px-4 py-3 text-sm ${authMode==='login'?'text-blue-600 border-b-2 border-blue-600':'text-slate-600'}`, onClick:()=>setAuthMode('login')}, '登录'),
-                        React.createElement('button',{className:`flex-1 px-4 py-3 text-sm ${authMode==='register'?'text-blue-600 border-b-2 border-blue-600':'text-slate-600'}`, onClick:()=>setAuthMode('register')}, '注册')
+                    React.createElement('div',{className:'flex border-b border-gray-200'},
+                        React.createElement('button',{className:`flex-1 px-4 py-3 text-sm font-medium ${authMode==='login'?'text-blue-600 border-b-2 border-blue-600':'text-gray-500 hover:text-gray-700'}`, onClick:()=>setAuthMode('login')}, '登录'),
+                        React.createElement('button',{className:`flex-1 px-4 py-3 text-sm font-medium ${authMode==='register'?'text-blue-600 border-b-2 border-blue-600':'text-gray-500 hover:text-gray-700'}`, onClick:()=>setAuthMode('register')}, '注册')
                     ),
-                    authMode==='login' ? React.createElement('div',{className:'p-6 space-y-4'},
-                        React.createElement('input',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', placeholder:'用户名', value:loginForm.username, onChange:e=>setLoginForm({...loginForm, username:e.target.value})}),
-                        React.createElement('input',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', type:'password', placeholder:'密码', value:loginForm.password, onChange:e=>setLoginForm({...loginForm, password:e.target.value})}),
-                        authTip && React.createElement('div',{className:'text-sm text-red-600'}, authTip),
-                    React.createElement('div',{className:'grid grid-cols-3 gap-3'},
-                        React.createElement('input',{className:'w-full border border-slate-300 rounded-lg px-3 py-2 col-span-2', placeholder:'验证码', value:captcha, onChange:e=>setCaptcha(e.target.value)}),
-                        React.createElement('img',{src:capSrc, alt:'验证码', className:'h-10 rounded border cursor-pointer', onClick:()=>setCapSrc(captchaUrl())})
-                    ),
-                    React.createElement('button',{className:'w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 mt-2', disabled:authLoading, onClick:submitLogin}, authLoading?'登录中...':'登录')
-                ) : React.createElement('div',{className:'p-6 space-y-4'},
-                    React.createElement('input',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', placeholder:'用户名', value:registerForm.username, onChange:e=>setRegisterForm({...registerForm, username:e.target.value})}),
-                    React.createElement('input',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', placeholder:'邮箱', value:registerForm.email, onChange:e=>setRegisterForm({...registerForm, email:e.target.value})}),
-                    React.createElement('input',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', placeholder:'昵称(可选)', value:registerForm.nickname, onChange:e=>setRegisterForm({...registerForm, nickname:e.target.value})}),
-                    React.createElement('input',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', type:'password', placeholder:'密码', value:registerForm.password, onChange:e=>setRegisterForm({...registerForm, password:e.target.value})}),
-                    React.createElement('div',{className:'grid grid-cols-3 gap-3'},
-                        React.createElement('input',{className:'w-full border border-slate-300 rounded-lg px-3 py-2 col-span-2', placeholder:'验证码', value:captcha, onChange:e=>setCaptcha(e.target.value)}),
-                        React.createElement('img',{src:capSrc, alt:'验证码', className:'h-10 rounded border cursor-pointer', onClick:()=>setCapSrc(captchaUrl())})
-                    ),
-                    authTip && React.createElement('div',{className:'text-sm text-red-600'}, authTip),
-                    React.createElement('button',{className:'w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50', disabled:authLoading, onClick:submitRegister}, authLoading?'注册中...':'注册')
-                )
+                    authMode==='login' ? React.createElement('div',{className:'p-6 space-y-5'},
+                        React.createElement('div', null,
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, '用户名'),
+                            React.createElement('input',{className:'w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition', placeholder:'请输入用户名', value:loginForm.username, onChange:e=>setLoginForm({...loginForm, username:e.target.value})})
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, '密码'),
+                            React.createElement('input',{className:'w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition', type:'password', placeholder:'请输入密码', value:loginForm.password, onChange:e=>setLoginForm({...loginForm, password:e.target.value})})
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, '验证码'),
+                            React.createElement('div',{className:'grid grid-cols-3 gap-3'},
+                                React.createElement('input',{className:'w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition col-span-2', placeholder:'请输入验证码', value:captcha, onChange:e=>setCaptcha(e.target.value)}),
+                                React.createElement('img',{src:capSrc, alt:'验证码', className:'h-12 rounded-lg border cursor-pointer self-end', onClick:()=>setCapSrc(captchaUrl())})
+                            )
+                        ),
+                        authTip && React.createElement('div',{className:'text-sm text-red-600 bg-red-50 p-3 rounded-lg'}, authTip),
+                        React.createElement('button',{className:'w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md font-medium', disabled:authLoading, onClick:submitLogin}, authLoading?'登录中...':'登录')
+                    ) : React.createElement('div',{className:'p-6 space-y-5'},
+                        React.createElement('div', null,
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, '用户名'),
+                            React.createElement('input',{className:'w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition', placeholder:'请输入用户名', value:registerForm.username, onChange:e=>setRegisterForm({...registerForm, username:e.target.value})})
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, '邮箱'),
+                            React.createElement('input',{className:'w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition', placeholder:'请输入邮箱', value:registerForm.email, onChange:e=>setRegisterForm({...registerForm, email:e.target.value})})
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, '昵称（可选）'),
+                            React.createElement('input',{className:'w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition', placeholder:'请输入昵称', value:registerForm.nickname, onChange:e=>setRegisterForm({...registerForm, nickname:e.target.value})})
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, '密码'),
+                            React.createElement('input',{className:'w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition', type:'password', placeholder:'请输入密码', value:registerForm.password, onChange:e=>setRegisterForm({...registerForm, password:e.target.value})})
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, '验证码'),
+                            React.createElement('div',{className:'grid grid-cols-3 gap-3'},
+                                React.createElement('input',{className:'w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition col-span-2', placeholder:'请输入验证码', value:captcha, onChange:e=>setCaptcha(e.target.value)}),
+                                React.createElement('img',{src:capSrc, alt:'验证码', className:'h-12 rounded-lg border cursor-pointer self-end', onClick:()=>setCapSrc(captchaUrl())})
+                            )
+                        ),
+                        authTip && React.createElement('div',{className:'text-sm text-red-600 bg-red-50 p-3 rounded-lg'}, authTip),
+                        React.createElement('button',{className:'w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md font-medium', disabled:authLoading, onClick:submitRegister}, authLoading?'注册中...':'注册')
+                    )
                 ),
-
+            // 新增：个人资料页面
+            showProfile && currentUser && React.createElement('div', { className: 'fixed inset-0 flex items-center justify-center p-4', style: { zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.6)' }, onClick: () => setShowProfile(false) },
+                React.createElement('div', { className: 'bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden', onClick: (e) => e.stopPropagation() },
+                    React.createElement('div', { className: 'flex items-center justify-between px-6 py-4 border-b' },
+                        React.createElement('h3', { className: 'text-xl font-bold text-slate-900' }, '个人资料'),
+                        React.createElement('button', { className: 'px-2 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200', onClick: () => setShowProfile(false) }, '×')
+                    ),
+                    React.createElement('div', { className: 'p-6 space-y-4' },
+                        React.createElement('div', { className: 'flex items-center space-x-4' },
+                            React.createElement('div', { className: 'w-16 h-16 rounded-full overflow-hidden border-2 relative' },
+                                React.createElement('img', {
+                                    src: currentUser.avatar || (Number(currentUser.vipLevel) === 99 ? '/image/头像4.jpeg' : ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'][Math.floor(Math.random() * 3)]),
+                                    alt: '用户头像',
+                                    className: 'w-full h-full object-cover',
+                                    onError: (e) => { 
+                                        // 根据用户VIP状态选择不同的备用头像
+                                        const isVip = Number(currentUser.vipLevel) === 99;
+                                        if (isVip) {
+                                            e.target.src = '/image/头像4.jpeg';
+                                        } else {
+                                            // 非VIP用户尝试其他头像文件
+                                            const avatarFiles = ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'];
+                                            e.target.src = avatarFiles[Math.floor(Math.random() * avatarFiles.length)];
+                                        }
+                                        e.target.onerror = () => { e.target.src = '/image/default-avatar.png'; };
+                                    },
+                                    style: { display: 'block', width: '100%', height: '100%', objectFit: 'cover' }
+                                })
+                            ),
+                            React.createElement('div', null,
+                                React.createElement('h4', { className: 'font-semibold text-lg' }, currentUser.nickname || currentUser.username || '未知用户'),
+                                React.createElement('p', { className: 'text-sm text-gray-500' }, currentUser.username || '')
+                            )
+                        ),
+                        React.createElement('div', { className: 'space-y-3' },
+                            React.createElement('div', null,
+                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '用户名'),
+                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, currentUser.username || '未设置')
+                            ),
+                            React.createElement('div', null,
+                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '邮箱'),
+                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, currentUser.email || '未设置')
+                            ),
+                            React.createElement('div', null,
+                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '昵称'),
+                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, currentUser.nickname || '未设置')
+                            ),
+                            React.createElement('div', null,
+                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '会员等级'),
+                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, `VIP ${currentUser.vipLevel ?? 0}`)
+                            ),
+                            React.createElement('div', null,
+                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '注册时间'),
+                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, (currentUser.registrationDate ? new Date(currentUser.registrationDate).toLocaleString() : (currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleString() : '未知')))                            )
+                        )
+                    )
+                )
+            ),
             React.createElement('div',{className:'fixed bottom-0 left-0 right-0 z-[1000] pointer-events-none'},
                 React.createElement('div',{className:`mx-auto max-w-7xl px-4 transition-all duration-300 transform ${showArticle?'translate-y-0 opacity-100 pointer-events-auto':'translate-y-full opacity-0'}`, style:{ transform: showArticle ? 'translateY(0)' : 'translateY(100%)', opacity: showArticle ? 1 : 0, transition: 'transform .3s ease, opacity .3s ease' }},
                     React.createElement('div',{className:'bg-white rounded-t-2xl shadow-2xl border border-slate-200 overflow-hidden'},

@@ -556,9 +556,3 @@
   window.Components.PromptEngineeringPage = PromptEngineeringPage;
   try { window.dispatchEvent(new Event('modules:loaded')); } catch(_) {}
 })();
-
-    useEffect(()=>{
-      if(!open) return; const onKey=(e)=>{ if(e.key==='Escape'){ try{ setOpen(false); }catch(_){ } } };
-      window.addEventListener('keydown', onKey);
-      return ()=>{ try{ window.removeEventListener('keydown', onKey); }catch(_){ } };
-    }, [open]);
