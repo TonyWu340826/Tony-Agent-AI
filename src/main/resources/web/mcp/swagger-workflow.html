@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Swagger 智能工作流</title>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html,body{height:100%;margin:0;padding:0}
+      .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+    <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="/mcp/index.html" class="inline-flex items-center gap-3">
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-bold">S</span>
+          <span class="text-lg font-extrabold tracking-tight text-slate-900">Swagger 智能工作流</span>
+        </a>
+        <div class="flex items-center gap-3">
+          <a href="/mcp/index.html" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200">返回</a>
+          <a href="/home.html" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm hover:bg-slate-800">首页</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="text-xl font-bold text-slate-900">输入参数</div>
+          <div class="mt-1 text-sm text-slate-600">调用接口：<span class="mono">POST /api/workFlow/swagger-ai</span></div>
+
+          <div class="mt-6 space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-900">需求描述</label>
+              <textarea id="query" rows="4" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如：查询最近 10 个用户列表，并输出字段含义"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-900">Swagger 文档地址</label>
+              <input id="swaggerUrl" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如：http://127.0.0.1:8080/v3/api-docs" />
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button id="fillLocal" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200" type="button">填充当前站点</button>
+                <a href="/v3/api-docs" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200" target="_blank" rel="noreferrer">打开 OpenAPI JSON</a>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-900">API Base URL</label>
+              <input id="apiBaseUrl" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如：http://127.0.0.1:8080" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-900">认证 Headers（可选）</label>
+              <div class="mt-2">
+                <div class="inline-flex items-center rounded-xl border border-slate-200 bg-white p-1">
+                  <button id="headersModeText" type="button" class="px-3 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white shadow">JSON/文本</button>
+                  <button id="headersModeKv" type="button" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100">键值对</button>
+                </div>
+
+                <div id="headersPanelText" class="mt-3">
+                  <textarea id="headersText" rows="4" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 mono" placeholder='支持多种格式：
+1) JSON：{"Cookie":"..."}
+2) 多行 Key: Value：
+Cookie: JSESSIONID=...
+Authorization: Bearer ...
+3) curl -H 形式：
+-H "Authorization: Bearer ..."'></textarea>
+                  <div class="mt-2 text-xs text-slate-500">仅在选择“JSON/文本”模式时生效。</div>
+                </div>
+
+                <div id="headersPanelKv" class="mt-3 hidden">
+                  <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="text-sm font-semibold text-slate-900">键值对</div>
+                      <button id="addHeaderRow" type="button" class="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-800 text-sm hover:bg-slate-100">+ 添加</button>
+                    </div>
+                    <div id="headersRows" class="mt-3 space-y-2"></div>
+                    <div class="mt-2 text-xs text-slate-500">仅在选择“键值对”模式时生效。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button id="runBtn" class="px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold hover:from-indigo-700 hover:to-blue-700" type="button">开始执行</button>
+              <button id="clearBtn" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-800 font-semibold hover:bg-slate-200" type="button">清空结果</button>
+              <div id="status" class="text-sm text-slate-600"></div>
+            </div>
+
+            <div id="error" class="hidden rounded-xl border border-rose-200 bg-rose-50 text-rose-700 px-4 py-3 text-sm"></div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div>
+            <div class="text-xl font-bold text-slate-900">执行观测</div>
+            <div class="mt-1 text-sm text-slate-600">展示：<span class="mono">required_operations</span>（流程）与 <span class="mono">execution_results</span>（结果）</div>
+          </div>
+
+          <div class="mt-4 grid gap-4">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div class="text-sm font-semibold text-slate-900">执行流程</div>
+              <div id="flowEmpty" class="mt-3 text-sm text-slate-600">暂无流程</div>
+              <ul id="flowList" class="mt-3 space-y-2"></ul>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-sm font-semibold text-slate-900">执行结果</div>
+                <button id="copyBtn" class="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-800 text-sm hover:bg-slate-100" type="button">复制</button>
+              </div>
+              <div id="resultEmpty" class="mt-3 text-sm text-slate-600">暂无结果</div>
+              <div id="resultMessages" class="mt-3 space-y-2"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      (function(){
+        const elQuery = document.getElementById('query');
+        const elSwagger = document.getElementById('swaggerUrl');
+        const elBase = document.getElementById('apiBaseUrl');
+        const elHeadersText = document.getElementById('headersText');
+        const elHeadersRows = document.getElementById('headersRows');
+        const addHeaderRowBtn = document.getElementById('addHeaderRow');
+        const headersModeTextBtn = document.getElementById('headersModeText');
+        const headersModeKvBtn = document.getElementById('headersModeKv');
+        const headersPanelText = document.getElementById('headersPanelText');
+        const headersPanelKv = document.getElementById('headersPanelKv');
+        const elFlowEmpty = document.getElementById('flowEmpty');
+        const elFlowList = document.getElementById('flowList');
+        const elResultEmpty = document.getElementById('resultEmpty');
+        const elResultMessages = document.getElementById('resultMessages');
+        const elErr = document.getElementById('error');
+        const elStatus = document.getElementById('status');
+        const runBtn = document.getElementById('runBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const fillLocal = document.getElementById('fillLocal');
+
+        const setError = (msg) => {
+          if (!msg) { elErr.classList.add('hidden'); elErr.textContent = ''; return; }
+          elErr.textContent = String(msg);
+          elErr.classList.remove('hidden');
+        };
+        const setStatus = (msg) => { elStatus.textContent = msg ? String(msg) : ''; };
+
+        fillLocal.addEventListener('click', function(){
+          try {
+            const origin = window.location.origin;
+            elSwagger.value = origin + '/v3/api-docs';
+            elBase.value = origin;
+          } catch(_) {}
+        });
+
+        const clearResultView = () => {
+          try { elFlowList.innerHTML = ''; } catch(_) {}
+          try { elResultMessages.innerHTML = ''; } catch(_) {}
+          try { elFlowEmpty.style.display = ''; } catch(_) {}
+          try { elResultEmpty.style.display = ''; } catch(_) {}
+        };
+
+        clearBtn.addEventListener('click', function(){
+          clearResultView();
+          setError('');
+          setStatus('');
+        });
+
+        const normalizeMaybeJson = (v) => {
+          if (v == null) return null;
+          if (Array.isArray(v)) return v;
+          if (typeof v === 'object') return v;
+          const s = String(v || '').trim();
+          if (!s) return null;
+          if (s.startsWith('{') || s.startsWith('[')) {
+            try { return JSON.parse(s); } catch(_) { return s; }
+          }
+          return s;
+        };
+
+        const parseHeadersFromText = (text) => {
+          const t = String(text || '').trim();
+          if (!t) return {};
+          if (t.startsWith('{')) {
+            const obj = JSON.parse(t);
+            if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw new Error('文本框 JSON 必须是对象');
+            return obj;
+          }
+          const out = {};
+          const lines = t.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+          for (const raw of lines) {
+            let line = raw;
+            line = line.replace(/^(-H|--header)\s*/i, '').trim();
+            if ((line.startsWith('"') && line.endsWith('"')) || (line.startsWith("'") && line.endsWith("'"))) {
+              line = line.slice(1, -1);
+            }
+            const idx = line.indexOf(':');
+            if (idx <= 0) continue;
+            const k = line.slice(0, idx).trim();
+            const v = line.slice(idx + 1).trim();
+            if (!k) continue;
+            out[k] = v;
+          }
+          return out;
+        };
+
+        const parseHeadersFromRows = () => {
+          const out = {};
+          const rows = Array.from(elHeadersRows.querySelectorAll('[data-row="header"]'));
+          for (const row of rows) {
+            const k = (row.querySelector('input[data-role="key"]')?.value || '').trim();
+            const v = (row.querySelector('input[data-role="value"]')?.value || '').trim();
+            if (!k) continue;
+            out[k] = v;
+          }
+          return out;
+        };
+
+        const buildAuthHeaders = () => {
+          if (headersMode === 'kv') {
+            const fromRows = parseHeadersFromRows();
+            const keys = Object.keys(fromRows);
+            if (keys.length === 0) return null;
+            for (const k of keys) {
+              if (fromRows[k] == null || String(fromRows[k]).trim() === '') delete fromRows[k];
+            }
+            return Object.keys(fromRows).length ? fromRows : null;
+          }
+          const fromText = parseHeadersFromText(elHeadersText.value || '');
+          const keys = Object.keys(fromText);
+          if (keys.length === 0) return null;
+          for (const k of keys) {
+            if (fromText[k] == null || String(fromText[k]).trim() === '') delete fromText[k];
+          }
+          return Object.keys(fromText).length ? fromText : null;
+        };
+
+        const addHeaderRow = (key = '', value = '') => {
+          const row = document.createElement('div');
+          row.setAttribute('data-row', 'header');
+          row.className = 'flex items-center gap-2';
+          row.innerHTML = `
+            <input data-role="key" class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Key" />
+            <input data-role="value" class="flex-[1.3] rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Value" />
+            <button data-role="remove" type="button" class="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm hover:bg-slate-100">删除</button>
+          `;
+          row.querySelector('input[data-role="key"]').value = key;
+          row.querySelector('input[data-role="value"]').value = value;
+          row.querySelector('button[data-role="remove"]').addEventListener('click', ()=>{
+            try { elHeadersRows.removeChild(row); } catch(_) {}
+          });
+          elHeadersRows.appendChild(row);
+        };
+
+        let headersMode = 'text';
+        let kvInited = false;
+        const applyHeadersMode = (mode) => {
+          headersMode = mode === 'kv' ? 'kv' : 'text';
+          if (headersMode === 'kv') {
+            headersPanelText.classList.add('hidden');
+            headersPanelKv.classList.remove('hidden');
+            headersModeTextBtn.className = 'px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100';
+            headersModeKvBtn.className = 'px-3 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white shadow';
+            if (!kvInited) {
+              kvInited = true;
+              addHeaderRow('', '');
+            }
+          } else {
+            headersPanelKv.classList.add('hidden');
+            headersPanelText.classList.remove('hidden');
+            headersModeKvBtn.className = 'px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100';
+            headersModeTextBtn.className = 'px-3 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white shadow';
+          }
+        };
+
+        headersModeTextBtn.addEventListener('click', function(){ applyHeadersMode('text'); });
+        headersModeKvBtn.addEventListener('click', function(){ applyHeadersMode('kv'); });
+
+        addHeaderRowBtn.addEventListener('click', function(){
+          if (headersMode !== 'kv') applyHeadersMode('kv');
+          addHeaderRow('', '');
+        });
+
+        // 默认模式：JSON/文本
+        applyHeadersMode('text');
+
+        const opLabel = (op) => {
+          if (op == null) return '';
+          if (typeof op === 'string') return op;
+          if (typeof op !== 'object') return String(op);
+          const method = (op.method || op.httpMethod || '').toString().toUpperCase();
+          const path = (op.path || op.url || op.apiPath || '').toString();
+          const opId = (op.operationId || op.operation_id || '').toString();
+          const summary = (op.summary || op.name || '').toString();
+          const parts = [];
+          if (method || path) parts.push([method, path].filter(Boolean).join(' '));
+          if (opId) parts.push(opId);
+          if (summary) parts.push(summary);
+          const s = parts.filter(Boolean).join(' · ');
+          return s || JSON.stringify(op);
+        };
+
+        const pickRequiredOps = (data) => {
+          if (!data) return null;
+          if (data.required_operations != null) return data.required_operations;
+          try {
+            if (data.raw && data.raw.user_intent && data.raw.user_intent.required_operations != null) {
+              return data.raw.user_intent.required_operations;
+            }
+          } catch(_) {}
+          try {
+            const s = (data.response != null ? String(data.response) : '').trim();
+            if (s && (s.startsWith('{') || s.startsWith('['))) {
+              const parsed = JSON.parse(s);
+              if (parsed && parsed.user_intent && parsed.user_intent.required_operations != null) {
+                return parsed.user_intent.required_operations;
+              }
+              if (parsed && parsed.required_operations != null) {
+                return parsed.required_operations;
+              }
+            }
+          } catch(_) {}
+          return null;
+        };
+
+        const renderFlow = (requiredOps, executionResults) => {
+          clearResultView();
+          const ops = normalizeMaybeJson(requiredOps);
+          const exec = normalizeMaybeJson(executionResults);
+          const opsArr = Array.isArray(ops) ? ops : null;
+          const execArr = Array.isArray(exec) ? exec : [];
+          if (!opsArr || opsArr.length === 0) {
+            elFlowEmpty.style.display = '';
+            return;
+          }
+          elFlowEmpty.style.display = 'none';
+          opsArr.forEach((op, idx) => {
+            const success = !!(execArr[idx] && (execArr[idx].success === true || execArr[idx].success === 'true'));
+            const li = document.createElement('li');
+            li.className = 'flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200';
+            const dotClass = success ? 'bg-emerald-500' : 'bg-slate-300';
+            const stepNo = String(idx + 1).padStart(2, '0');
+            li.innerHTML = `
+              <div class="mt-1 h-2.5 w-2.5 rounded-full ${dotClass}"></div>
+              <div class="min-w-0 flex-1">
+                <div class="text-sm font-semibold text-slate-900">步骤 ${stepNo}</div>
+                <div class="mt-1 text-sm text-slate-700 break-words">${opLabel(op).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+              </div>
+            `;
+            elFlowList.appendChild(li);
+          });
+        };
+
+        const renderMessages = (executionResults) => {
+          const exec = normalizeMaybeJson(executionResults);
+          const execArr = Array.isArray(exec) ? exec : [];
+          if (!execArr || execArr.length === 0) {
+            elResultEmpty.style.display = '';
+            return;
+          }
+          elResultEmpty.style.display = 'none';
+          const escapeHtml = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          execArr.forEach((r, idx) => {
+            const success = !!(r && (r.success === true || r.success === 'true'));
+            const endpoint = (r && r.endpoint != null) ? String(r.endpoint) : '';
+            const statusCode = (r && r.status_code != null) ? String(r.status_code) : '';
+            let jsonText = '';
+            try { jsonText = JSON.stringify(r, null, 2); } catch(_) { jsonText = String(r); }
+            const card = document.createElement('div');
+            card.className = 'p-3 rounded-xl bg-white border border-slate-200';
+            const tagClass = success ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-700 border-slate-200';
+            const title = `结果 ${String(idx + 1).padStart(2, '0')}`;
+            const metaParts = [];
+            if (endpoint) metaParts.push(endpoint);
+            if (statusCode) metaParts.push('HTTP ' + statusCode);
+            const meta = metaParts.join(' · ');
+            card.innerHTML = `
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-sm font-semibold text-slate-900">${title}</div>
+                <span class="px-2 py-0.5 text-xs rounded-full border ${tagClass}">${success ? '成功' : '未知/失败'}</span>
+              </div>
+              ${meta ? `<div class="mt-1 text-xs text-slate-500">${escapeHtml(meta)}</div>` : ''}
+              <pre data-role="result-body" class="mt-2 text-sm text-slate-700 whitespace-pre-wrap break-words mono">${escapeHtml(jsonText)}</pre>
+            `;
+            elResultMessages.appendChild(card);
+          });
+        };
+
+        copyBtn.addEventListener('click', async function(){
+          try {
+            const texts = Array.from(elResultMessages.querySelectorAll('[data-role="result-body"]')).map(x => (x.textContent || '').trim()).filter(Boolean);
+            const text = texts.join('\n\n');
+            if (!text) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(text);
+              setStatus('已复制');
+              setTimeout(()=>setStatus(''), 1200);
+              return;
+            }
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try { document.execCommand('copy'); } catch(_) {}
+            document.body.removeChild(ta);
+            setStatus('已复制');
+            setTimeout(()=>setStatus(''), 1200);
+          } catch(_) {}
+        });
+
+        runBtn.addEventListener('click', async function(){
+          setError('');
+          setStatus('执行中...');
+          runBtn.disabled = true;
+          runBtn.classList.add('opacity-60');
+
+          try {
+            const query = (elQuery.value || '').trim();
+            const swaggerUrl = (elSwagger.value || '').trim();
+            const apiBaseUrl = (elBase.value || '').trim();
+            if (!query) throw new Error('请输入需求描述');
+            if (!swaggerUrl) throw new Error('请输入 Swagger 文档地址');
+            if (!apiBaseUrl) throw new Error('请输入 API Base URL');
+
+            let headersObj = null;
+            try {
+              headersObj = buildAuthHeaders();
+            } catch(e) {
+              throw new Error(e && e.message ? e.message : '认证 Headers 解析失败');
+            }
+
+            const body = { query, swaggerUrl, apiBaseUrl };
+            if (headersObj) body.auth = { headers: headersObj };
+
+            const resp = await fetch('/api/workFlow/swagger-ai', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify(body)
+            });
+            const text = await resp.text();
+            let data = {};
+            try { data = JSON.parse(text || '{}'); } catch(_) { data = { response: text }; }
+            if (!resp.ok) {
+              const msg = (data && (data.message || data.error)) ? (data.message || data.error) : ('请求失败，状态码: ' + resp.status);
+              throw new Error(msg);
+            }
+            const out = (data && typeof data.response === 'string') ? data.response : (data && data.response != null ? String(data.response) : (text || ''));
+            const ops = pickRequiredOps(data);
+            renderFlow(ops, data.execution_results);
+            renderMessages(data.execution_results);
+            setStatus('完成');
+            setTimeout(()=>setStatus(''), 1200);
+          } catch(e) {
+            setError(e && e.message ? e.message : '执行失败');
+            setStatus('');
+          } finally {
+            runBtn.disabled = false;
+            runBtn.classList.remove('opacity-60');
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

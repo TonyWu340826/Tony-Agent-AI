@@ -25,13 +25,15 @@ public class WorkFlowController {
     @Operation(summary = "智能工作流", description = "智能工作流")
     public ResponseEntity<?> chat(@RequestBody ApiQueryRequest request) {
         try {
-            String resp = ysWorkFlowClient.workFlowSeekChat(request);
-            return ResponseEntity.ok(Map.of("response", resp == null ? "" : resp));
+            Map<String, Object> resp = ysWorkFlowClient.workFlowSeekChat(request);
+            if (resp == null) {
+                return ResponseEntity.ok(Map.of("response", "", "required_operations", null, "execution_results", null));
+            }
+            return ResponseEntity.ok(resp);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", "upstream error"));
         }
     }
-
 
 
 

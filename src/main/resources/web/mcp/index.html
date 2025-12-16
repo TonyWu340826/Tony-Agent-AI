@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MCP 工具</title>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html,body{height:100%;margin:0;padding:0}
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+    <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="/home.html" class="inline-flex items-center gap-2">
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold">M</span>
+          <span class="text-xl font-extrabold tracking-tight text-slate-900">MCP 工具中心</span>
+        </a>
+        <div class="flex items-center gap-3">
+          <a href="/home.html" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm hover:bg-slate-800">返回首页</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-10">
+      <section class="text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">选择一个 MCP 工作流</h1>
+        <p class="mt-3 text-slate-600">统一入口，快速进入你的智能工作流</p>
+      </section>
+
+      <section class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="/mcp/swagger-workflow.html" class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 transition p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white flex items-center justify-center font-bold text-lg shadow">S</div>
+              <div>
+                <div class="text-lg font-bold text-slate-900">Swagger 智能工作流</div>
+                <div class="mt-1 text-sm text-slate-600">基于 Swagger 接口清单自动规划与执行</div>
+              </div>
+            </div>
+            <span class="mt-1 text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">推荐</span>
+          </div>
+          <div class="mt-4 text-sm text-slate-600">
+            支持输入需求、Swagger 文档地址、API BaseUrl 与认证 Headers。
+          </div>
+          <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
+            打开工具
+            <span class="transition-transform group-hover:translate-x-0.5">→</span>
+          </div>
+        </a>
+
+        <a href="/mcp/custom-api-workflow.html" class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 transition p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-bold text-lg shadow">C</div>
+              <div>
+                <div class="text-lg font-bold text-slate-900">自定义接口清单工作流</div>
+                <div class="mt-1 text-sm text-slate-600">手动粘贴接口清单，AI 生成执行方案</div>
+              </div>
+            </div>
+            <span class="mt-1 text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">灵活</span>
+          </div>
+          <div class="mt-4 text-sm text-slate-600">
+            适用于无 Swagger、或仅有接口描述文档的场景。
+          </div>
+          <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 group-hover:text-emerald-700">
+            打开工具
+            <span class="transition-transform group-hover:translate-x-0.5">→</span>
+          </div>
+        </a>
+      </section>
+
+      <section class="mt-10 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <div class="text-sm font-semibold text-slate-900">快捷入口</div>
+        <div class="mt-3 flex flex-col md:flex-row md:items-center gap-3">
+          <a href="/swagger-ui/index.html" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200 text-sm">Swagger UI</a>
+          <a href="/v3/api-docs" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200 text-sm">OpenAPI JSON</a>
+        </div>
+      </section>
+
+      <footer class="mt-10 text-center text-xs text-slate-500">
+        © 2025 TonyWu AI 平台
+      </footer>
+    </main>
+  </body>
+</html>

@@ -5,20 +5,15 @@ import com.tony.service.tonywuai.dto.request.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import static com.tony.service.tonywuai.com.ComStatus.TYPE_AUTO_CASE;
-import static com.tony.service.tonywuai.com.ComStatus.TYPE_CASE_CHECK;
 
 @Service
 public class YSWorkFlowClient {
@@ -74,7 +69,7 @@ public class YSWorkFlowClient {
      *
      * @return
      */
-    public String workFlowSeekChat(ApiQueryRequest request) throws Exception {
+    public Map<String, Object> workFlowSeekChat(ApiQueryRequest request) throws Exception {
         logger.info("开始调用MCP工作流");
         if (request == null) {
             throw new IllegalArgumentException("输入不能为空");
@@ -120,36 +115,66 @@ public class YSWorkFlowClient {
             try {
                 // 将响应解析为 JSON 对象
                 com.alibaba.fastjson.JSONObject jsonResponse = JSON.parseObject(responseBody);
-                
+
+                Object requiredOps = jsonResponse.get("required_operations");
+                if (requiredOps == null) {
+                    try {
+                        com.alibaba.fastjson.JSONObject userIntent = jsonResponse.getJSONObject("user_intent");
+                        if (userIntent != null) {
+                            requiredOps = userIntent.get("required_operations");
+                        }
+                    } catch (Exception ignore) {
+                        // ignore
+                    }
+                }
+                Object executionResults = jsonResponse.get("execution_results");
+
+                // 尽量保持向后兼容：给出旧的 response 文本字段
+                String responseText = null;
+
                 // 检查是否有 execution_results 字段
                 if (jsonResponse.containsKey("execution_results")) {
-                    com.alibaba.fastjson.JSONArray executionResults = jsonResponse.getJSONArray("execution_results");
-                    if (executionResults != null && !executionResults.isEmpty()) {
+                    com.alibaba.fastjson.JSONArray executionResultsArr = jsonResponse.getJSONArray("execution_results");
+                    if (executionResultsArr != null && !executionResultsArr.isEmpty()) {
                         // 获取第一个执行结果
-                        com.alibaba.fastjson.JSONObject firstResult = executionResults.getJSONObject(0);
+                        com.alibaba.fastjson.JSONObject firstResult = executionResultsArr.getJSONObject(0);
                         if (firstResult != null && firstResult.getBooleanValue("success")) {
                             // 检查是否有 data 字段
                             if (firstResult.containsKey("data")) {
                                 com.alibaba.fastjson.JSONObject data = firstResult.getJSONObject("data");
                                 if (data != null && data.containsKey("response")) {
-                                    return data.getString("response");
+                                    responseText = data.getString("response");
                                 }
                             }
                         }
                     }
                 }
-                
+
                 // 如果 execution_results 中没有找到响应，检查是否有 response 字段
                 if (jsonResponse.containsKey("response")) {
-                    return jsonResponse.getString("response");
+                    responseText = jsonResponse.getString("response");
                 }
-                
+
                 // 如果还是没有找到，返回整个响应体
-                return responseBody;
+                if (responseText == null) {
+                    responseText = responseBody;
+                }
+
+                Map<String, Object> out = new LinkedHashMap<>();
+                out.put("response", responseText);
+                out.put("required_operations", requiredOps);
+                out.put("execution_results", executionResults);
+                out.put("raw", jsonResponse);
+                return out;
             } catch (Exception parseException) {
                 logger.warn("解析响应体时发生异常: {}", parseException.getMessage());
-                // 如果解析失败，直接返回原始响应
-                return responseBody;
+                // 如果解析失败，直接返回原始响应（结构化包装）
+                Map<String, Object> out = new LinkedHashMap<>();
+                out.put("response", responseBody);
+                out.put("required_operations", null);
+                out.put("execution_results", null);
+                out.put("raw", responseBody);
+                return out;
             }
         } catch (Exception e) {
             logger.error("调用 MCP 工作流失败，参数: {}, 异常: {}", param, e.getMessage(), e);

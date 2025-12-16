@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>自定义接口清单工作流</title>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html,body{height:100%;margin:0;padding:0}
+      .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
+    <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="/mcp/index.html" class="inline-flex items-center gap-3">
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold">C</span>
+          <span class="text-lg font-extrabold tracking-tight text-slate-900">自定义接口清单工作流</span>
+        </a>
+        <div class="flex items-center gap-3">
+          <a href="/mcp/index.html" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200">返回</a>
+          <a href="/home.html" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm hover:bg-slate-800">首页</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="text-xl font-bold text-slate-900">输入参数</div>
+          <div class="mt-1 text-sm text-slate-600">调用接口：<span class="mono">POST /api/open/chat</span></div>
+
+          <div class="mt-6 space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-900">需求描述</label>
+              <textarea id="query" rows="4" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="例如：请基于以下接口清单，规划一个‘创建订单并查询订单状态’的调用流程"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-900">接口清单 (文本)</label>
+              <textarea id="apiList" rows="10" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 mono" placeholder="示例：
+1) POST /api/orders 创建订单 body: {userId, items}
+2) GET /api/orders/{id} 查询订单
+3) POST /api/payments 支付 ..."></textarea>
+              <div class="mt-2 text-xs text-slate-500">可以粘贴接口文档、表格转换文本、或你的接口描述。</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-900">认证 Headers（可选）</label>
+              <div class="mt-2">
+                <div class="inline-flex items-center rounded-xl border border-slate-200 bg-white p-1">
+                  <button id="headersModeText" type="button" class="px-3 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white shadow">JSON/文本</button>
+                  <button id="headersModeKv" type="button" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100">键值对</button>
+                </div>
+
+                <div id="headersPanelText" class="mt-3">
+                  <textarea id="headersText" rows="4" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 mono" placeholder='支持多种格式：
+                        1) JSON：{"Authorization":"Bearer ..."}
+                        2) 多行 Key: Value：
+                        Authorization: Bearer ...
+                        Cookie: JSESSIONID=...
+                        3) curl -H 形式：
+                        -H "Authorization: Bearer ..."'>
+                  </textarea>
+                  <div class="mt-2 text-xs text-slate-500">仅在选择“JSON/文本”模式时生效。</div>
+                </div>
+
+                <div id="headersPanelKv" class="mt-3 hidden">
+                  <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="text-sm font-semibold text-slate-900">键值对</div>
+                      <button id="addHeaderRow" type="button" class="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-800 text-sm hover:bg-slate-100">+ 添加</button>
+                    </div>
+                    <div id="headersRows" class="mt-3 space-y-2"></div>
+                    <div class="mt-2 text-xs text-slate-500">仅在选择“键值对”模式时生效。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button id="runBtn" class="px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold hover:from-emerald-700 hover:to-teal-700" type="button">开始分析</button>
+              <button id="clearBtn" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-800 font-semibold hover:bg-slate-200" type="button">清空结果</button>
+              <div id="status" class="text-sm text-slate-600"></div>
+            </div>
+
+            <div id="error" class="hidden rounded-xl border border-rose-200 bg-rose-50 text-rose-700 px-4 py-3 text-sm"></div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xl font-bold text-slate-900">输出</div>
+              <div class="mt-1 text-sm text-slate-600">建议输出包含：调用顺序、请求示例、参数依赖、错误处理</div>
+            </div>
+            <button id="copyBtn" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200" type="button">复制</button>
+          </div>
+
+          <div class="mt-4">
+            <pre id="output" class="min-h-[420px] max-h-[68vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-900 whitespace-pre-wrap break-words"></pre>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      (function(){
+        const elQuery = document.getElementById('query');
+        const elApiList = document.getElementById('apiList');
+        const elHeadersText = document.getElementById('headersText');
+        const elHeadersRows = document.getElementById('headersRows');
+        const addHeaderRowBtn = document.getElementById('addHeaderRow');
+        const headersModeTextBtn = document.getElementById('headersModeText');
+        const headersModeKvBtn = document.getElementById('headersModeKv');
+        const headersPanelText = document.getElementById('headersPanelText');
+        const headersPanelKv = document.getElementById('headersPanelKv');
+        const elOut = document.getElementById('output');
+        const elErr = document.getElementById('error');
+        const elStatus = document.getElementById('status');
+        const runBtn = document.getElementById('runBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+
+        const setError = (msg) => {
+          if (!msg) { elErr.classList.add('hidden'); elErr.textContent = ''; return; }
+          elErr.textContent = String(msg);
+          elErr.classList.remove('hidden');
+        };
+        const setStatus = (msg) => { elStatus.textContent = msg ? String(msg) : ''; };
+
+        clearBtn.addEventListener('click', function(){
+          elOut.textContent = '';
+          setError('');
+          setStatus('');
+        });
+
+        const parseHeadersFromText = (text) => {
+          const t = String(text || '').trim();
+          if (!t) return {};
+          if (t.startsWith('{')) {
+            const obj = JSON.parse(t);
+            if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw new Error('文本框 JSON 必须是对象');
+            return obj;
+          }
+          const out = {};
+          const lines = t.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+          for (const raw of lines) {
+            let line = raw;
+            line = line.replace(/^(-H|--header)\s*/i, '').trim();
+            if ((line.startsWith('"') && line.endsWith('"')) || (line.startsWith("'") && line.endsWith("'"))) {
+              line = line.slice(1, -1);
+            }
+            const idx = line.indexOf(':');
+            if (idx <= 0) continue;
+            const k = line.slice(0, idx).trim();
+            const v = line.slice(idx + 1).trim();
+            if (!k) continue;
+            out[k] = v;
+          }
+          return out;
+        };
+
+        const parseHeadersFromRows = () => {
+          const out = {};
+          const rows = Array.from(elHeadersRows.querySelectorAll('[data-row="header"]'));
+          for (const row of rows) {
+            const k = (row.querySelector('input[data-role="key"]')?.value || '').trim();
+            const v = (row.querySelector('input[data-role="value"]')?.value || '').trim();
+            if (!k) continue;
+            out[k] = v;
+          }
+          return out;
+        };
+
+        const buildAuthHeaders = () => {
+          if (headersMode === 'kv') {
+            const fromRows = parseHeadersFromRows();
+            const keys = Object.keys(fromRows);
+            if (keys.length === 0) return null;
+            for (const k of keys) {
+              if (fromRows[k] == null || String(fromRows[k]).trim() === '') delete fromRows[k];
+            }
+            return Object.keys(fromRows).length ? fromRows : null;
+          }
+          const fromText = parseHeadersFromText(elHeadersText.value || '');
+          const keys = Object.keys(fromText);
+          if (keys.length === 0) return null;
+          for (const k of keys) {
+            if (fromText[k] == null || String(fromText[k]).trim() === '') delete fromText[k];
+          }
+          return Object.keys(fromText).length ? fromText : null;
+        };
+
+        const addHeaderRow = (key = '', value = '') => {
+          const row = document.createElement('div');
+          row.setAttribute('data-row', 'header');
+          row.className = 'flex items-center gap-2';
+          row.innerHTML = `
+            <input data-role="key" class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Key" />
+            <input data-role="value" class="flex-[1.3] rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Value" />
+            <button data-role="remove" type="button" class="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm hover:bg-slate-100">删除</button>
+          `;
+          row.querySelector('input[data-role="key"]').value = key;
+          row.querySelector('input[data-role="value"]').value = value;
+          row.querySelector('button[data-role="remove"]').addEventListener('click', ()=>{
+            try { elHeadersRows.removeChild(row); } catch(_) {}
+          });
+          elHeadersRows.appendChild(row);
+        };
+
+        addHeaderRowBtn.addEventListener('click', function(){
+          if (headersMode !== 'kv') applyHeadersMode('kv');
+          addHeaderRow('', '');
+        });
+
+        let headersMode = 'text';
+        let kvInited = false;
+        const applyHeadersMode = (mode) => {
+          headersMode = mode === 'kv' ? 'kv' : 'text';
+          if (headersMode === 'kv') {
+            headersPanelText.classList.add('hidden');
+            headersPanelKv.classList.remove('hidden');
+            headersModeTextBtn.className = 'px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100';
+            headersModeKvBtn.className = 'px-3 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white shadow';
+            if (!kvInited) {
+              kvInited = true;
+              addHeaderRow('', '');
+            }
+          } else {
+            headersPanelKv.classList.add('hidden');
+            headersPanelText.classList.remove('hidden');
+            headersModeKvBtn.className = 'px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100';
+            headersModeTextBtn.className = 'px-3 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white shadow';
+          }
+        };
+
+        headersModeTextBtn.addEventListener('click', function(){ applyHeadersMode('text'); });
+        headersModeKvBtn.addEventListener('click', function(){ applyHeadersMode('kv'); });
+
+        // 默认模式：JSON/文本
+        applyHeadersMode('text');
+
+        copyBtn.addEventListener('click', async function(){
+          try {
+            const text = elOut.textContent || '';
+            if (!text) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(text);
+              setStatus('已复制');
+              setTimeout(()=>setStatus(''), 1200);
+              return;
+            }
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try { document.execCommand('copy'); } catch(_) {}
+            document.body.removeChild(ta);
+            setStatus('已复制');
+            setTimeout(()=>setStatus(''), 1200);
+          } catch(_) {}
+        });
+
+        runBtn.addEventListener('click', async function(){
+          setError('');
+          setStatus('分析中...');
+          runBtn.disabled = true;
+          runBtn.classList.add('opacity-60');
+
+          try {
+            const query = (elQuery.value || '').trim();
+            const apiList = (elApiList.value || '').trim();
+            if (!query) throw new Error('请输入需求描述');
+            if (!apiList) throw new Error('请输入接口清单');
+
+            let headersObj = null;
+            try {
+              headersObj = buildAuthHeaders();
+            } catch(e) {
+              throw new Error(e && e.message ? e.message : '认证 Headers 解析失败');
+            }
+
+            const prompt = [
+              '你是一个资深后端架构师与接口编排专家。',
+              '我会给你一份自定义接口清单以及业务需求。',
+              '请你输出一个可执行的调用编排方案：',
+              '1) 调用顺序（步骤编号）',
+              '2) 每一步请求方法/路径/关键参数/依赖的上一步返回字段',
+              '3) 关键错误处理与重试策略',
+              '4) 如有必要，给出示例请求 JSON',
+              '',
+              '【接口清单】',
+              apiList,
+              '',
+              '【业务需求】',
+              query
+            ].join('\n');
+
+            const resp = await fetch('/api/open/chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...(headersObj || {}) },
+              credentials: 'same-origin',
+              body: JSON.stringify({ prompt })
+            });
+            const text = await resp.text();
+            let data = {};
+            try { data = JSON.parse(text || '{}'); } catch(_) { data = { response: text }; }
+            if (!resp.ok) {
+              const msg = (data && (data.message || data.error)) ? (data.message || data.error) : ('请求失败，状态码: ' + resp.status);
+              throw new Error(msg);
+            }
+            const out = (data && typeof data.response === 'string') ? data.response : (data && data.response != null ? String(data.response) : (text || ''));
+            elOut.textContent = out;
+            setStatus('完成');
+            setTimeout(()=>setStatus(''), 1200);
+          } catch(e) {
+            setError(e && e.message ? e.message : '分析失败');
+            setStatus('');
+          } finally {
+            runBtn.disabled = false;
+            runBtn.classList.remove('opacity-60');
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
