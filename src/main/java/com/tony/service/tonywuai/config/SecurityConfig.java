@@ -78,6 +78,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/open/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/open/**").permitAll()
 
+                        // 允许匿名访问工作流接口
+                        .requestMatchers(HttpMethod.POST, "/api/workFlow/**").permitAll()
+
                         // 访问日志放行，留言需登录
                         .requestMatchers("/api/system/messages").authenticated()
                         .requestMatchers("/api/visit/**").permitAll()
