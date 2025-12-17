@@ -415,7 +415,7 @@ const Footer = () => (
                         ),
                         (showModule==='tools' && (window.Components&&window.Components.UserToolsExplorer) ? React.createElement(window.Components.UserToolsExplorer, { currentUser }) : null),
                         (showModule==='model' && (window.Components&&window.Components.ModelUI) ? React.createElement(window.Components.ModelUI) : null),
-                        (showModule==='mcp' && (window.Components&&window.Components.MCPUI) ? React.createElement(window.Components.MCPUI) : null),
+                        (showModule==='mcp' && (window.Components&&window.Components.MCPUI) ? React.createElement(window.Components.MCPUI, { currentUser }) : null),
                         (showModule==='prompt' && (window.Components&&window.Components.PromptUI) ? React.createElement(window.Components.PromptUI) : null),
                         (showModule==='dba' && (window.Components&&window.Components.SqlDbaUI) ? React.createElement(window.Components.SqlDbaUI) : null)
                     ),

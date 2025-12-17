@@ -11,6 +11,40 @@
     </style>
   </head>
   <body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+    <script>
+      (function(){
+        const ensureVip99 = async () => {
+          try {
+            const r = await fetch('/api/auth/user', { credentials:'same-origin', cache:'no-store' });
+            const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
+            const u = d && d.user ? d.user : null;
+            if (!u) { alert('请先登录后使用'); return false; }
+            if (Number(u.vipLevel) !== 99) { alert('该功能为VIP99专享，请升级为VIP后使用'); return false; }
+            try { window.__currentUser = u; } catch(_) {}
+            return true;
+          } catch(_) {
+            try { alert('请先登录后使用'); } catch(__) {}
+            return false;
+          }
+        };
+
+        const bind = () => {
+          const links = Array.from(document.querySelectorAll('[data-role="mcp-vip-link"]'));
+          links.forEach((a) => {
+            a.addEventListener('click', async (e) => {
+              try { e.preventDefault(); } catch(_) {}
+              const ok = await ensureVip99();
+              if (!ok) return;
+              const href = a.getAttribute('href');
+              if (href) { try { window.location.assign(href); } catch(_) {} }
+            });
+          });
+        };
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+        else bind();
+      })();
+    </script>
     <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200">
       <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
         <a href="/home.html" class="inline-flex items-center gap-2">
@@ -30,7 +64,7 @@
       </section>
 
       <section class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <a href="/mcp/swagger-workflow.html" class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 transition p-6">
+        <a data-role="mcp-vip-link" href="/mcp/swagger-workflow.html" class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 transition p-6">
           <div class="flex items-start justify-between gap-4">
             <div class="flex items-center gap-3">
               <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white flex items-center justify-center font-bold text-lg shadow">S</div>
@@ -39,18 +73,21 @@
                 <div class="mt-1 text-sm text-slate-600">基于 Swagger 接口清单自动规划与执行</div>
               </div>
             </div>
-            <span class="mt-1 text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">推荐</span>
+            <div class="flex items-center gap-2">
+              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">VIP99</span>
+              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">推荐</span>
+            </div>
           </div>
           <div class="mt-4 text-sm text-slate-600">
             支持输入需求、Swagger 文档地址、API BaseUrl 与认证 Headers。
           </div>
           <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
-            打开工具
+            打开工具（VIP99）
             <span class="transition-transform group-hover:translate-x-0.5">→</span>
           </div>
         </a>
 
-        <a href="/mcp/custom-api-workflow.html" class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 transition p-6">
+        <a data-role="mcp-vip-link" href="/mcp/custom-api-workflow.html" class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 transition p-6">
           <div class="flex items-start justify-between gap-4">
             <div class="flex items-center gap-3">
               <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-bold text-lg shadow">C</div>
@@ -59,13 +96,16 @@
                 <div class="mt-1 text-sm text-slate-600">手动粘贴接口清单，AI 生成执行方案</div>
               </div>
             </div>
-            <span class="mt-1 text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">灵活</span>
+            <div class="flex items-center gap-2">
+              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">VIP99</span>
+              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">灵活</span>
+            </div>
           </div>
           <div class="mt-4 text-sm text-slate-600">
             适用于无 Swagger、或仅有接口描述文档的场景。
           </div>
           <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 group-hover:text-emerald-700">
-            打开工具
+            打开工具（VIP99）
             <span class="transition-transform group-hover:translate-x-0.5">→</span>
           </div>
         </a>

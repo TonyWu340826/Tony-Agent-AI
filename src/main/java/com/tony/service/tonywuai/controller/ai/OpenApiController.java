@@ -1,11 +1,10 @@
-package com.tony.service.tonywuai.controller;
+package com.tony.service.tonywuai.controller.ai;
 
 import com.alibaba.fastjson.JSON;
 import com.tony.service.tonywuai.dto.request.*;
 import com.tony.service.tonywuai.openapi.PythonOpenApiClient;
 import com.tony.service.tonywuai.utils.PlaceholderUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

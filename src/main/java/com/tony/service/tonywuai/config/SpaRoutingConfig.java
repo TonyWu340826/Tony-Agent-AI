@@ -1,5 +1,6 @@
 package com.tony.service.tonywuai.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -15,6 +16,9 @@ import java.io.IOException;
  */
 @Configuration
 public class SpaRoutingConfig implements WebMvcConfigurer {
+    
+    @Value("${temp.upload.dir:/tmp/uploads}")
+    private String tempUploadDir;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -58,5 +62,9 @@ public class SpaRoutingConfig implements WebMvcConfigurer {
                         return requestedResource.exists() && requestedResource.isReadable() ? requestedResource : null;
                     }
                 });
+        
+        // 添加上传文件的静态资源映射
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + tempUploadDir + "/");
     }
 }

@@ -14,6 +14,22 @@ const UserToolsExplorer = ({ currentUser }) => {
   const [size, setSize] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
 
+  // 添加useEffect来监听返回到工具列表的事件
+  useEffect(() => {
+    // 监听返回到工具列表的事件
+    const handleBackToToolList = () => {
+      setActiveTool(null);
+      setToolReady(false);
+      setShowOverlay(false);
+    };
+
+    window.addEventListener('backToToolList', handleBackToToolList);
+    
+    return () => {
+      window.removeEventListener('backToToolList', handleBackToToolList);
+    };
+  }, []);
+
   const loadScriptOnce = (src) => new Promise((resolve, reject) => {
     if ([...document.scripts].some(s => (s.src||'').endsWith(src))) { resolve(); return; }
     const tag = document.createElement('script'); tag.src = src; tag.defer = true; tag.onload = () => resolve(); tag.onerror = (e) => reject(e); document.head.appendChild(tag);

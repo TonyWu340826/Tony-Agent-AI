@@ -80,7 +80,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-              <button id="runBtn" class="px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold hover:from-emerald-700 hover:to-teal-700" type="button">开始分析</button>
+              <button id="runBtn" class="px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold hover:from-emerald-700 hover:to-teal-700" type="button">开始分析（VIP99）</button>
               <button id="clearBtn" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-800 font-semibold hover:bg-slate-200" type="button">清空结果</button>
               <div id="status" class="text-sm text-slate-600"></div>
             </div>
@@ -266,7 +266,24 @@
           } catch(_) {}
         });
 
+        const ensureVip99 = async () => {
+          try {
+            const r = await fetch('/api/auth/user', { credentials:'same-origin', cache:'no-store' });
+            const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
+            const u = d && d.user ? d.user : null;
+            if (!u) { alert('请先登录后使用'); return false; }
+            if (Number(u.vipLevel) !== 99) { alert('该功能为VIP99专享，请升级为VIP后使用'); return false; }
+            try { window.__currentUser = u; } catch(_) {}
+            return true;
+          } catch(_) {
+            try { alert('请先登录后使用'); } catch(__) {}
+            return false;
+          }
+        };
+
         runBtn.addEventListener('click', async function(){
+          const okVip = await ensureVip99();
+          if (!okVip) return;
           setError('');
           setStatus('分析中...');
           runBtn.disabled = true;
