@@ -164,7 +164,7 @@ const UserToolsExplorer = ({ currentUser }) => {
     })();
   },[]);
 
-  const TYPE_NAME_MAP = {1:'AI工具',2:'三方Agent平台',3:'阅读与写作',4:'图像生成',5:'AI商业解读',6:'教育与学习',7:'AI智能SQL',8:'文案与写作',9:'编程助手',10:'工作效率'};
+  const TYPE_NAME_MAP = {1:'AI工具',2:'三方AI平台',3:'阅读与写作',4:'图像生成',5:'AI商业解读',6:'教育与学习',7:'AI智能SQL',8:'文案与写作',9:'编程助手',10:'工作效率'};
   const filtered = tools.filter(x => {
     if (!search) return true;
     const s = search.toLowerCase();
