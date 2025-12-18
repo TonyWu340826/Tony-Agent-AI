@@ -327,6 +327,35 @@ Authorization: Bearer ...
           return null;
         };
 
+        const pickExecutionResults = (data) => {
+          if (!data) return null;
+          if (data.execution_results != null) return data.execution_results;
+          try {
+            if (data.raw && typeof data.raw === 'object' && !Array.isArray(data.raw) && data.raw.execution_results != null) {
+              return data.raw.execution_results;
+            }
+          } catch(_) {}
+          try {
+            const s = (data.response != null ? String(data.response) : '').trim();
+            if (s && (s.startsWith('{') || s.startsWith('['))) {
+              const parsed = JSON.parse(s);
+              if (parsed && parsed.execution_results != null) {
+                return parsed.execution_results;
+              }
+            }
+          } catch(_) {}
+          try {
+            const rawStr = (data.raw != null && typeof data.raw !== 'object') ? String(data.raw).trim() : '';
+            if (rawStr && (rawStr.startsWith('{') || rawStr.startsWith('['))) {
+              const parsedRaw = JSON.parse(rawStr);
+              if (parsedRaw && parsedRaw.execution_results != null) {
+                return parsedRaw.execution_results;
+              }
+            }
+          } catch(_) {}
+          return null;
+        };
+
         const renderFlow = (requiredOps, executionResults) => {
           clearResultView();
           const ops = normalizeMaybeJson(requiredOps);
@@ -471,8 +500,9 @@ Authorization: Bearer ...
             }
             const out = (data && typeof data.response === 'string') ? data.response : (data && data.response != null ? String(data.response) : (text || ''));
             const ops = pickRequiredOps(data);
-            renderFlow(ops, data.execution_results);
-            renderMessages(data.execution_results);
+            const exec = pickExecutionResults(data);
+            renderFlow(ops, exec);
+            renderMessages(exec);
             setStatus('完成');
             setTimeout(()=>setStatus(''), 1200);
           } catch(e) {
