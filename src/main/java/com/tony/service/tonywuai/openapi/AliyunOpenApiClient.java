@@ -1,54 +1,27 @@
 package com.tony.service.tonywuai.openapi;
 import com.alibaba.fastjson.JSON;
 import com.tony.service.tonywuai.dto.request.*;
+import com.tony.service.tonywuai.openapi.base.OpenAIBaseClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.ResourceAccessException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Service
-public class AliyunOpenApiClient {
+public class AliyunOpenApiClient extends OpenAIBaseClient {
 
-
-    @Value("${openapi.python.url:http://116.62.120.101:8889}")
-    private String baseUrl;
 
     @Value("${openapi.python.dev_url:http://172.16.86.183:8889}")
     private String dev_baseUrl;
 
-    @Value("${openapi.tongyi.video.path_01:/api/ai/aliyun_ai/video/videoSynthesis}") // 使用相对路径
+    @Value("${openapi.tongyi.video.path_01:/api/ai/aliyun_ai/video/videoSynthesis}")
     private String path;
-    
-    @Value("${openapi.python.connect-timeout-ms:600000}")
-    private int connectTimeoutMs;
-    
-    @Value("${openapi.python.read-timeout-ms:600000}")
-    private int readTimeoutMs;
-
-    private RestTemplate restTemplate;
-
-
 
     Logger logger  = LoggerFactory.getLogger(this.getClass());
-    public AliyunOpenApiClient() { }
-
-    @jakarta.annotation.PostConstruct
-    public void init() {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Math.max(1000, connectTimeoutMs));
-        factory.setReadTimeout(Math.max(5000, readTimeoutMs));
-        this.restTemplate = new RestTemplate(factory);
-        logger.info("AliyunOpenApiClient initialized with connectTimeout: {}ms, readTimeout: {}ms", connectTimeoutMs, readTimeoutMs);
-    }
-
-
 
     /**
      * 调用阿里的文生视频接口
@@ -59,7 +32,7 @@ public class AliyunOpenApiClient {
      */
     public String create_viedo(VideoGenerationRequest request) throws Exception {
         logger.info("开始调用阿里文生视频接口{}", JSON.toJSONString(request));
-        String url = dev_baseUrl + path;
+        String url = baseUrl + path;
 
         logger.info("开始调用阿里文生视频接口URL>>>{}", url);
         // 设置请求头

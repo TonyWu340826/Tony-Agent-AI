@@ -1,25 +1,21 @@
 package com.tony.service.tonywuai.openapi;
-
 import com.alibaba.fastjson.JSON;
 import com.tony.service.tonywuai.dto.request.*;
+import com.tony.service.tonywuai.openapi.base.OpenAIBaseClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
-public class YSWorkFlowClient {
+public class YSWorkFlowClient extends OpenAIBaseClient {
 
-    @Value("${openapi.python.url:http://116.62.120.101:8889}")
-    private String baseUrl;
+
     @Value("${openapi.python.dev_url:http://172.16.86.183:8889}")
     private String dev_baseUrl;
 
@@ -27,29 +23,7 @@ public class YSWorkFlowClient {
     private String workflow;
 
 
-    @Value("${openapi.python.connect-timeout-ms:600000}")
-    private int connectTimeoutMs;
-    @Value("${openapi.python.read-timeout-ms:600000}")
-    private int readTimeoutMs;
-
-
-
-    private RestTemplate restTemplate;
-
-
-
     Logger logger  = LoggerFactory.getLogger(this.getClass());
-    public YSWorkFlowClient() { }
-
-    @jakarta.annotation.PostConstruct
-    public void init() {
-        SimpleClientHttpRequestFactory f = new SimpleClientHttpRequestFactory();
-        f.setConnectTimeout(Math.max(1000, connectTimeoutMs));
-        f.setReadTimeout(Math.max(5000, readTimeoutMs));
-        this.restTemplate = new RestTemplate(f);
-    }
-
-
 
     /**
      *DeepSeek 模型调用

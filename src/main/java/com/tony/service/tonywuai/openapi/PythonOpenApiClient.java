@@ -4,27 +4,22 @@ import com.tony.service.tonywuai.dto.request.AliyunCreateImage;
 import com.tony.service.tonywuai.dto.request.CozeWorkFlowRequest;
 import com.tony.service.tonywuai.dto.request.ImageUnderstanding;
 import com.tony.service.tonywuai.dto.request.ReplyData;
+import com.tony.service.tonywuai.openapi.base.OpenAIBaseClient;
+import com.tony.service.tonywuai.openapi.dto.PythonChatResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
 import java.util.*;
-
 import static com.tony.service.tonywuai.com.ComStatus.TYPE_AUTO_CASE;
 import static com.tony.service.tonywuai.com.ComStatus.TYPE_CASE_CHECK;
 
 @Service
-public class PythonOpenApiClient {
+public class PythonOpenApiClient extends OpenAIBaseClient {
 
-    @Value("${openapi.python.url:http://116.62.120.101:8889}")
-    private String baseUrl;
     @Value("${openapi.tongyi.agent.path_agent_01:/api/user/user/aliyun/chat}")
     private String path_agent_01;
     @Value("${openapi.deepseek.api.ask_base_path:/api/chat/ask-base}")
@@ -35,26 +30,7 @@ public class PythonOpenApiClient {
     private String imageCreatePath;
     @Value("${openapi.tongyi.image.path_agent_02:/api/user/user/aliyun/image_understanding_base64}")
     private String understanding;
-    @Value("${openapi.python.connect-timeout-ms:600000}")
-    private int connectTimeoutMs;
-    @Value("${openapi.python.read-timeout-ms:600000}")
-    private int readTimeoutMs;
-
-    private RestTemplate restTemplate;
-
-
-
     Logger logger  = LoggerFactory.getLogger(this.getClass());
-    public PythonOpenApiClient() { }
-
-    @jakarta.annotation.PostConstruct
-    public void init() {
-        SimpleClientHttpRequestFactory f = new SimpleClientHttpRequestFactory();
-        f.setConnectTimeout(Math.max(1000, connectTimeoutMs));
-        f.setReadTimeout(Math.max(5000, readTimeoutMs));
-        this.restTemplate = new RestTemplate(f);
-    }
-
 
     /**
      * 同义万象智能体

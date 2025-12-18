@@ -1,4 +1,4 @@
-package com.tony.service.tonywuai.openapi;
+package com.tony.service.tonywuai.openapi.dto;
 
 import lombok.Data;
 

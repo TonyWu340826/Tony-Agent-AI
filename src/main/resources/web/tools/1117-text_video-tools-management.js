@@ -27,6 +27,14 @@
     const [generatingPrompt, setGeneratingPrompt] = useState(false);
     const [aiPolishOpen, setAiPolishOpen] = useState(false);
     const [aiPolishText, setAiPolishText] = useState('');
+    const [showTemplatesPolish, setShowTemplatesPolish] = useState(false);
+    const [templatesPolish, setTemplatesPolish] = useState([]);
+    const [filteredTemplatesPolish, setFilteredTemplatesPolish] = useState([]);
+    const [templateLoadingPolish, setTemplateLoadingPolish] = useState(false);
+    const [showVarModalPolish, setShowVarModalPolish] = useState(false);
+    const [currentTemplatePolish, setCurrentTemplatePolish] = useState(null);
+    const [formVarsPolish, setFormVarsPolish] = useState({});
+    const [varDefinitionsPolish, setVarDefinitionsPolish] = useState([]);
 
     // 模型选项
     const modelOptions = [
@@ -91,6 +99,191 @@
       window.addEventListener('keydown', handleEsc);
       return () => window.removeEventListener('keydown', handleEsc);
     }, []);
+
+    const loadTemplatesPolish = async () => {
+      if (templatesPolish.length > 0) return;
+      setTemplateLoadingPolish(true);
+      try {
+        const res = await fetch('/api/prompt/admin/templates?page=0&size=1000&status=0', { credentials: 'same-origin' });
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (Array.isArray(data.content) ? data.content : []);
+        setTemplatesPolish(list);
+        setFilteredTemplatesPolish(list);
+      } catch (e) {
+        console.error('Load templates failed', e);
+      } finally {
+        setTemplateLoadingPolish(false);
+      }
+    };
+
+    const parseParamSchemaPolish = (t) => {
+      const raw = (t && (t.paramSchema !== undefined ? t.paramSchema : t.param_schema));
+      if (!raw) return null;
+      try {
+        if (typeof raw === 'string') {
+          return JSON.parse(raw || 'null');
+        }
+        if (typeof raw === 'object') return raw;
+      } catch (_) {
+        return null;
+      }
+      return null;
+    };
+
+    const resolveLabelFromSchemaItem = (item, fallback) => {
+      if (!item) return fallback;
+      if (typeof item === 'string') return item;
+      if (typeof item === 'object') {
+        return item.label || item.title || item.name || item.key || item.id || item.description || fallback;
+      }
+      return fallback;
+    };
+
+    const resolveLabelForName = (name, schema) => {
+      const fallback = name;
+      if (!schema) return fallback;
+      if (Array.isArray(schema)) {
+        const item = schema.find(s => s && (s.name === name || s.key === name || s.id === name));
+        return resolveLabelFromSchemaItem(item, fallback);
+      }
+      if (schema && typeof schema === 'object') {
+        const v = schema[name];
+        return resolveLabelFromSchemaItem(v, fallback);
+      }
+      return fallback;
+    };
+
+    const resolveLabelForIndex = (idx, schema) => {
+      const fallback = `参数${idx + 1}`;
+      if (!schema) return fallback;
+      if (Array.isArray(schema)) {
+        return resolveLabelFromSchemaItem(schema[idx], fallback);
+      }
+      if (schema && typeof schema === 'object') {
+        const keys = Object.keys(schema || {});
+        const key = keys[idx];
+        return resolveLabelFromSchemaItem(key ? schema[key] : null, fallback);
+      }
+      return fallback;
+    };
+
+    const insertAiPolishContent = (text) => {
+      const base = String(aiPolishText || '');
+      const parts = base.split('#');
+      parts.pop();
+      const newText = parts.join('#') + String(text || '');
+      setAiPolishText(newText);
+    };
+
+    const handleAiPolishTextChange = (e) => {
+      const val = e.target.value;
+      setAiPolishText(val);
+
+      const lastChar = val.slice(-1);
+      if (lastChar === '#') {
+        setShowTemplatesPolish(true);
+        loadTemplatesPolish();
+        setFilteredTemplatesPolish(templatesPolish.length > 0 ? templatesPolish : []);
+        return;
+      }
+      if (showTemplatesPolish) {
+        if (!val.includes('#')) {
+          setShowTemplatesPolish(false);
+          return;
+        }
+        const parts = val.split('#');
+        const query = String(parts[parts.length - 1] || '').toLowerCase();
+        if (query.includes(' ') || query.includes('\n')) {
+          setShowTemplatesPolish(false);
+          return;
+        }
+        setFilteredTemplatesPolish(templatesPolish.filter(t => String((t && (t.templateName || t.template_name)) || '').toLowerCase().includes(query)));
+      }
+    };
+
+	const maybeOpenTemplateMenuPolish = (val, cursorPos) => {
+		try {
+			const text = String(val || '');
+			const pos = Number.isFinite(cursorPos) ? cursorPos : text.length;
+			const idx = text.lastIndexOf('#', Math.max(0, pos - 1));
+			if (idx < 0) {
+				setShowTemplatesPolish(false);
+				return;
+			}
+			const query = String(text.slice(idx + 1, pos) || '').toLowerCase();
+			if (query.includes(' ') || query.includes('\n') || query.includes('\r') || query.includes('\t')) {
+				setShowTemplatesPolish(false);
+				return;
+			}
+			setShowTemplatesPolish(true);
+			loadTemplatesPolish();
+			if (templatesPolish.length > 0) {
+				setFilteredTemplatesPolish(templatesPolish.filter(t => String((t && (t.templateName || t.template_name)) || '').toLowerCase().includes(query)));
+			}
+		} catch (_) {
+			setShowTemplatesPolish(false);
+		}
+	};
+
+    const selectTemplatePolish = (t) => {
+      setShowTemplatesPolish(false);
+      const content = String((t && (t.templateContent || t.template_content)) || '');
+      const schema = parseParamSchemaPolish(t || {});
+
+      const emptyCount = (content.match(/\{\}/g) || []).length;
+      const namedSet = new Set();
+      const named = [];
+      const re = /\{([^}]*)\}/g;
+      let m;
+      while ((m = re.exec(content)) !== null) {
+        const nm = String(m[1] || '').trim();
+        if (!nm) continue;
+        if (!namedSet.has(nm)) {
+          namedSet.add(nm);
+          named.push(nm);
+        }
+      }
+
+      const defs = [];
+      named.forEach(nm => {
+        defs.push({ key: `named:${nm}`, kind: 'named', name: nm, label: resolveLabelForName(nm, schema) });
+      });
+      for (let i = 0; i < emptyCount; i++) {
+        defs.push({ key: `empty:${i}`, kind: 'empty', index: i, label: resolveLabelForIndex(i, schema) });
+      }
+
+      if (defs.length === 0) {
+        insertAiPolishContent(content);
+        return;
+      }
+
+      setVarDefinitionsPolish(defs);
+      setFormVarsPolish({});
+      setCurrentTemplatePolish(t);
+      setShowVarModalPolish(true);
+    };
+
+    const submitPolishVariables = () => {
+      if (!currentTemplatePolish) return;
+      let content = String((currentTemplatePolish.templateContent || currentTemplatePolish.template_content) || '');
+
+      (varDefinitionsPolish || []).forEach(def => {
+        if (def.kind === 'named') {
+          const val = String(formVarsPolish[def.key] || '');
+          content = content.split(`{${def.name}}`).join(val);
+        }
+      });
+
+      const emptyDefs = (varDefinitionsPolish || []).filter(d => d.kind === 'empty').sort((a, b) => (a.index || 0) - (b.index || 0));
+      emptyDefs.forEach(def => {
+        const val = String(formVarsPolish[def.key] || '');
+        content = content.replace(/\{\}/, val);
+      });
+
+      insertAiPolishContent(content);
+      setShowVarModalPolish(false);
+      setCurrentTemplatePolish(null);
+    };
 
     // AI生成提示词
     const generatePrompt = async (seedText) => {
@@ -266,7 +459,7 @@
           }
         },
           React.createElement('div', {
-            className: 'w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden',
+            className: 'w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-visible',
             onClick: (e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -290,13 +483,28 @@
               )
             ),
             React.createElement('div', { className: 'p-5 space-y-3' },
-              React.createElement('textarea', {
-                value: aiPolishText,
-                onChange: (e) => setAiPolishText(e.target.value),
-                className: 'w-full h-40 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-slate-700',
-                placeholder: '输入需要润色的提示词（可留空，AI将生成一段高质量提示词）',
-                disabled: loading || generatingPrompt
-              }),
+              React.createElement('div', { className: 'relative' },
+                React.createElement('textarea', {
+                  value: aiPolishText,
+                  onChange: handleAiPolishTextChange,
+                  onClick: (e) => maybeOpenTemplateMenuPolish(e.target.value, e.target.selectionStart),
+                  onKeyUp: (e) => maybeOpenTemplateMenuPolish(e.target.value, e.target.selectionStart),
+                  className: 'w-full h-40 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-slate-700',
+                  placeholder: '输入需要润色的提示词（可留空，AI将生成一段高质量提示词；输入 # 可选择模板）',
+                  disabled: loading || generatingPrompt
+                }),
+                showTemplatesPolish && React.createElement('div', { className: 'absolute z-50 left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-lg shadow-xl max-h-72 overflow-y-auto' },
+                  templateLoadingPolish
+                    ? React.createElement('div', { className: 'p-3 text-slate-500 text-sm' }, '加载中...')
+                    : (filteredTemplatesPolish.length === 0
+                      ? React.createElement('div', { className: 'p-3 text-slate-500 text-sm' }, '无匹配模板')
+                      : filteredTemplatesPolish.map(t => React.createElement('div', {
+                        key: t.id,
+                        className: 'px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-sm text-slate-700 border-b border-slate-100 last:border-0',
+                        onClick: () => selectTemplatePolish(t)
+                      }, t.templateName || t.template_name)))
+                )
+              ),
               React.createElement('div', { className: 'flex items-center justify-end' },
                 React.createElement('button', {
                   type: 'button',
@@ -314,6 +522,44 @@
                   React.createElement('span', null, '开始润色并回填')
                 )
               )
+            )
+          )
+        ),
+
+        showVarModalPolish && React.createElement('div', { className: 'fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4', onClick: () => setShowVarModalPolish(false) },
+          React.createElement('div', { className: 'bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden', onClick: (e) => e.stopPropagation() },
+            React.createElement('div', { className: 'px-6 py-4 border-b border-slate-100 flex items-center justify-between' },
+              React.createElement('h3', { className: 'font-bold text-lg text-slate-800' }, '填写模板参数'),
+              React.createElement('button', { type: 'button', className: 'w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center', onClick: () => setShowVarModalPolish(false), title: '关闭' },
+                typeof IconX === 'function' && IconX !== Fallback
+                  ? React.createElement(IconX, { className: 'w-4 h-4 text-slate-600' })
+                  : React.createElement('span', { className: 'text-lg text-slate-600 leading-none' }, '×')
+              )
+            ),
+            React.createElement('div', { className: 'p-6 space-y-4 max-h-[60vh] overflow-y-auto' },
+              (varDefinitionsPolish || []).map(def =>
+                React.createElement('div', { key: def.key, className: 'space-y-1' },
+                  React.createElement('label', { className: 'block text-sm font-medium text-slate-700' }, def.label),
+                  React.createElement('input', {
+                    type: 'text',
+                    value: formVarsPolish[def.key] || '',
+                    onChange: (e) => setFormVarsPolish({ ...formVarsPolish, [def.key]: e.target.value }),
+                    className: 'w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm'
+                  })
+                )
+              )
+            ),
+            React.createElement('div', { className: 'px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3' },
+              React.createElement('button', {
+                type: 'button',
+                onClick: () => setShowVarModalPolish(false),
+                className: 'px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg text-sm font-medium'
+              }, '取消'),
+              React.createElement('button', {
+                type: 'button',
+                onClick: submitPolishVariables,
+                className: 'px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-medium'
+              }, '确认使用')
             )
           )
         ),
@@ -350,6 +596,8 @@
                       e.preventDefault();
                       e.stopPropagation();
                       setAiPolishText(prompt || '');
+                      setShowTemplatesPolish(false);
+                      setShowVarModalPolish(false);
                       setAiPolishOpen(true);
                     },
                     disabled: loading,
@@ -540,6 +788,7 @@
                   title: '下载视频'
                 }, React.createElement(IconDownload, { className: 'w-5 h-5' }))
               )
+
             )
           )
         )

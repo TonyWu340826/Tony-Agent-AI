@@ -20,11 +20,15 @@ const Linkedin = ({ className }) => React.createElement(Svg,{className}, React.c
 const Mail = ({ className }) => React.createElement(Svg,{className}, React.createElement('path',{d:'M4 4h16v16H4z'}), React.createElement('path',{d:'M22 6l-10 7L2 6'}));
 const Zap = ({ className }) => React.createElement(Svg,{className}, React.createElement('path',{d:'M13 2L3 14h7l-1 8 11-14h-7l1-6z'}));
 const ProSupportIcon = ({ className }) => React.createElement(Svg,{className},
-    React.createElement('path',{d:'M4 12a8 8 0 0116 0'}),
-    React.createElement('rect',{x:'3',y:'12',width:'4',height:'6',rx:'2'}),
-    React.createElement('rect',{x:'17',y:'12',width:'4',height:'6',rx:'2'}),
-    React.createElement('path',{d:'M9 18h6'}),
-    React.createElement('path',{d:'M12 18v2'})
+    React.createElement('path',{d:'M7 10a5 5 0 0110 0v3a2 2 0 01-2 2H9a2 2 0 01-2-2v-3z'}),
+    React.createElement('path',{d:'M9 10V9a3 3 0 016 0v1'}),
+    React.createElement('path',{d:'M9 16v2a3 3 0 003 3h0a3 3 0 003-3v-2'}),
+    React.createElement('path',{d:'M4 12v1a3 3 0 003 3'}),
+    React.createElement('path',{d:'M20 12v1a3 3 0 01-3 3'}),
+    React.createElement('circle',{cx:'10',cy:'13',r:'0.6'}),
+    React.createElement('circle',{cx:'14',cy:'13',r:'0.6'}),
+    React.createElement('path',{d:'M12 2v2'}),
+    React.createElement('path',{d:'M10.5 4.5L12 4l1.5.5'})
 );
 
 const features = [
@@ -618,24 +622,49 @@ const SupportChat = () => {
 
     return (
         React.createElement(React.Fragment, null,
-            (!open) && React.createElement('button', { className:'fixed right-6 top-1/2 -translate-y-1/2 z-[1300] w-12 h-12 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 grid place-items-center relative sc-bounce', onClick:()=>setOpen(true), 'aria-label':'打开AI客服' },
+            (!open) && React.createElement('button', { className:'fixed right-6 top-1/2 -translate-y-1/2 z-[1300] w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-600 text-white shadow-[0_12px_30px_rgba(56,189,248,0.35)] hover:brightness-110 grid place-items-center relative sc-bounce', onClick:()=>setOpen(true), 'aria-label':'打开AI客服' },
                 React.createElement(ProSupportIcon,{className:'w-6 h-6 sc-bot'}),
                 React.createElement('span',{className:'absolute inset-0 rounded-full border-2 border-cyan-300 sc-pulse'}),
                 React.createElement('span',{className:'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-400 animate-ping'})
             ),
-            open && React.createElement('div', { className:(fullscreen ? 'fixed z-[1300]' : 'fixed right-6 top-1/2 -translate-y-1/2 z-[1300] w-80 md:w-96 h-[28rem] rounded-2xl') + ' bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col', style: (fullscreen ? { width:'75vw', height:'75vh', left:'50%', top:'50%', transform:'translate(-50%, -50%)', borderRadius:'12px' } : undefined) },
-                React.createElement('div', { className:'flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50' },
+            open && React.createElement('div', { className: fullscreen ? 'fixed inset-0 z-[1300] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4' : '' },
+                React.createElement('div', { className:(fullscreen ? 'w-full max-w-5xl h-[92vh] max-h-[900px] rounded-2xl' : 'fixed right-6 top-1/2 -translate-y-1/2 z-[1300] w-80 md:w-96 h-[28rem] rounded-2xl') + ' bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col' },
+                React.createElement('div', { className:'flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-700 text-white' },
                     React.createElement('div', { className:'font-semibold text-slate-900' }, 'AI客服'),
                     React.createElement('div', { className:'flex items-center gap-2' },
-                        React.createElement('button', { id:'support-chat-fullscreen', className:'px-3 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200', onClick:()=>setFullscreen(f=>!f), title:'切换全屏' }, fullscreen?'退出全屏':'全屏'),
-                        React.createElement('button', { className:'px-2 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200', onClick:()=>{ setOpen(false); setFullscreen(false); } }, '关闭')
+                        React.createElement('button', { id:'support-chat-fullscreen', className:'px-3 py-1 rounded bg-white/15 text-white hover:bg-white/25', onClick:()=>setFullscreen(f=>!f), title:'切换全屏' }, fullscreen?'退出全屏':'全屏'),
+                        React.createElement('button', { className:'px-2 py-1 rounded bg-white/15 text-white hover:bg-white/25', onClick:()=>{ setOpen(false); setFullscreen(false); } }, '关闭')
                     )
                 ),
-                React.createElement('div', { className:'flex-1 p-3 overflow-auto space-y-3' },
-                    messages.map((m,i)=>React.createElement('div',{ key:i, className:(m.role==='assistant' ? 'bg-slate-100 text-slate-800' : 'bg-blue-600 text-white') + ' px-3 py-2 rounded-lg text-sm max-w-[85%] ' + (m.role==='assistant'?'':'ml-auto') }, m.thinking ? React.createElement('div',{className:'flex items-center gap-2'}, React.createElement('svg',{className:'animate-spin h-4 w-4 text-blue-600', viewBox:'0 0 24 24'}, React.createElement('circle',{className:'opacity-25', cx:'12', cy:'12', r:'10', stroke:'currentColor', strokeWidth:'4'}), React.createElement('path',{className:'opacity-75', fill:'currentColor', d:'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'})), '正在思考…') : m.content)),
+                React.createElement('div', { className:'flex-1 min-h-0 p-3 overflow-auto space-y-3 bg-slate-50/60' },
+                    messages.map((m,i)=>{
+                        const isAssistant = m.role === 'assistant';
+                        const avatar = isAssistant
+                            ? React.createElement('div', { className:'w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white flex items-center justify-center text-[10px] font-extrabold flex-shrink-0' }, 'AI')
+                            : React.createElement('div', { className:'w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-extrabold flex-shrink-0' }, '我');
+
+                        const body = m.thinking
+                            ? React.createElement('div',{className:'flex items-center gap-2'},
+                                React.createElement('svg',{className:'animate-spin h-4 w-4 ' + (isAssistant ? 'text-blue-600' : 'text-white'), viewBox:'0 0 24 24'},
+                                    React.createElement('circle',{className:'opacity-25', cx:'12', cy:'12', r:'10', stroke:'currentColor', strokeWidth:'4'}),
+                                    React.createElement('path',{className:'opacity-75', fill:'currentColor', d:'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'})
+                                ),
+                                '正在思考…'
+                            )
+                            : React.createElement('div', { className:'whitespace-pre-wrap break-words' }, m.content);
+
+                        return React.createElement('div', { key:i, className:'flex items-end gap-2 ' + (isAssistant ? '' : 'justify-end') },
+                            isAssistant ? avatar : null,
+                            React.createElement('div', { className:'max-w-[78%] ' + (isAssistant ? '' : 'text-right') },
+                                React.createElement('div', { className:'text-[10px] text-slate-400 mb-1 ' + (isAssistant ? '' : 'text-right') }, isAssistant ? 'AI客服' : '我'),
+                                React.createElement('div', { className:(isAssistant ? 'bg-white text-slate-800 border border-slate-200' : 'bg-blue-600 text-white') + ' px-3 py-2 rounded-2xl text-sm shadow-sm ' + (isAssistant ? 'rounded-bl-md' : 'rounded-br-md') }, body)
+                            ),
+                            isAssistant ? null : avatar
+                        );
+                    }),
                     React.createElement('div', { ref: bottomRef })
                 ),
-                React.createElement('div', { className:'px-3 py-2 border-t border-slate-100 space-y-2' },
+                React.createElement('div', { className:'mt-auto px-3 py-2 border-t border-slate-100 space-y-2 bg-white' },
                     React.createElement('div', { className:'flex items-center gap-2' },
                         React.createElement('input', { className:'flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm', placeholder:'请输入您的问题…', value:input, onChange:(e)=>setInput(e.target.value), onKeyDown:(e)=>{ if(e.key==='Enter') send(); } }),
                         React.createElement('button', { className:'px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700', onClick:send }, '发送')
@@ -644,6 +673,7 @@ const SupportChat = () => {
                         ['平台核心功能','工具合集分类','VIP权益咨询','反馈问题与建议'].map((q,idx)=>React.createElement('button',{ key:idx, className:'px-2 py-1 text-xs rounded bg-slate-100 text-slate-700 hover:bg-slate-200', onClick:()=>quick(q) }, q))
                     )
                 )
+              )
             )
         )
     );
