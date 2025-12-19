@@ -12,15 +12,190 @@
     </style>
   </head>
   <body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
-    <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200">
-      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <a href="/mcp/index.html" class="inline-flex items-center gap-3">
-          <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-bold">S</span>
-          <span class="text-lg font-extrabold tracking-tight text-slate-900">Swagger 智能工作流</span>
-        </a>
-        <div class="flex items-center gap-3">
-          <a href="/mcp/index.html" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200">返回</a>
-          <a href="/home.html" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm hover:bg-slate-800">首页</a>
+    <script>
+      (function(){
+        const renderUserNav = async () => {
+          try {
+            const nameEl = document.getElementById('nav-username');
+            const loginEl = document.getElementById('nav-login');
+            const userWrap = document.getElementById('nav-user-wrap');
+            const avatarImg = document.getElementById('nav-avatar-img');
+            if (!nameEl || !loginEl || !userWrap || !avatarImg) return;
+
+            const r = await fetch('/api/auth/user', { credentials:'same-origin', cache:'no-store' });
+            const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
+            const u = d && d.user ? d.user : null;
+            if (!u) {
+              loginEl.classList.remove('hidden');
+              userWrap.classList.add('hidden');
+              return;
+            }
+            const username = u.nickname || u.username || '用户';
+            nameEl.textContent = username;
+            loginEl.classList.add('hidden');
+            userWrap.classList.remove('hidden');
+            const isVip = Number(u.vipLevel) === 99;
+            avatarImg.src = u.avatar || (isVip ? '/image/头像4.jpeg' : '/image/头像1.png');
+            avatarImg.onerror = () => { avatarImg.src = '/image/default-avatar.png'; };
+            try { window.__currentUser = u; } catch(_) {}
+          } catch(_) {
+            try {
+              const loginEl = document.getElementById('nav-login');
+              if (loginEl) loginEl.classList.remove('hidden');
+            } catch(__) {}
+          }
+        };
+
+        const renderAgents = async () => {
+          const menu = document.getElementById('nav-agents-menu');
+          if (!menu) return;
+          menu.innerHTML = '<div class="px-3 py-2 text-sm text-slate-500">加载中...</div>';
+          try {
+            const resp = await fetch('/api/tools/active?type=10000', { credentials:'same-origin', cache:'no-store' });
+            const txt = await resp.text();
+            let data = [];
+            try { data = JSON.parse(txt || '[]'); } catch(_) { data = []; }
+            const list = Array.isArray(data) ? data : [];
+            if (list.length === 0) {
+              menu.innerHTML = '<div class="px-3 py-2 text-sm text-slate-500">暂无可用工具</div>';
+              return;
+            }
+            const isVipUser = !!(window.__currentUser && Number(window.__currentUser.vipLevel) === 99);
+            menu.innerHTML = '';
+            list.forEach((a) => {
+              const row = document.createElement('div');
+              row.className = 'flex items-center gap-3 p-2 rounded-lg hover:bg-indigo-50 cursor-pointer';
+              row.onclick = () => {
+                const isVipTool = String(a.vipAllow || '').toUpperCase() === 'VIP';
+                if (isVipTool && !isVipUser) {
+                  alert('该工具为VIP99专享，请升级为VIP后使用');
+                  return;
+                }
+                const url = a.apiPath || a.url;
+                if (url) window.open(url, '_blank');
+              };
+              const img = document.createElement('img');
+              img.className = 'w-6 h-6 rounded';
+              img.alt = a.toolName || '';
+              img.src = a.iconUrl || '/image/img.png';
+              img.onerror = () => { img.src = '/image/img.png'; };
+              const name = document.createElement('span');
+              name.className = 'text-slate-900 font-medium';
+              name.textContent = a.toolName || '';
+              row.appendChild(img);
+              row.appendChild(name);
+              menu.appendChild(row);
+            });
+          } catch(_) {
+            menu.innerHTML = '<div class="px-3 py-2 text-sm text-slate-500">加载失败</div>';
+          }
+        };
+
+        const initMenus = () => {
+          const userWrap = document.getElementById('nav-user-wrap');
+          const userBtn = document.getElementById('nav-user-btn');
+          const userMenu = document.getElementById('nav-user-menu');
+          const agentsBtn = document.getElementById('nav-agents-btn');
+          const agentsWrap = document.getElementById('nav-agents-wrap');
+          const agentsMenu = document.getElementById('nav-agents-menu');
+
+          const closeAll = () => {
+            if (userMenu) userMenu.classList.add('hidden');
+            if (agentsMenu) agentsMenu.classList.add('hidden');
+          };
+
+          if (userBtn && userMenu) {
+            userBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const willOpen = userMenu.classList.contains('hidden');
+              closeAll();
+              if (willOpen) userMenu.classList.remove('hidden');
+            });
+          }
+
+          if (agentsBtn && agentsMenu) {
+            agentsBtn.addEventListener('click', async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const willOpen = agentsMenu.classList.contains('hidden');
+              closeAll();
+              if (willOpen) {
+                agentsMenu.classList.remove('hidden');
+                await renderAgents();
+              }
+            });
+          }
+
+          document.addEventListener('mousedown', (e) => {
+            const t = e.target;
+            const inUser = userWrap && userWrap.contains(t);
+            const inAgents = agentsWrap && agentsWrap.contains(t);
+            if (!inUser && !inAgents) closeAll();
+          });
+
+          const logoutBtn = document.getElementById('nav-logout-btn');
+          if (logoutBtn) {
+            logoutBtn.addEventListener('click', async (e) => {
+              e.preventDefault();
+              try { await fetch('/api/auth/logout', { method:'POST', credentials:'same-origin' }); } catch(_) {}
+              try { window.location.assign('/home.html'); } catch(_) {}
+            });
+          }
+        };
+
+        const bind = () => {
+          renderUserNav().then(()=>{ try{ initMenus(); }catch(_){ } });
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+        else bind();
+      })();
+    </script>
+
+    <header class="sticky top-0 z-[60] backdrop-blur-lg bg-white/90 border-b border-slate-100 shadow-sm">
+      <div class="max-w-7xl mx-auto px-3 lg:px-6 py-4">
+        <div class="flex items-center">
+          <a href="/home.html" class="flex items-center gap-1 cursor-pointer">
+            <span class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-extrabold">宙</span>
+            <span class="text-2xl tracking-tight text-slate-950 font-bold">宙斯</span>
+          </a>
+
+          <div class="hidden md:flex items-center gap-12 relative flex-1 justify-center">
+            <a href="/home.html#features-section" class="flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1">平台功能</a>
+            <a href="/home.html#tools" class="flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-indigo-600 transition-colors border-b-2 border-transparent hover:border-indigo-600 pb-1">工具合集</a>
+            <a href="/home.html#model" class="text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1">模型服务</a>
+            <a href="/mcp/index.html" class="text-blue-600 font-semibold text-base md:text-lg border-b-2 border-blue-600 pb-1">MCP</a>
+            <a href="/home.html#prompt-engineering" class="text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1">Prompt工程</a>
+
+            <div id="nav-agents-wrap" class="relative">
+              <a id="nav-agents-btn" href="#" class="flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1">三方AI平台</a>
+              <div id="nav-agents-menu" class="hidden absolute right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-80 p-2 transition-opacity z-[100]">
+                <div class="px-3 py-2 text-sm text-slate-500">加载中...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 ml-auto">
+            <a id="nav-login" href="/home.html" class="hidden px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200">去登录</a>
+
+            <div id="nav-user-wrap" class="hidden relative">
+              <a id="nav-user-btn" href="#" class="flex items-center gap-2 cursor-pointer">
+                <span id="nav-username" class="text-sm font-semibold text-slate-700"></span>
+                <span class="w-8 h-8 rounded-full overflow-hidden border-2 border-slate-200">
+                  <img id="nav-avatar-img" class="w-full h-full object-cover" alt="用户头像" />
+                </span>
+              </a>
+              <div id="nav-user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-200 p-2">
+                <a href="/home.html" class="block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md">个人资料</a>
+                <a href="/home.html" class="block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md">设置</a>
+                <div class="border-t border-slate-100 my-1"></div>
+                <a id="nav-logout-btn" href="#" class="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-md">登出</a>
+              </div>
+            </div>
+
+            <a href="/mcp/index.html" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200">返回</a>
+            <a href="/home.html" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm hover:bg-slate-800">首页</a>
+          </div>
         </div>
       </div>
     </header>

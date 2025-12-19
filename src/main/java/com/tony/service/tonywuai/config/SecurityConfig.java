@@ -38,6 +38,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .authorizeHttpRequests(auth -> auth
+                        // 用户自助修改用户名需要登录态
+                        .requestMatchers(HttpMethod.PATCH, "/api/auth/user/username").authenticated()
                         // 允许匿名访问 /api/auth/** (注册, 登录处理, 获取用户信息)
                         .requestMatchers("/api/auth/**").permitAll()
 

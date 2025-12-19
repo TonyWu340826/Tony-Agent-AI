@@ -37,12 +37,16 @@
     <script type="text/javascript" defer src="/js/sql-dba-ui.js"></script>
     <script type="text/javascript" defer src="/js/ai-tool-management.js"></script>
   <script type="text/javascript" defer src="/tools/10-aiSql-tools-management.js"></script>
-    <script type="text/javascript" defer src="/js/user-home.js?v=14"></script>
+    <script type="text/javascript" defer src="/js/user-home.js?v=23"></script>
     <script type="text/babel">
       const root = ReactDOM.createRoot(document.getElementById('root'))
+      let mounted = false
+      let mountedComp = null
       const render = () => {
         const Comp = window.Components && window.Components.UserHome
+        if (mounted && mountedComp === Comp) return
         root.render(Comp ? React.createElement(Comp) : React.createElement('div', {className:'p-6'}, '组件加载中...'))
+        if (Comp) { mounted = true; mountedComp = Comp }
         // 隐藏加载动画
         const loader = document.getElementById('page-loader')
         if (loader && Comp) {

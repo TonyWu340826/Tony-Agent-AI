@@ -20,6 +20,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
     /**
+     * 判断用户名是否存在。
+     *
+     * <p>用于用户自助修改用户名时做唯一性校验。
+     */
+    boolean existsByUsername(String username);
+
+    /**
      * 根据邮箱查询用户，用于注册检查
      */
     Optional<User> findByEmail(String email);

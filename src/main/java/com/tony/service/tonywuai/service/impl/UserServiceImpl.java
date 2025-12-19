@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -76,6 +77,30 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("用户未找到: " + username));
+    }
+
+    @Override
+    @Transactional
+    public User updateUsername(String currentUsername, String newUsername) {
+        if (currentUsername == null || currentUsername.isBlank()) {
+            throw new RuntimeException("当前用户名不能为空");
+        }
+        if (newUsername == null || newUsername.isBlank()) {
+            throw new RuntimeException("新用户名不能为空");
+        }
+
+        String normalizedNewUsername = newUsername.trim();
+        if (Objects.equals(currentUsername, normalizedNewUsername)) {
+            return getUserByUsername(currentUsername);
+        }
+
+        if (userRepository.existsByUsername(normalizedNewUsername)) {
+            throw new RuntimeException("用户名已被占用: " + normalizedNewUsername);
+        }
+
+        User user = getUserByUsername(currentUsername);
+        user.setUsername(normalizedNewUsername);
+        return userRepository.save(user);
     }
 
     @Override

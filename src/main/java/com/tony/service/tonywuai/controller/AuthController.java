@@ -1,6 +1,7 @@
 package com.tony.service.tonywuai.controller;
 import com.tony.service.tonywuai.dto.UserLoginRequest;
 import com.tony.service.tonywuai.dto.UserRegisterRequest;
+import com.tony.service.tonywuai.dto.UpdateUsernameRequest;
 import com.tony.service.tonywuai.entity.User;
 import com.tony.service.tonywuai.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,8 +11,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Map;
 
 /**
@@ -57,6 +62,57 @@ public class AuthController {
                     "message", e.getMessage()
             );
             return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+
+    /**
+     * 用户自助修改用户名。
+     * 路径: PATCH /api/auth/user/username
+     */
+    @PatchMapping("/user/username")
+    @Operation(summary = "修改用户名", description = "用户端设置页自助修改用户名")
+    public ResponseEntity<?> updateUsername(
+            @Valid @RequestBody UpdateUsernameRequest request,
+            @Parameter(hidden = true) @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "未登录"));
+        }
+
+        try {
+            User user = userService.updateUsername(principal.getUsername(), request.getUsername());
+
+            // 为什么要刷新 SecurityContext：用户名作为 principal 的 key，如果不刷新会导致同一 session 下
+            // 后续接口仍携带旧用户名而查询失败。
+            Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+            if (currentAuth != null) {
+                String password = "";
+                Object authPrincipal = currentAuth.getPrincipal();
+                if (authPrincipal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+                    password = userDetails.getPassword();
+                }
+
+                org.springframework.security.core.userdetails.UserDetails newPrincipal =
+                        new org.springframework.security.core.userdetails.User(user.getUsername(), password, currentAuth.getAuthorities());
+                Authentication newAuth = new UsernamePasswordAuthenticationToken(
+                        newPrincipal,
+                        currentAuth.getCredentials(),
+                        currentAuth.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(newAuth);
+            }
+
+            Map<String, Object> userData = new java.util.HashMap<>();
+            userData.put("id", user.getId());
+            userData.put("username", user.getUsername());
+            userData.put("email", user.getEmail());
+            userData.put("nickname", user.getNickname());
+            userData.put("vipLevel", user.getVipLevel());
+            userData.put("balance", user.getBalance());
+            userData.put("registrationDate", user.getRegistrationDate());
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "修改成功", "user", userData));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
 

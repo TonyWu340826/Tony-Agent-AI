@@ -40,6 +40,87 @@ const features = [
 
 const SIGNIN_URL = 'http://116.62.120.101:8088/signin';
 
+const smoothNavigate = (url) => {
+    try {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = url;
+        document.head.appendChild(link);
+    } catch (_) {}
+
+    try { fetch(url, { method: 'GET', credentials: 'same-origin', cache: 'force-cache' }).catch(()=>{}); } catch (_) {}
+
+    try {
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.inset = '0';
+        overlay.style.zIndex = '40000';
+        overlay.style.background = 'rgba(2,6,23,0.18)';
+        overlay.style.backdropFilter = 'blur(6px)';
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 180ms ease-out';
+        overlay.style.pointerEvents = 'none';
+
+        const spinner = document.createElement('div');
+        spinner.style.position = 'absolute';
+        spinner.style.top = '50%';
+        spinner.style.left = '50%';
+        spinner.style.transform = 'translate(-50%,-50%)';
+        spinner.style.width = '42px';
+        spinner.style.height = '42px';
+        spinner.style.borderRadius = '9999px';
+        spinner.style.border = '3px solid rgba(255,255,255,0.7)';
+        spinner.style.borderTopColor = 'rgba(37,99,235,0.95)';
+        spinner.style.animation = 'uhSpin 0.8s linear infinite';
+
+        const style = document.getElementById('uh-spin-style') || document.createElement('style');
+        style.id = 'uh-spin-style';
+        style.textContent = '@keyframes uhSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}';
+        document.head.appendChild(style);
+
+        overlay.appendChild(spinner);
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+        setTimeout(() => {
+            try { window.location.assign(url); } catch (_) {}
+        }, 190);
+        return;
+    } catch (_) {}
+
+    try { window.location.assign(url); } catch (_) {}
+};
+
+try {
+    window.__userHomeJsVersion = 'v23';
+    const __DEBUG = (()=>{ try { return new URLSearchParams(window.location.search).get('debug') === '1'; } catch(_) { return false; } })();
+    window.__userHomeDebug = __DEBUG;
+    if (__DEBUG) {
+        console.log('[user-home] loaded', window.__userHomeJsVersion);
+    }
+} catch (_) {}
+
+const __USER_HOME_DEBUG = (()=>{ try { return !!window.__userHomeDebug; } catch(_) { return false; } })();
+
+const ErrorBoundary = class extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+    componentDidCatch(error) {
+        try { console.error('[user-home] render error', error); } catch(_) {}
+    }
+    render() {
+        if (this.state.hasError) {
+            return React.createElement('div', { className: 'p-6' }, String(this.state.error || 'render error'));
+        }
+        return this.props.children;
+    }
+};
+
 // =============================================================================
 // 1. 辅助工具组件 (必须在被使用前定义)
 // =============================================================================
@@ -54,11 +135,14 @@ const ImageWithFallback = ({ src, alt, className }) => {
 // =============================================================================
 // 2. 头部组件 (必须在 UserHome 前定义)
 // =============================================================================
-const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, openModule, prefetchPrompt, setShowProfile }) => {
-    const { useEffect, useState } = React;
+const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, openModule, prefetchPrompt, setShowProfile, setShowSettings }) => {
+    const { useEffect, useRef, useState } = React;
     const [agents, setAgents] = useState([]);
     const [loadingAgents, setLoadingAgents] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const userMenuRef = useRef(null);
+    const [agentsMenuOpen, setAgentsMenuOpen] = useState(false);
+    const agentsMenuRef = useRef(null);
     
     // 修复个人资料显示问题
     const handleShowProfile = () => {
@@ -73,6 +157,37 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
             console.error('setShowProfile is not a function:', setShowProfile);
         }
     };    
+
+    const handleShowSettings = () => {
+        try { console.log('handleShowSettings called'); } catch(_) {}
+        if (typeof setShowSettings === 'function') {
+            setShowSettings(true);
+        } else {
+            console.error('setShowSettings is not a function:', setShowSettings);
+        }
+    };
+
+    useEffect(() => {
+        const handlePointerDown = (e) => {
+            const t = e.target;
+            const inUser = !!(userMenuRef.current && userMenuRef.current.contains(t));
+            const inAgents = !!(agentsMenuRef.current && agentsMenuRef.current.contains(t));
+
+            if (!inUser && userMenuOpen) {
+                setUserMenuOpen(false);
+            }
+            if (!inAgents && agentsMenuOpen) {
+                setAgentsMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handlePointerDown);
+        document.addEventListener('touchstart', handlePointerDown);
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown);
+            document.removeEventListener('touchstart', handlePointerDown);
+        };
+    }, [userMenuOpen, agentsMenuOpen]);
     // 确保 currentUser 对象包含 registrationDate 字段
     useEffect(() => {
         if (user && !user.registrationDate) {
@@ -131,14 +246,14 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
     React.createElement('header',{className:'sticky top-0 z-[60] backdrop-blur-lg bg-white/90 border-b border-slate-100 shadow-sm'},
         React.createElement('div',{className:'max-w-7xl mx-auto px-3 lg:px-6 py-4'},
                 React.createElement('div',{className:'flex items-center'},
-                React.createElement('div',{className:'flex items-center gap-1 cursor-pointer', onClick:(e)=>{ e.preventDefault(); try{ window.location.assign('/home.html'); }catch(_){ } try{ openModule && openModule(null); }catch(_){ } try{ const el=document.getElementById('features-section'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }},
+                React.createElement('div',{className:'flex items-center gap-1 cursor-pointer', onClick:(e)=>{ e.preventDefault(); try{ const p=String(window.location.pathname||''); const isHome = p.endsWith('/home.html') || p==='/' || p==='' ; if(!isHome){ window.location.assign('/home.html'); return; } }catch(_){ } try{ openModule && openModule(null); }catch(_){ } try{ const el=document.getElementById('features-section'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }},
                     React.createElement('div',{className:'w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center'}, React.createElement(Sparkles,{className:'w-5 h-5 text-white'})),
                     React.createElement('span',{className:'text-3xl tracking-tight text-slate-950 font-bold'}, '宙斯')
                 ),
                 // 🎯 优化 3: 增大导航项间距 gap-8
                 React.createElement('div',{className:'hidden md:flex items-center gap-12 relative flex-1 justify-center'}, 
                     React.createElement('div',{className:'relative group'},
-                        React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ window.location.assign('/home.html'); }catch(_){ } try{ openModule && openModule(null); }catch(_){ } try{ const el=document.getElementById('features-section'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, React.createElement(Code2,{className:'w-5 h-5'}),'平台功能'),
+                        React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ const p=String(window.location.pathname||''); const isHome = p.endsWith('/home.html') || p==='/' || p==='' ; if(!isHome){ window.location.assign('/home.html'); return; } }catch(_){ } try{ openModule && openModule(null); }catch(_){ } try{ const el=document.getElementById('features-section'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, React.createElement(Code2,{className:'w-5 h-5'}),'平台功能'),
                         // 使用 visible/invisible 控制可交互性，避免 pointer-events 切换导致 hover 丢失而无法点击
                         React.createElement('div',{className:'absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-64 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100]'},
                             [
@@ -159,12 +274,12 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                     ),
                     React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-indigo-600 transition-colors border-b-2 border-transparent hover:border-indigo-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ if(String(window.location.pathname||'').endsWith('/home.html')){ window.location.hash = 'tools'; if(openModule) openModule('tools'); } else { window.location.assign('/home.html#tools'); } }catch(_){ } try{ const el=document.getElementById('tools-page'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, React.createElement(Terminal,{className:'w-5 h-5'}),'工具合集'),
                     React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ window.location.hash = 'model'; openModule && openModule('model'); }catch(_){ } }}, '模型服务'),
-                    React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ window.location.assign('/mcp/index.html'); }catch(_){ } }}, 'MCP'),
+                    React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); smoothNavigate('/mcp/index.html'); }}, 'MCP'),
                     React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onMouseEnter:()=>{ try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } }, onClick:(e)=>{ e.preventDefault(); try{ history.pushState({ page:'prompt-engineering' }, '', '/prompt-engineering'); }catch(_){ try{ window.location.hash = 'prompt-engineering'; }catch(__){} } try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } try{ openModule && openModule('prompt-engineering'); }catch(_){ } try{ const el=document.getElementById('prompt-engineering-page'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, 'Prompt工程'),
-                    React.createElement('div',{className:'relative group'},
-                        React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ onOpenAgents && onOpenAgents(); }catch(_){ } }}, React.createElement(Star,{className:'w-5 h-5'}),'三方AI平台'),
+                    React.createElement('div',{className:'relative group', ref: agentsMenuRef},
+                        React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); setUserMenuOpen(false); setAgentsMenuOpen(v=>!v); }}, React.createElement(Star,{className:'w-5 h-5'}),'三方AI平台'),
                         // 同上：避免 pointer-events 切换导致下拉菜单无法点击
-                        React.createElement('div',{className:'absolute right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-80 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100]'},
+                        React.createElement('div',{className:`absolute right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-80 p-2 transition-all z-[100] ${agentsMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible'}`},
                             (loadingAgents ? [1,2,3].map((i)=>React.createElement('div',{key:i,className:'h-8 bg-slate-100 rounded animate-pulse mb-2'}))
                             : agents.map((a,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-indigo-50 cursor-pointer', onClick:()=>{
                                     const isVipTool = String(a.vipAllow||'').toUpperCase()==='VIP';
@@ -180,7 +295,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                 ),
                 React.createElement('div',{className:'flex items-center gap-4 ml-auto'},
                     user ? (
-                        React.createElement('div',{className:'relative'},
+                        React.createElement('div',{className:'relative', ref: userMenuRef},
                             React.createElement('div',{className:'flex items-center gap-2 cursor-pointer mr-4', onClick:()=>setUserMenuOpen(v=>!v)},
                                 React.createElement('div',{className:'w-8 h-8 rounded-full overflow-hidden border-2 relative', style:{ borderColor: isVipUser ? '#FFD700' : '#D1D5DB' }},
                                     isVipUser && React.createElement('div', {className:'absolute inset-0 rounded-full', style:{ boxShadow: '0 0 10px rgba(255,215,0,0.8), 0 0 20px rgba(255,215,0,0.6)', zIndex: -1 }}),
@@ -217,10 +332,11 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                                     // 关闭用户菜单
                                     setUserMenuOpen(false);
                                     // 显示个人资料页面
-                                    if (typeof setShowProfile === 'function') {
-                                        setShowProfile(true);
-                                    }
-                                }}, '个人资料'),                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md'}, '设置'),
+                                    handleShowProfile();
+                                }}, '个人资料'),                                React.createElement('button',{className:'block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md', onClick: () => {
+                                    setUserMenuOpen(false);
+                                    handleShowSettings();
+                                }}, '设置'),
                                                                                                 React.createElement('button',{className:'block w-full text-left px-3 py-2 text-pink-500 font-bold hover:bg-pink-50 rounded-md animate-bounce', onClick:()=>{
                                     // 显示鼓励模态框
                                     const showDonationModal = () => {
@@ -704,6 +820,10 @@ const UserHome = () => {
     const [authLoading, setAuthLoading] = useState(false);
     const [captcha, setCaptcha] = useState('');
     const [showProfile, setShowProfile] = useState(false); // 新增：控制个人资料页面显示
+    const [showSettings, setShowSettings] = useState(false);
+    const [settingsForm, setSettingsForm] = useState({ username: '' });
+    const [settingsTip, setSettingsTip] = useState('');
+    const [settingsLoading, setSettingsLoading] = useState(false);
     const captchaUrl = () => `/api/captcha/image?t=${Date.now()}`;
     const [capSrc, setCapSrc] = useState(captchaUrl());
     const [loginForm, setLoginForm] = useState({ username:'', password:'' });
@@ -719,6 +839,26 @@ const UserHome = () => {
     const [agentList, setAgentList] = useState([]);
     const [agentLoading, setAgentLoading] = useState(false);
     useEffect(()=>{ try{ document.body.style.overflow = showAuth ? 'hidden' : ''; }catch(_){ } return ()=>{ try{ document.body.style.overflow=''; }catch(_){ } }; }, [showAuth]);
+
+    useEffect(()=>{
+        if (!__USER_HOME_DEBUG) {
+            return;
+        }
+        try { console.log('[user-home] state', { showProfile, showSettings }); } catch(_) {}
+    }, [showProfile, showSettings]);
+
+    useEffect(()=>{
+        if (!__USER_HOME_DEBUG) {
+            return;
+        }
+        try {
+            window.__dbgUserHome = {
+                setShowProfile: (v) => setShowProfile(!!v),
+                setShowSettings: (v) => setShowSettings(!!v),
+                getState: () => ({ showProfile, showSettings })
+            };
+        } catch(_) {}
+    }, [showProfile, showSettings]);
 
     useEffect(()=>{
         try {
@@ -853,6 +993,33 @@ const UserHome = () => {
         };
         fetchUser();
     },[]);
+
+    useEffect(()=>{
+        const refreshUserIfNeeded = async () => {
+            if (!showProfile && !showSettings) {
+                return;
+            }
+            try {
+                const r = await fetch('/api/auth/user');
+                const t = await r.text();
+                let d = {};
+                try { d = JSON.parse(t || '{}'); } catch(_) { d = {}; }
+                if (d && d.user) {
+                    setCurrentUser(d.user);
+                    try { window.__currentUser = d.user; } catch(_) { }
+                }
+            } catch(_) { }
+        };
+        refreshUserIfNeeded();
+    }, [showProfile, showSettings]);
+
+    useEffect(()=>{
+        if (showSettings && currentUser) {
+            setSettingsForm({ username: currentUser.username || '' });
+            setSettingsTip('');
+            setSettingsLoading(false);
+        }
+    }, [showSettings]);
 
     useEffect(()=>{
         // 背景预加载 Prompt 工程脚本，降低首次点击等待
@@ -1017,7 +1184,18 @@ const UserHome = () => {
             if(r.ok && (d.success!==false)){
                 const me = await fetch('/api/auth/user');
                 const mt = await me.text(); let md={}; try{ md=JSON.parse(mt||'{}'); }catch(_){ md={}; }
-                if(md && md.user){ setCurrentUser(md.user); setShowAuth(false); setLoginForm({ username:'', password:'' }); }
+                if(md && md.user){
+                    setCurrentUser(md.user);
+                    setShowAuth(false);
+                    setLoginForm({ username:'', password:'' });
+                    try {
+                        const p = String(window.location.pathname || '');
+                        if (!p.endsWith('/home.html')) {
+                            window.location.assign('/home.html');
+                            return;
+                        }
+                    } catch(_) {}
+                }
             } else { setAuthTip(d.message||'用户名或密码错误'); }
         } catch(_){ setAuthTip('网络错误'); }
         setAuthLoading(false);
@@ -1034,8 +1212,12 @@ const UserHome = () => {
     };
 
     return (
-        React.createElement('div',null,
-            React.createElement(Header,{ user: currentUser, onOpenLogin: ()=>openAuth('login'), onOpenRegister: ()=>openAuth('register'), onLogout: logout, onOpenAgents: ()=>setShowAgents(true), openModule: (key)=>{
+        React.createElement(ErrorBoundary, null,
+            React.createElement('div',null,
+                (__USER_HOME_DEBUG ? React.createElement('div', { style: { position: 'fixed', top: 8, right: 8, zIndex: 30000, background: 'rgba(15,23,42,0.85)', color: '#fff', padding: '6px 8px', borderRadius: 8, fontSize: 12, pointerEvents: 'none' } },
+                    `probe: profile=${showProfile ? '1' : '0'} settings=${showSettings ? '1' : '0'}`
+                ) : null),
+                React.createElement(Header,{ user: currentUser, onOpenLogin: ()=>openAuth('login'), onOpenRegister: ()=>openAuth('register'), onLogout: logout, onOpenAgents: ()=>setShowAgents(true), openModule: (key)=>{
                 if (key==='tools' || key==='prompt-engineering') { setActivePage(key); setShowModule(null); }
                 else { setActivePage(null); setShowModule(key); }
             }, prefetchPrompt: ()=>{
@@ -1046,7 +1228,7 @@ const UserHome = () => {
                         try { window.dispatchEvent(new Event('modules:loaded')); } catch(e) {}
                     }).catch(()=>{});
                 } catch(_) {}
-            }, setShowProfile }),
+            }, setShowProfile: (v)=>{ if(__USER_HOME_DEBUG){ try{ console.log('[user-home] setShowProfile', v); }catch(_){ } } setShowProfile(!!v); }, setShowSettings: (v)=>{ if(__USER_HOME_DEBUG){ try{ console.log('[user-home] setShowSettings', v); }catch(_){ } } setShowSettings(!!v); } }),
             (activePage==='articles') && React.createElement(ArticlesPage,null),
             (activePage==='tech-learning') && ((window.Components && window.Components.TechLearningPage) ? React.createElement(window.Components.TechLearningPage,null) : React.createElement('div',null, techLearningReady ? '组件加载中...' : '正在加载组件脚本...')),
             (activePage==='interview-home') && ((window.Components && window.Components.InterviewHomePage) ? React.createElement(window.Components.InterviewHomePage,null) : React.createElement('div',null, interviewReady ? '组件加载中...' : '正在加载组件脚本...')),
@@ -1299,60 +1481,143 @@ const UserHome = () => {
                     )
                 ),
             // 新增：个人资料页面
-            showProfile && currentUser && React.createElement('div', { className: 'fixed inset-0 flex items-center justify-center p-4', style: { zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.6)' }, onClick: () => setShowProfile(false) },
+            showProfile && React.createElement('div', { className: 'fixed inset-0 flex items-center justify-center p-4', style: { zIndex: 20000, backgroundColor: 'rgba(0,0,0,0.6)' }, onClick: () => setShowProfile(false) },
                 React.createElement('div', { className: 'bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden', onClick: (e) => e.stopPropagation() },
-                    React.createElement('div', { className: 'flex items-center justify-between px-6 py-4 border-b' },
-                        React.createElement('h3', { className: 'text-xl font-bold text-slate-900' }, '个人资料'),
-                        React.createElement('button', { className: 'px-2 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200', onClick: () => setShowProfile(false) }, '×')
-                    ),
-                    React.createElement('div', { className: 'p-6 space-y-4' },
-                        React.createElement('div', { className: 'flex items-center space-x-4' },
-                            React.createElement('div', { className: 'w-16 h-16 rounded-full overflow-hidden border-2 relative' },
-                                React.createElement('img', {
-                                    src: currentUser.avatar || (Number(currentUser.vipLevel) === 99 ? '/image/头像4.jpeg' : ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'][Math.floor(Math.random() * 3)]),
-                                    alt: '用户头像',
-                                    className: 'w-full h-full object-cover',
-                                    onError: (e) => { 
-                                        // 根据用户VIP状态选择不同的备用头像
-                                        const isVip = Number(currentUser.vipLevel) === 99;
-                                        if (isVip) {
-                                            e.target.src = '/image/头像4.jpeg';
-                                        } else {
-                                            // 非VIP用户尝试其他头像文件
-                                            const avatarFiles = ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'];
-                                            e.target.src = avatarFiles[Math.floor(Math.random() * avatarFiles.length)];
-                                        }
-                                        e.target.onerror = () => { e.target.src = '/image/default-avatar.png'; };
-                                    },
-                                    style: { display: 'block', width: '100%', height: '100%', objectFit: 'cover' }
-                                })
+                    currentUser ? (
+                        React.createElement('div', null,
+                            React.createElement('div', { className: 'flex items-center justify-between px-6 py-4 border-b' },
+                                React.createElement('h3', { className: 'text-xl font-bold text-slate-900' }, '个人资料'),
+                                React.createElement('button', { className: 'px-2 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200', onClick: () => setShowProfile(false) }, '×')
                             ),
-                            React.createElement('div', null,
-                                React.createElement('h4', { className: 'font-semibold text-lg' }, currentUser.nickname || currentUser.username || '未知用户'),
-                                React.createElement('p', { className: 'text-sm text-gray-500' }, currentUser.username || '')
+                            React.createElement('div', { className: 'p-6 space-y-4' },
+                                React.createElement('div', { className: 'flex items-center space-x-4' },
+                                    React.createElement('div', { className: 'w-16 h-16 rounded-full overflow-hidden border-2 relative' },
+                                        React.createElement('img', {
+                                            src: currentUser.avatar || (Number(currentUser.vipLevel) === 99 ? '/image/头像4.jpeg' : ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'][Math.floor(Math.random() * 3)]),
+                                            alt: '用户头像',
+                                            className: 'w-full h-full object-cover',
+                                            onError: (e) => { 
+                                                // 根据用户VIP状态选择不同的备用头像
+                                                const isVip = Number(currentUser.vipLevel) === 99;
+                                                if (isVip) {
+                                                    e.target.src = '/image/头像4.jpeg';
+                                                } else {
+                                                    // 非VIP用户尝试其他头像文件
+                                                    const avatarFiles = ['/image/头像1.png', '/image/头像2.jpeg', '/image/头像3.jpeg'];
+                                                    e.target.src = avatarFiles[Math.floor(Math.random() * avatarFiles.length)];
+                                                }
+                                                e.target.onerror = () => { e.target.src = '/image/default-avatar.png'; };
+                                            },
+                                            style: { display: 'block', width: '100%', height: '100%', objectFit: 'cover' }
+                                        })
+                                    ),
+                                    React.createElement('div', null,
+                                        React.createElement('h4', { className: 'font-semibold text-lg' }, currentUser.nickname || currentUser.username || '未知用户'),
+                                        React.createElement('p', { className: 'text-sm text-gray-500' }, currentUser.username || '')
+                                    )
+                                ),
+                                React.createElement('div', { className: 'space-y-3' },
+                                    React.createElement('div', null,
+                                        React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '用户名'),
+                                        React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, currentUser.username || '未设置')
+                                    ),
+                                    React.createElement('div', null,
+                                        React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '邮箱'),
+                                        React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, currentUser.email || '未设置')
+                                    ),
+                                    React.createElement('div', null,
+                                        React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '昵称'),
+                                        React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, currentUser.nickname || '未设置')
+                                    ),
+                                    React.createElement('div', null,
+                                        React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '会员等级'),
+                                        React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, `VIP ${currentUser.vipLevel ?? 0}`)
+                                    ),
+                                    React.createElement('div', null,
+                                        React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '注册时间'),
+                                        React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, (currentUser.registrationDate ? new Date(currentUser.registrationDate).toLocaleString() : (currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleString() : '未知')))                            )
+                                )
                             )
-                        ),
-                        React.createElement('div', { className: 'space-y-3' },
-                            React.createElement('div', null,
-                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '用户名'),
-                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, currentUser.username || '未设置')
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '邮箱'),
-                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, currentUser.email || '未设置')
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '昵称'),
-                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, currentUser.nickname || '未设置')
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '会员等级'),
-                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, `VIP ${currentUser.vipLevel ?? 0}`)
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '注册时间'),
-                                React.createElement('div', { className: 'mt-1 p-2 bg-gray-50 rounded-md text-slate-900' }, (currentUser.registrationDate ? new Date(currentUser.registrationDate).toLocaleString() : (currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleString() : '未知')))                            )
                         )
+                    ) : (
+                        React.createElement('div', { className: 'p-6' }, '未登录')
+                    )
+                )
+            ),
+            showSettings && React.createElement('div', { className: 'fixed inset-0 flex items-center justify-center p-4', style: { zIndex: 20000, backgroundColor: 'rgba(0,0,0,0.6)' }, onClick: () => setShowSettings(false) },
+                React.createElement('div', { className: 'bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden', onClick: (e) => e.stopPropagation() },
+                    currentUser ? (
+                        React.createElement('div', null,
+                            React.createElement('div', { className: 'flex items-center justify-between px-6 py-4 border-b' },
+                                React.createElement('h3', { className: 'text-xl font-bold text-slate-900' }, '设置'),
+                                React.createElement('button', { className: 'px-2 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200', onClick: () => setShowSettings(false) }, '×')
+                            ),
+                            React.createElement('div', { className: 'p-6 space-y-4' },
+                                React.createElement('div', null,
+                                    React.createElement('label', { className: 'text-sm font-medium text-gray-700' }, '用户名'),
+                                    React.createElement('input', {
+                                        className: 'mt-1 w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition',
+                                        placeholder: '请输入新的用户名',
+                                        value: settingsForm.username,
+                                        onChange: (e) => setSettingsForm({ ...settingsForm, username: e.target.value })
+                                    })
+                                ),
+                                settingsTip && React.createElement('div', { className: 'text-sm text-red-600 bg-red-50 p-3 rounded-lg' }, settingsTip),
+                                React.createElement('button', {
+                                    className: 'w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md font-medium',
+                                    disabled: settingsLoading,
+                                    onClick: async () => {
+                                        setSettingsTip('');
+                                        const nextUsername = (settingsForm.username || '').trim();
+                                        if (!nextUsername) {
+                                            setSettingsTip('用户名不能为空');
+                                            return;
+                                        }
+                                        if (!/^[a-zA-Z0-9_]{4,50}$/.test(nextUsername)) {
+                                            setSettingsTip('用户名仅支持字母、数字与下划线，长度4-50');
+                                            return;
+                                        }
+
+                                        setSettingsLoading(true);
+                                        try {
+                                            const r = await fetch('/api/auth/user/username', {
+                                                method: 'PATCH',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ username: nextUsername })
+                                            });
+                                            const t = await r.text();
+                                            let d = {};
+                                            try { d = JSON.parse(t || '{}'); } catch(_) { d = {}; }
+                                            if (r.ok && d && d.success !== false) {
+                                                if (d.user) {
+                                                    setCurrentUser(d.user);
+                                                    try { window.__currentUser = d.user; } catch(_) { }
+                                                } else {
+                                                    try {
+                                                        const me = await fetch('/api/auth/user');
+                                                        const mt = await me.text();
+                                                        let md = {};
+                                                        try { md = JSON.parse(mt || '{}'); } catch(_) { md = {}; }
+                                                        if (md && md.user) {
+                                                            setCurrentUser(md.user);
+                                                            try { window.__currentUser = md.user; } catch(_) { }
+                                                        }
+                                                    } catch(_) { }
+                                                }
+                                                setShowSettings(false);
+                                            } else {
+                                                setSettingsTip((d && d.message) ? d.message : '修改失败');
+                                            }
+                                        } catch (_) {
+                                            setSettingsTip('网络错误');
+                                        }
+                                        setSettingsLoading(false);
+                                    }
+                                }, settingsLoading ? '保存中...' : '保存')
+                            )
+                        )
+                    ) : (
+                        React.createElement('div', { className: 'p-6' }, '未登录')
                     )
                 )
             ),
@@ -1370,6 +1635,7 @@ const UserHome = () => {
             ),
             !showAuth && !String(activePage||'').startsWith('interview') && React.createElement(Footer,null)
             , React.createElement(SupportChat, null)
+            )
         )
     ));
 };

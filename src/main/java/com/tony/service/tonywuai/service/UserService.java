@@ -26,6 +26,17 @@ public interface UserService extends UserDetailsService {
     User getUserByUsername(String username);
 
     /**
+     * 更新用户的登录用户名。
+     *
+     * <p>用于用户端“设置”页自助修改用户名。该方法会负责做用户名唯一性校验。
+     *
+     * @param currentUsername 当前登录用户名（旧用户名）
+     * @param newUsername 新用户名
+     * @return 更新后的用户实体
+     */
+    User updateUsername(String currentUsername, String newUsername);
+
+    /**
      * 根据 ID 列表批量获取用户实体
      * @param userIds 用户 ID 列表
      * @return 用户实体列表
