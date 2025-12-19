@@ -860,6 +860,47 @@ const UserHome = () => {
         } catch(_) {}
     }, [showProfile, showSettings]);
 
+    // 添加 crypto.randomUUID polyfill 以支持旧版浏览器和某些扩展环境
+    useEffect(() => {
+        try {
+            if (window.crypto && !window.crypto.randomUUID) {
+                window.crypto.randomUUID = function() {
+                    if (!window.crypto.getRandomValues) {
+                        throw new Error("crypto.getRandomValues() not supported");
+                    }
+                    const bytes = new Uint8Array(16);
+                    window.crypto.getRandomValues(bytes);
+                    bytes[6] = (bytes[6] & 0x0f) | 0x40; // Version 4
+                    bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant 10xx
+                    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+                    return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}`;
+                };
+            } else if (!window.crypto) {
+                window.crypto = {
+                    randomUUID: function() {
+                        if (typeof window.msCrypto !== 'undefined' && typeof window.msCrypto.getRandomValues !== 'undefined') {
+                            const bytes = new Uint8Array(16);
+                            window.msCrypto.getRandomValues(bytes);
+                            bytes[6] = (bytes[6] & 0x0f) | 0x40;
+                            bytes[8] = (bytes[8] & 0x3f) | 0x80;
+                            const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+                            return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}`;
+                        } else {
+                            // Math.random fallback (less secure but works)
+                            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                                const r = Math.random() * 16 | 0;
+                                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                                return v.toString(16);
+                            });
+                        }
+                    }
+                };
+            }
+        } catch (e) {
+            console.warn('Failed to polyfill crypto.randomUUID', e);
+        }
+    }, []);
+
     useEffect(()=>{
         try {
             const applyRoute = () => {
