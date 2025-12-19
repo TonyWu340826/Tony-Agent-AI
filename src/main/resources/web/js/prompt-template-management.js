@@ -145,7 +145,7 @@
         )
       ),
       showEdit ? React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4', onClick:onClosed },
-        React.createElement('div', { className:'bg-white rounded-xl shadow-2xl w-full max-w-4xl space-y-4 overflow-y-auto', style:{ maxHeight:'80vh' }, onClick:(e)=>e.stopPropagation() },
+        React.createElement('div', { className:'bg-white rounded-3xl shadow-2xl w-[92vw] max-w-[1600px] space-y-4 overflow-y-auto', style:{ maxHeight:'86vh' }, onClick:(e)=>e.stopPropagation() },
           React.createElement('div', { className:'flex items-center justify-between p-6 border-b' },
             React.createElement('div', { className:'text-xl font-bold text-gray-800' }, editData && editData.id ? '编辑模板' : '新增模板'),
             React.createElement('button', { className:'px-3 py-1 rounded-md bg-gray-200 text-gray-700', onClick:onClosed }, '关闭')

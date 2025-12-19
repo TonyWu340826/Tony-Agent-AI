@@ -13,6 +13,7 @@
   const IconSettings = (window.LucideReact && window.LucideReact.Settings) || ((props)=>React.createElement('span',{className:props.className}, '⚙️'));
   const IconGlobe = (window.LucideReact && window.LucideReact.Globe) || ((props)=>React.createElement('span',{className:props.className}, '🌐'));
   const IconMessageSquare = (window.LucideReact && window.LucideReact.MessageSquare) || ((props)=>React.createElement('span',{className:props.className}, '💬'));
+  const IconArrowLeft = (window.LucideReact && window.LucideReact.ArrowLeft) || ((props)=>React.createElement('span',{className:props.className}, '←'));
   const Portal = ({ children }) => (window.ReactDOM && window.ReactDOM.createPortal ? window.ReactDOM.createPortal(children, document.body) : children);
 
   const SceneCard = ({ scene, onClick }) => (
@@ -137,27 +138,40 @@
       } catch(_) {}
     }, [scenes]);
 
-    const openCreate = async () => {
-      if (!requireVip()) return;
+    const ensureEditorLoaded = async () => {
       try {
         await loadOnce('/js/prompt-template-edit.js');
         setEditorReady(!!(window.Components && window.Components.PromptTemplateEdit));
-      } catch(_) {}
-      setView('create');
-      try { history.pushState({ page:'prompt-engineering-create' }, '', '/prompt-engineering/create'); } catch(_) {}
+      } catch (_) {}
     };
 
-    const backToList = () => {
+    const openCreate = async (opts={}) => {
+      if (!requireVip()) return;
+      const pushHistory = opts.pushHistory !== false;
+      await ensureEditorLoaded();
+      setView('create');
+      if (pushHistory) {
+        try { history.pushState({ page:'prompt-engineering-create' }, '', '/prompt-engineering/create'); } catch(_) {}
+      }
+    };
+
+    const backToList = (opts={}) => {
+      const pushHistory = opts.pushHistory !== false;
       setView('list');
       setCurrentScene(null); setTpls([]);
-      try { history.pushState({ page:'prompt-engineering' }, '', '/prompt-engineering'); } catch(_) {}
+      if (pushHistory) {
+        try { history.pushState({ page:'prompt-engineering' }, '', '/prompt-engineering'); } catch(_) {}
+      }
     };
 
-    const openScene = async (code, sceneObj) => {
+    const openScene = async (code, sceneObj, opts={}) => {
+      const pushHistory = opts.pushHistory !== false;
       const sc = sceneObj || (scenes||[]).find(s => (s.sceneCode||s.scene_code)===code);
       setCurrentScene(sc || { sceneCode: code, sceneName: '-', description: '' });
       setView('scene'); setTpls([]); setTplLoading(true); setError(''); setTplPage(0); setTplTotal(1);
-      try { history.pushState({ page:'prompt-engineering-scene', sceneCode: code }, '', `/prompt-engineering/scene/${code}`); } catch(_) {}
+      if (pushHistory) {
+        try { history.pushState({ page:'prompt-engineering-scene', sceneCode: code }, '', `/prompt-engineering/scene/${code}`); } catch(_) {}
+      }
       await fetchTemplates(code, 0);
     };
 
@@ -176,11 +190,45 @@
       setTplLoading(false);
     };
 
-    const openCreateScene = () => {
+    const openCreateScene = (opts={}) => {
       if (!requireVip()) return;
+      const pushHistory = opts.pushHistory !== false;
       setView('createScene');
-      try { history.pushState({ page:'prompt-engineering-scene-new' }, '', '/prompt-engineering/scene/new'); } catch(_) {}
+      if (pushHistory) {
+        try { history.pushState({ page:'prompt-engineering-scene-new' }, '', '/prompt-engineering/scene/new'); } catch(_) {}
+      }
     };
+
+    useEffect(() => {
+      // Keep React view in sync when users navigate via browser back/forward.
+      const onPopState = () => {
+        try {
+          const p = String(window.location.pathname || '');
+          const sceneMatch = p.match(/^\/prompt-engineering\/scene\/(\w[\w-]*)$/);
+          if (sceneMatch && sceneMatch[1]) {
+            const code = sceneMatch[1];
+            const sc = (scenes || []).find(s => (s.sceneCode || s.scene_code) === code);
+            openScene(code, sc, { pushHistory:false });
+            return;
+          }
+          if (/^\/prompt-engineering\/scene\/new$/.test(p)) {
+            openCreateScene({ pushHistory:false });
+            return;
+          }
+          if (/^\/prompt-engineering\/create$/.test(p)) {
+            ensureEditorLoaded().then(() => openCreate({ pushHistory:false }));
+            return;
+          }
+          if (/^\/prompt-engineering\/?$/.test(p)) {
+            backToList({ pushHistory:false });
+            return;
+          }
+        } catch (_) {}
+      };
+
+      try { window.addEventListener('popstate', onPopState); } catch (_) {}
+      return () => { try { window.removeEventListener('popstate', onPopState); } catch (_) {} };
+    }, [scenes]);
 
     const parseFieldsFromContent = (text) => {
       const s = String(text||'');
@@ -350,10 +398,16 @@
     };
 
     if (view === 'create') {
-      return React.createElement('section', { className:'py-12 px-6 max-w-[1200px] mx-auto bg-white rounded-2xl' },
-        React.createElement('div', { className:'flex items-center justify-between mb-6' },
-          React.createElement('h2', { className:'text-2xl font-extrabold text-slate-900' }, '新增提示词模板'),
-          React.createElement('button', { className:'px-4 py-2 rounded-md bg-gray-200 text-gray-700', onClick: backToList }, '返回')
+      return React.createElement('section', { className:'py-10 md:py-12 px-4 md:px-8 max-w-[1600px] mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm' },
+        React.createElement('div', { className:'flex items-start justify-between gap-4 mb-6' },
+          React.createElement('div', { className:'space-y-1' },
+            React.createElement('button', { className:'inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200', onClick: () => backToList() },
+              React.createElement(IconArrowLeft, { className:'w-5 h-5' }),
+              '返回 Prompt 工程'
+            ),
+            React.createElement('h2', { className:'text-3xl font-extrabold text-slate-900' }, '我要开发'),
+            React.createElement('div', { className:'text-sm text-slate-500' }, '新增提示词模板')
+          )
         ),
         (window.Components && window.Components.PromptTemplateEdit && editorReady)
           ? React.createElement(window.Components.PromptTemplateEdit, { initialData: null, onClose: backToList, onSaved: backToList })
