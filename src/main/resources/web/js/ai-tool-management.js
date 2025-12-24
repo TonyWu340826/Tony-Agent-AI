@@ -13,6 +13,8 @@ const UserToolsExplorer = ({ currentUser }) => {
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // 添加useEffect来监听返回到工具列表的事件
   useEffect(() => {
@@ -21,10 +23,11 @@ const UserToolsExplorer = ({ currentUser }) => {
       setActiveTool(null);
       setToolReady(false);
       setShowOverlay(false);
+      setSidebarOpen(false);
     };
 
     window.addEventListener('backToToolList', handleBackToToolList);
-    
+
     return () => {
       window.removeEventListener('backToToolList', handleBackToToolList);
     };
@@ -88,32 +91,32 @@ const UserToolsExplorer = ({ currentUser }) => {
     const copySql = async () => { try { if(!sql) return; await navigator.clipboard.writeText(sql); } catch(_){} };
     const gen = async () => { const prompt = (need||'').trim(); if (selected.length===0) { alert('请至少选择一张表'); return; } if(!prompt){ alert('请输入SQL需求'); return; } setLoading(true); setSql(''); try { const body = { user_prompt: prompt, selected_tables: selected, table_structures: raw ? [raw] : [] }; const r = await fetch('/api/open/sql/dba', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) }); const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; } setSql(d.sql||d.response||d.message||''); } catch(_) { setSql(''); alert('生成失败'); } setLoading(false); };
     return (
-      React.createElement('div',{className:'space-y-4'},
-        React.createElement('div',{className:'space-y-2'},
-          React.createElement('div',{className:'flex items-center gap-2'},
-            React.createElement('input',{type:'file', accept:'.txt,.sql,.json', multiple:true, onChange:handleFile}),
-            React.createElement('button',{className:'px-3 py-1 rounded bg-slate-100 text-slate-700', onClick:()=>setRaw('')}, '清空')
-          ),
-          React.createElement('textarea',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', rows:6, placeholder:'支持粘贴 DDL 或 JSON 表结构', value:raw, onChange:(e)=>setRaw(e.target.value)}),
-          React.createElement('div',{className:'text-xs text-slate-500'}, `已解析 ${tables.length} 张表`)
-        ),
-        React.createElement('div',{className:'grid grid-cols-2 gap-2'}, tables.map(n=>React.createElement('label',{key:n,className:'border rounded-xl p-2 flex items-center gap-2'}, React.createElement('input',{type:'checkbox', checked:selected.includes(n), onChange:()=>toggle(n)}), React.createElement('span',{className:'text-sm text-slate-900'}, n)) )),
-        React.createElement('div',{className:'space-y-2'},
-          React.createElement('label',{className:'text-sm text-slate-700'}, '请输入你的 SQL 需求'),
-          React.createElement('textarea',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', rows:4, placeholder:'例如：查询所有用户姓名和年龄', value:need, onChange:(e)=>setNeed(e.target.value)})
-        ),
-        React.createElement('div',{className:'flex items-center gap-3'},
-          React.createElement('button',{className:'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50', disabled:loading || selected.length===0, onClick:gen}, loading?'生成中…':'生成 SQL'),
-          React.createElement('span',{className:'text-xs text-slate-500'}, selected.length>0?`已选择：${selected.join(', ')}`:'请选择至少一张表')
-        ),
-        React.createElement('div',null,
-          React.createElement('div',{className:'flex items-center justify-between'},
-            React.createElement('label',{className:'text-sm text-slate-700'}, '生成结果'),
-            React.createElement('button',{className:'px-2 py-1 text-xs rounded bg-slate-100 text-slate-700 hover:bg-slate-200', onClick:copySql, disabled:!sql}, '复制')
-          ),
-          React.createElement('pre',{className:'bg-white border border-slate-200 rounded-lg p-3 text-sm whitespace-pre-wrap break-words min-h-[6rem] text-slate-900 font-mono'}, sql||'')
+        React.createElement('div',{className:'space-y-4'},
+            React.createElement('div',{className:'space-y-2'},
+                React.createElement('div',{className:'flex items-center gap-2'},
+                    React.createElement('input',{type:'file', accept:'.txt,.sql,.json', multiple:true, onChange:handleFile}),
+                    React.createElement('button',{className:'px-3 py-1 rounded bg-slate-100 text-slate-700', onClick:()=>setRaw('')}, '清空')
+                ),
+                React.createElement('textarea',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', rows:6, placeholder:'支持粘贴 DDL 或 JSON 表结构', value:raw, onChange:(e)=>setRaw(e.target.value)}),
+                React.createElement('div',{className:'text-xs text-slate-500'}, `已解析 ${tables.length} 张表`)
+            ),
+            React.createElement('div',{className:'grid grid-cols-2 gap-2'}, tables.map(n=>React.createElement('label',{key:n,className:'border rounded-xl p-2 flex items-center gap-2'}, React.createElement('input',{type:'checkbox', checked:selected.includes(n), onChange:()=>toggle(n)}), React.createElement('span',{className:'text-sm text-slate-900'}, n)) )),
+            React.createElement('div',{className:'space-y-2'},
+                React.createElement('label',{className:'text-sm text-slate-700'}, '请输入你的 SQL 需求'),
+                React.createElement('textarea',{className:'w-full border border-slate-300 rounded-lg px-3 py-2', rows:4, placeholder:'例如：查询所有用户姓名和年龄', value:need, onChange:(e)=>setNeed(e.target.value)})
+            ),
+            React.createElement('div',{className:'flex items-center gap-3'},
+                React.createElement('button',{className:'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50', disabled:loading || selected.length===0, onClick:gen}, loading?'生成中…':'生成 SQL'),
+                React.createElement('span',{className:'text-xs text-slate-500'}, selected.length>0?`已选择：${selected.join(', ')}`:'请选择至少一张表')
+            ),
+            React.createElement('div',null,
+                React.createElement('div',{className:'flex items-center justify-between'},
+                    React.createElement('label',{className:'text-sm text-slate-700'}, '生成结果'),
+                    React.createElement('button',{className:'px-2 py-1 text-xs rounded bg-slate-100 text-slate-700 hover:bg-slate-200', onClick:copySql, disabled:!sql}, '复制')
+                ),
+                React.createElement('pre',{className:'bg-white border border-slate-200 rounded-lg p-3 text-sm whitespace-pre-wrap break-words min-h-[6rem] text-slate-900 font-mono'}, sql||'')
+            )
         )
-      )
     );
   };
 
@@ -188,25 +191,17 @@ const UserToolsExplorer = ({ currentUser }) => {
     const ltRaw = tool.linkType ?? tool.link_type ?? '';
     const lt = String(ltRaw).toUpperCase();
     const api = String(tool.apiPath ?? tool.api_path ?? '');
-    
-    // If linkType is "4", show in modal dialog
-    if (lt === '4') {
-      setActiveTool(tool);
-      setShowOverlay(true);
-      return;
-    }
-    
+
     if (lt === '1' || lt === 'EXTERNAL') { if (api) { window.open(api, '_blank'); } return; }
+    setSidebarOpen(false);
     if (Number(tool.type) === 20) {
       setActiveTool(tool);
       await ensureTool10Ready();
-      setShowOverlay(true);
       return;
     }
     if (Number(tool.type) === 19) {
       setActiveTool(tool);
       await ensureTool16Ready();
-      setShowOverlay(true);
       return;
     }
     const isVip = String(tool.vipAllow||tool.vip_allow||'').toUpperCase() === 'VIP';
@@ -214,6 +209,7 @@ const UserToolsExplorer = ({ currentUser }) => {
     const lt2 = String(tool.linkType||tool.link_type||'').toUpperCase();
     const api2 = String(tool.apiPath||tool.api_path||'');
     if (lt2 === '1' || lt2 === 'EXTERNAL') { if (api2) { window.open(api2, '_blank'); } return; }
+    if (lt === '4') { setActiveTool(tool); setToolReady(true); return; }
     if (lt === '3' || lt === 'EMBED') { setActiveTool(tool); setToolReady(true); return; }
     if (lt === '2' || lt === 'INTERNAL') {
       const exists = !!(window.ToolsPages && window.ToolsPages[String(tool.id)]);
@@ -236,94 +232,197 @@ const UserToolsExplorer = ({ currentUser }) => {
   };
 
   const Card = (tool) => (
-    React.createElement('div',{className:'bg-gradient-to-br from-white via-white to-blue-50/30 rounded-xl p-3 shadow-lg border border-slate-200/80 hover:shadow-2xl hover:shadow-blue-500/20 hover:border-blue-400/60 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center h-[160px] relative overflow-hidden group backdrop-blur-sm', onClick:()=>openTool(tool)},
-      // Animated background gradient overlay
-      React.createElement('div',{className:'absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-purple-500/5 group-hover:to-blue-500/5 transition-all duration-500'}),
-      
-      // VIP Badge
-      (String(tool.vipAllow||'').toUpperCase()==='VIP' ? 
-        React.createElement('span',{className:'absolute top-1.5 right-1.5 px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white border border-amber-300/50 font-bold shadow-md z-10'}, 'VIP') : null
-      ),
-      
-      // Icon with glow effect
-      tool.iconUrl ? 
-        React.createElement('div',{className:'relative z-10'},
-          React.createElement('div',{className:'absolute inset-0 bg-blue-400/20 rounded-lg blur-md group-hover:bg-blue-500/40 transition-all duration-300'}),
-          React.createElement('img',{src:tool.iconUrl, className:'relative w-10 h-10 rounded-lg mb-2 shadow-md object-cover group-hover:scale-110 group-hover:rotate-3 transition-all duration-300', alt:tool.toolName})
-        ) : 
-        React.createElement('div',{className:'relative z-10 w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg mb-2 flex items-center justify-center text-slate-400 text-xs shadow-inner group-hover:from-blue-100 group-hover:to-purple-100 transition-all duration-300'}, '🔧'),
-      
-      // Title with gradient on hover
-      React.createElement('div',{className:'relative z-10 font-semibold text-sm text-slate-900 group-hover:text-blue-700 mb-1 line-clamp-2 px-1 w-full transition-colors duration-300'}, tool.toolName),
-      
-      // Description
-      React.createElement('div',{className:'relative z-10 text-xs text-slate-500 group-hover:text-slate-600 line-clamp-2 leading-relaxed px-1 w-full transition-colors duration-300'}, tool.description || '暂无描述'),
-      
-      // Bottom shine effect
-      React.createElement('div',{className:'absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500/0 to-transparent group-hover:via-blue-500/50 transition-all duration-500'})
-    )
+      React.createElement('div',{className:'bg-gradient-to-br from-white via-white to-blue-50/30 rounded-xl p-3 shadow-lg border border-slate-200/80 hover:shadow-2xl hover:shadow-blue-500/20 hover:border-blue-400/60 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center h-[160px] relative overflow-hidden group backdrop-blur-sm', onClick:()=>openTool(tool)},
+          // Animated background gradient overlay
+          React.createElement('div',{className:'absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-purple-500/5 group-hover:to-blue-500/5 transition-all duration-500'}),
+
+          // VIP Badge
+          (String(tool.vipAllow||'').toUpperCase()==='VIP' ?
+                  React.createElement('span',{className:'absolute top-1.5 right-1.5 px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white border border-amber-300/50 font-bold shadow-md z-10'}, 'VIP') : null
+          ),
+
+          // Icon with glow effect
+          tool.iconUrl ?
+              React.createElement('div',{className:'relative z-10'},
+                  React.createElement('div',{className:'absolute inset-0 bg-blue-400/20 rounded-lg blur-md group-hover:bg-blue-500/40 transition-all duration-300'}),
+                  React.createElement('img',{src:tool.iconUrl, className:'relative w-10 h-10 rounded-lg mb-2 shadow-md object-cover group-hover:scale-110 group-hover:rotate-3 transition-all duration-300', alt:tool.toolName})
+              ) :
+              React.createElement('div',{className:'relative z-10 w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg mb-2 flex items-center justify-center text-slate-400 text-xs shadow-inner group-hover:from-blue-100 group-hover:to-purple-100 transition-all duration-300'}, '🔧'),
+
+          // Title with gradient on hover
+          React.createElement('div',{className:'relative z-10 font-semibold text-sm text-slate-900 group-hover:text-blue-700 mb-1 line-clamp-2 px-1 w-full transition-colors duration-300'}, tool.toolName),
+
+          // Description
+          React.createElement('div',{className:'relative z-10 text-xs text-slate-500 group-hover:text-slate-600 line-clamp-2 leading-relaxed px-1 w-full transition-colors duration-300'}, tool.description || '暂无描述'),
+
+          // Bottom shine effect
+          React.createElement('div',{className:'absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500/0 to-transparent group-hover:via-blue-500/50 transition-all duration-500'})
+      )
   );
 
-  return (
-    React.createElement('div',{className:'grid grid-cols-12 gap-6'},
-      React.createElement('aside',{className:'col-span-12 md:col-span-3'},
-        React.createElement('div',{className:'bg-white rounded-2xl shadow border p-3'},
-          React.createElement('div',{className:'font-semibold text-slate-900 mb-2'}, '分类'),
-          categories.map(c => React.createElement('button',{key:(c.id===null?'all':c.id), className:((c.id===activeType)? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100') + ' w-full text-left px-3 py-2 rounded-lg mb-2', onClick:()=>setActiveType(c.id)}, c.name))
-        )
-      ),
-      React.createElement('section',{className:'col-span-12 md:col-span-9'},
-        React.createElement('div',{className:'flex items-center mb-4'},
-          React.createElement('input',{className:'w-full md:w-80 border border-slate-300 rounded-lg px-3 py-2', placeholder:'搜索工具...', value:search, onChange:(e)=>setSearch(e.target.value)})
-        ),
-        React.createElement('div',{className:'grid md:grid-cols-12 gap-6'},
-          React.createElement('div',{className:(activeTool ? 'md:col-span-8' : 'md:col-span-12')},
-            loading ? React.createElement('div',{className:'grid md:grid-cols-3 gap-4'}, [1,2,3,4,5,6].map(i=>React.createElement('div',{key:i,className:'h-24 bg-slate-100 animate-pulse rounded-xl'})))
-            : (filtered.length===0 ? React.createElement('div',{className:'text-slate-600 text-sm'}, '暂无数据')
-               : React.createElement('div',{className:'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3'}, filtered.map(t=>React.createElement(Card,{...t, key:t.id})))
-              )
+  const ToolListItem = (tool) => (
+      React.createElement('button', {
+            type: 'button',
+            onClick: () => openTool(tool),
+            className: `${activeTool && String(activeTool.id) === String(tool.id)
+                ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white border-indigo-200 shadow-sm'
+                : 'bg-transparent text-slate-800 border-transparent hover:bg-white hover:border-slate-200'} w-full text-left px-3 py-2.5 rounded-xl border transition flex items-center gap-2`,
+            title: tool.toolName || ''
+          },
+          React.createElement('span', { className: `${activeTool && String(activeTool.id) === String(tool.id) ? 'bg-white/70' : 'bg-slate-300'} w-1.5 h-5 rounded-full flex-none` }),
+          tool.iconUrl
+              ? React.createElement('img', { src: tool.iconUrl, className: 'w-7 h-7 rounded-lg object-cover flex-none', alt: tool.toolName || 'tool' })
+              : React.createElement('div', { className: `${activeTool && String(activeTool.id) === String(tool.id) ? 'bg-white/30' : 'bg-slate-200'} w-7 h-7 rounded-lg flex-none` }),
+          React.createElement('div', { className: 'min-w-0 flex-1' },
+              React.createElement('div', { className: 'text-[13px] font-semibold truncate leading-5' }, tool.toolName || '-'),
+              React.createElement('div', { className: `${activeTool && String(activeTool.id) === String(tool.id) ? 'text-white/80' : 'text-slate-500'} text-[11px] truncate leading-4` }, tool.description || '')
           ),
-          activeTool && React.createElement('div',{className:'md:col-span-3'},
-            (()=>{
-              const lt = String(activeTool.linkType||'').toUpperCase();
-              if (lt === '3' || lt === 'EMBED') { return React.createElement('iframe',{src: activeTool.apiPath, className:'w-full h-[520px] rounded-xl border'}); }
-              if (Number(activeTool.type) === 20 && window.ToolsPages && window.ToolsPages['10'] && toolReady) { return React.createElement(window.ToolsPages['10'], null); }
-              if (window.ToolsPages && window.ToolsPages[String(activeTool.id)] && toolReady) { return React.createElement(window.ToolsPages[String(activeTool.id)], null); }
-              return React.createElement('div',{className:'p-6 border rounded-xl bg-white text-sm text-slate-500'}, '工具加载中...');
-            })()
-          )
-        )
-        , React.createElement('div',{className:'flex items-center justify-between mt-6'},
-          React.createElement('div',{className:'text-xs text-slate-500'}, `第 ${page+1} / ${Math.max(totalPages,1)} 页 · 共 ${filtered.length} 项`),
-          React.createElement('div',{className:'flex items-center gap-2'},
-            React.createElement('button',{className:'px-3 py-1 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: page<=0, onClick:()=>setPage(p=>Math.max(0,p-1))}, '上一页'),
-            React.createElement('button',{className:'px-3 py-1 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: (page+1)>=totalPages, onClick:()=>setPage(p=>p+1)}, '下一页')
-          )
-        )
-        , (showOverlay && React.createElement('div',{className:'fixed inset-0 z-[980] bg-black/60 flex items-center justify-center p-4', onClick:()=>{ setShowOverlay(false); setActiveTool(null); setToolReady(false); }},
-            React.createElement('div',{className:'bg-white rounded-2xl shadow-2xl w-full max-w-[90vw] md:max-w-6xl h-[85vh] overflow-hidden', onClick:(e)=>e.stopPropagation()},
-              React.createElement('div',{className:'p-6 space-y-4 h-full overflow-auto'},
-                // Show tool name as title for all tools in modal
-                React.createElement('div',{className:'text-xl font-bold text-slate-900 flex justify-between items-center'},
-                  React.createElement('span', null, activeTool?.toolName || (Number(activeTool?.type)===19 ? '小学AI助教' : '智能DBA')),
-                  React.createElement('button', { 
-                    className: 'text-slate-500 hover:text-slate-700',
-                    onClick: () => { setShowOverlay(false); setActiveTool(null); setToolReady(false); }
-                  }, '✕')
-                ),
-                // Handle different tool types in modal
-                (String(activeTool?.linkType||'').toUpperCase() === '4'
-                  ? React.createElement('iframe',{src: activeTool?.apiPath, className:'w-full h-[70vh] rounded-xl border'})
-                  : (Number(activeTool?.type)===19
-                      ? (window.ToolsPages && window.ToolsPages['16'] ? React.createElement(window.ToolsPages['16'], { currentUser }, null) : React.createElement('div',{className:'text-sm text-slate-500'}, '考试页面加载中...'))
-                      : ((window.ToolsPages && window.ToolsPages['10']) ? React.createElement(window.ToolsPages['10'], null) : React.createElement(InlineSqlDba, null))
-                    )
-                )
-              )
-            )
-          ))
+          (String(tool.vipAllow || '').toUpperCase() === 'VIP'
+              ? React.createElement('span', { className: `${activeTool && String(activeTool.id) === String(tool.id) ? 'bg-white/20 text-white border-white/20' : 'bg-amber-100 text-amber-700 border-amber-200'} px-2 py-0.5 text-[10px] rounded-full border font-semibold flex-none` }, 'VIP')
+              : null)
       )
-    )
+  );
+
+  const clearActiveTool = () => {
+    setActiveTool(null);
+    setToolReady(false);
+    setShowOverlay(false);
+  };
+
+  const renderActiveTool = () => {
+    if (!activeTool) {
+      return React.createElement('div', { className: 'relative overflow-hidden rounded-2xl border bg-white text-slate-900 min-h-[62vh]' },
+          React.createElement('div', { className: 'absolute inset-0', style: { backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(99,102,241,0.18) 0%, rgba(255,255,255,0) 55%), radial-gradient(circle at 80% 30%, rgba(59,130,246,0.14) 0%, rgba(255,255,255,0) 60%), radial-gradient(circle at 50% 90%, rgba(34,211,238,0.10) 0%, rgba(255,255,255,0) 55%)' } }),
+          React.createElement('div', { className: 'absolute inset-0 opacity-60', style: { backgroundImage: 'linear-gradient(rgba(148,163,184,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.25) 1px, transparent 1px)', backgroundSize: '52px 52px' } }),
+          React.createElement('div', { className: 'absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/80' }),
+          React.createElement('div', { className: 'relative p-8 md:p-10' },
+              React.createElement('div', { className: 'inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200 text-slate-700 text-xs shadow-sm' },
+                  React.createElement('span', { className: 'w-2 h-2 rounded-full bg-blue-600' }),
+                  'AI 工具合集'
+              ),
+              React.createElement('div', { className: 'mt-4 text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900' }, '一站式 AI 能力中心'),
+              React.createElement('div', { className: 'mt-3 text-slate-600 max-w-2xl leading-relaxed' }, '这里汇聚了学习、创作、办公与开发等多类型工具。通过左侧菜单快速定位功能，右侧将加载对应工具页面，开箱即用。'),
+              React.createElement('div', { className: 'mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4' },
+                  React.createElement('div', { className: 'rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-5 shadow-sm' },
+                      React.createElement('div', { className: 'text-sm font-semibold text-slate-900' }, '快速发现'),
+                      React.createElement('div', { className: 'mt-1 text-xs text-slate-600 leading-relaxed' }, '按分组浏览工具，支持搜索，减少选择成本。')
+                  ),
+                  React.createElement('div', { className: 'rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-5 shadow-sm' },
+                      React.createElement('div', { className: 'text-sm font-semibold text-slate-900' }, '场景覆盖'),
+                      React.createElement('div', { className: 'mt-1 text-xs text-slate-600 leading-relaxed' }, '从模型与Agent到写作、图片与效率，持续扩展。')
+                  ),
+                  React.createElement('div', { className: 'rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-5 shadow-sm' },
+                      React.createElement('div', { className: 'text-sm font-semibold text-slate-900' }, '安全可控'),
+                      React.createElement('div', { className: 'mt-1 text-xs text-slate-600 leading-relaxed' }, '统一入口与权限控制，VIP 工具清晰标识。')
+                  )
+              ),
+              React.createElement('div', { className: 'mt-7 flex flex-wrap items-center gap-3' },
+                  React.createElement('div', { className: 'px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold text-sm shadow-sm' }, '从左侧选择一个工具开始'),
+                  React.createElement('div', { className: 'text-xs text-slate-500' }, `当前可用工具：${filtered.length} 个`)
+              )
+          )
+      );
+    }
+
+    const lt = String(activeTool.linkType || activeTool.link_type || '').toUpperCase();
+    const apiPath = String(activeTool.apiPath || activeTool.api_path || '');
+    if (lt === '4') {
+      return React.createElement('iframe', { src: apiPath, className: 'w-full h-[78vh] rounded-2xl border bg-white' });
+    }
+    if (lt === '3' || lt === 'EMBED') {
+      return React.createElement('iframe', { src: apiPath, className: 'w-full h-[78vh] rounded-2xl border bg-white' });
+    }
+    if (Number(activeTool.type) === 19 && window.ToolsPages && window.ToolsPages['16'] && toolReady) {
+      return React.createElement(window.ToolsPages['16'], { currentUser }, null);
+    }
+    if (Number(activeTool.type) === 20 && window.ToolsPages && window.ToolsPages['10'] && toolReady) {
+      return React.createElement(window.ToolsPages['10'], null);
+    }
+    if (window.ToolsPages && window.ToolsPages[String(activeTool.id)] && toolReady) {
+      return React.createElement(window.ToolsPages[String(activeTool.id)], { currentUser }, null);
+    }
+    return React.createElement('div', { className: 'p-6 border rounded-2xl bg-white text-sm text-slate-500' }, '工具加载中...');
+  };
+
+  const categoryList = (Array.isArray(categories) ? categories : []).filter(c => c && c.id != null);
+  const categoryIdSet = new Set(categoryList.map(c => String(c.id)));
+  const otherTools = filtered.filter(t => !categoryIdSet.has(String(Number(t.type))));
+  const groupedTools = categoryList
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        items: filtered.filter(t => String(Number(t.type)) === String(c.id))
+      }))
+      .filter(g => g.items.length > 0);
+
+  return (
+      React.createElement('div', { className: 'bg-white rounded-2xl border overflow-hidden min-h-[75vh]' },
+          React.createElement('div', { className: 'md:hidden flex items-center justify-between px-4 py-3 border-b bg-slate-50/60' },
+              React.createElement('div', { className: 'font-semibold text-slate-900' }, '工具合集'),
+              React.createElement('button', { className: 'px-3 py-1 rounded-lg bg-slate-100 text-slate-700', onClick: ()=>setSidebarOpen(v=>!v) }, sidebarOpen ? '收起菜单' : '展开菜单')
+          ),
+          React.createElement('div', { className: 'grid grid-cols-12 min-h-[75vh]' },
+              React.createElement('aside', { className: `${sidebarOpen ? 'block' : 'hidden'} md:block col-span-12 ${sidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'} border-b md:border-b-0 md:border-r bg-slate-50/50` },
+                  React.createElement('div', { className: `p-4 ${sidebarCollapsed ? 'space-y-3' : 'space-y-4'}` },
+                      React.createElement('div', { className: 'hidden md:flex items-center justify-between gap-2' },
+                          React.createElement('div', { className: `min-w-0 ${sidebarCollapsed ? 'hidden' : 'block'}` },
+                              React.createElement('div', { className: 'text-lg font-bold text-slate-900' }, '工具合集'),
+                              React.createElement('div', { className: 'text-xs text-slate-500 mt-1' }, '选择工具开始使用')
+                          ),
+                          React.createElement('button', {
+                            type: 'button',
+                            className: 'ml-auto w-9 h-9 grid place-items-center rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-100',
+                            title: sidebarCollapsed ? '展开侧栏' : '折叠侧栏',
+                            onClick: ()=>setSidebarCollapsed(v=>!v)
+                          }, sidebarCollapsed ? '›' : '‹')
+                      ),
+                      !sidebarCollapsed && React.createElement('input', { className: 'w-full border border-slate-200 rounded-xl px-3 py-2 bg-white', placeholder: '搜索工具...', value: search, onChange: (e)=>setSearch(e.target.value) }),
+                      React.createElement('div', { className: `${sidebarCollapsed ? 'max-h-[66vh]' : 'max-h-[64vh]'} overflow-auto pr-1 space-y-4` },
+                          loading
+                              ? React.createElement('div', { className: 'space-y-2' }, [1,2,3,4,5,6,7,8].map(i=>React.createElement('div', { key: i, className: 'h-10 bg-slate-100 rounded-xl animate-pulse' })))
+                              : (
+                                  React.createElement(React.Fragment, null,
+                                      (groupedTools.length === 0 && otherTools.length === 0)
+                                          ? React.createElement('div', { className: 'text-xs text-slate-500' }, '暂无工具')
+                                          : null,
+                                      groupedTools.map(g => React.createElement('div', { key: String(g.id), className: 'space-y-1' },
+                                          !sidebarCollapsed && React.createElement('div', { className: 'px-2 pt-2 pb-1 text-[11px] font-bold tracking-wide text-slate-500 uppercase' }, g.name),
+                                          React.createElement('div', { className: 'space-y-1' },
+                                              g.items.map(t => React.createElement(ToolListItem, { ...t, key: t.id }))
+                                          )
+                                      )),
+                                      (otherTools.length > 0
+                                          ? React.createElement('div', { className: 'space-y-1' },
+                                              !sidebarCollapsed && React.createElement('div', { className: 'px-2 pt-2 pb-1 text-[11px] font-bold tracking-wide text-slate-500 uppercase' }, '其他'),
+                                              React.createElement('div', { className: 'space-y-1' }, otherTools.map(t => React.createElement(ToolListItem, { ...t, key: t.id })))
+                                          )
+                                          : null)
+                                  )
+                              )
+                      )
+                  )
+              ),
+              React.createElement('section', { className: `${sidebarOpen ? 'hidden' : 'block'} md:block col-span-12 ${sidebarCollapsed ? 'md:col-span-11' : 'md:col-span-9'} bg-white` },
+                  React.createElement('div', { className: 'p-4 border-b flex items-center justify-between gap-3' },
+                      React.createElement('div', { className: 'min-w-0' },
+                          React.createElement('div', { className: 'text-base font-semibold text-slate-900 truncate' }, activeTool ? (activeTool.toolName || '工具') : '欢迎使用工具合集'),
+                          React.createElement('div', { className: 'text-xs text-slate-500 truncate' }, activeTool ? (activeTool.description || '') : '在左侧选择工具后，将在此处展示功能页面')
+                      ),
+                      activeTool
+                          ? React.createElement('div', { className: 'flex items-center gap-2' },
+                              React.createElement('button', { className: 'px-3 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-sm', onClick: clearActiveTool }, '返回列表'),
+                              React.createElement('button', { className: 'px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm', onClick: ()=>setSidebarOpen(true) }, '菜单')
+                          )
+                          : React.createElement('div', { className: 'flex items-center gap-2' },
+                              React.createElement('button', { className: 'px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm', onClick: ()=>setSidebarOpen(true) }, '菜单')
+                          )
+                  ),
+                  React.createElement('div', { className: 'p-4' },
+                      renderActiveTool()
+                  )
+              )
+          )
+      )
   );
 };
 
@@ -408,164 +507,164 @@ const AIToolManagement = () => {
   };
 
   return (
-    React.createElement('div',{className:'p-6 md:p-10 bg-white rounded-xl shadow-lg w-full h-full space-y-6'},
-      React.createElement('h2',{className:'text-3xl font-bold text-gray-800'}, 'AI功能管理'),
-      React.createElement('div',{className:'flex items-center gap-3'},
-        React.createElement('input',{type:'search', value:searchTerm, onChange:(e)=>setSearchTerm(e.target.value), onKeyDown:(e)=>{ if(e.key==='Enter') fetchTools(); }, placeholder:'按名称/描述/API搜索...', className:'w-full md:w-80 border border-gray-300 rounded-lg px-3 py-2'}),
-        React.createElement('select',{className:'border border-gray-300 rounded-lg px-3 py-2 w-48', value:typeFilter, onChange:(e)=>setTypeFilter(e.target.value)},
-          React.createElement('option',{value:''},'全部分类'),
-          ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
-        ),
-        React.createElement('button',{className:'px-3 py-2 bg-blue-600 text-white rounded-lg', onClick:fetchTools}, '搜索'),
-        React.createElement('button',{className:'px-3 py-2 bg-green-600 text-white rounded-lg', onClick:handleAdd}, '新增')
-      ),
-      error && React.createElement('div',{className:'text-red-600 text-sm'}, error),
-      React.createElement('div',{className:'overflow-x-auto bg-white rounded-lg border border-gray-200 shadow'},
-        React.createElement('table',{className:'min-w-full divide-y divide-gray-200 text-xs'},
-          React.createElement('thead',{className:'bg-gray-50'}, React.createElement('tr',null, ['ID','名称','类型','权限','链接方式','描述','API路径','状态','操作'].map((h,i)=>React.createElement('th',{key:i,className:'px-4 py-3 text-left text-xs font-medium text-gray-500'},h)))),
-          React.createElement('tbody',{className:'bg白 divide-y divide-gray-200'},
-            loading ? React.createElement('tr',null, React.createElement('td',{className:'px-4 py-6 text-center text-gray-500', colSpan:9}, '加载中...'))
-            : tools.length===0 ? React.createElement('tr',null, React.createElement('td',{className:'px-4 py-6 text-center text-gray-500', colSpan:9}, '暂无数据'))
-            : tools.map(t=>React.createElement('tr',{key:t.id},
-                React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, t.id),
-                React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, t.toolName),
-                React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, typeLabel(t.type)),
-                React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, (String(t.vipAllow||'NO').toUpperCase()==='VIP'?'VIP99专享':'所有人可用')),
-                React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, (String(t.linkType||'1').toUpperCase()==='4'?'内嵌链接':'外部链接')),
-                React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700 truncate max-w-[20rem]'}, t.description||''),
-                React.createElement('td',{className:'px-3 py-2 text-xs text-gray-700'}, React.createElement('span',{className:'truncate max-w-[12rem] inline-block'}, t.apiPath||'')),
-                React.createElement('td',{className:'px-4 py-3 text-sm'}, (t.isActive?'激活':'禁用')),
-                React.createElement('td',{className:'px-3 py-2 text-xs'},
-                  React.createElement('div',{className:'flex items-center justify-end gap-2'},
-                    React.createElement('button',{className:'px-3 py-1 rounded bg-blue-600 text-white', onClick:()=>openEdit(t)}, '修改'),
-                    React.createElement('button',{className:'px-3 py-1 rounded border border-red-600 text-red-600 bg-white hover:bg-red-50', onClick:()=>handleDelete(t.id)}, '删除')
+      React.createElement('div',{className:'p-6 md:p-10 bg-white rounded-xl shadow-lg w-full h-full space-y-6'},
+          React.createElement('h2',{className:'text-3xl font-bold text-gray-800'}, 'AI功能管理'),
+          React.createElement('div',{className:'flex items-center gap-3'},
+              React.createElement('input',{type:'search', value:searchTerm, onChange:(e)=>setSearchTerm(e.target.value), onKeyDown:(e)=>{ if(e.key==='Enter') fetchTools(); }, placeholder:'按名称/描述/API搜索...', className:'w-full md:w-80 border border-gray-300 rounded-lg px-3 py-2'}),
+              React.createElement('select',{className:'border border-gray-300 rounded-lg px-3 py-2 w-48', value:typeFilter, onChange:(e)=>setTypeFilter(e.target.value)},
+                  React.createElement('option',{value:''},'全部分类'),
+                  ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
+              ),
+              React.createElement('button',{className:'px-3 py-2 bg-blue-600 text-white rounded-lg', onClick:fetchTools}, '搜索'),
+              React.createElement('button',{className:'px-3 py-2 bg-green-600 text-white rounded-lg', onClick:handleAdd}, '新增')
+          ),
+          error && React.createElement('div',{className:'text-red-600 text-sm'}, error),
+          React.createElement('div',{className:'overflow-x-auto bg-white rounded-lg border border-gray-200 shadow'},
+              React.createElement('table',{className:'min-w-full divide-y divide-gray-200 text-xs'},
+                  React.createElement('thead',{className:'bg-gray-50'}, React.createElement('tr',null, ['ID','名称','类型','权限','链接方式','描述','API路径','状态','操作'].map((h,i)=>React.createElement('th',{key:i,className:'px-4 py-3 text-left text-xs font-medium text-gray-500'},h)))),
+                  React.createElement('tbody',{className:'bg白 divide-y divide-gray-200'},
+                      loading ? React.createElement('tr',null, React.createElement('td',{className:'px-4 py-6 text-center text-gray-500', colSpan:9}, '加载中...'))
+                          : tools.length===0 ? React.createElement('tr',null, React.createElement('td',{className:'px-4 py-6 text-center text-gray-500', colSpan:9}, '暂无数据'))
+                              : tools.map(t=>React.createElement('tr',{key:t.id},
+                                  React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, t.id),
+                                  React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, t.toolName),
+                                  React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, typeLabel(t.type)),
+                                  React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, (String(t.vipAllow||'NO').toUpperCase()==='VIP'?'VIP99专享':'所有人可用')),
+                                  React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700'}, (String(t.linkType||'1').toUpperCase()==='4'?'内嵌链接':'外部链接')),
+                                  React.createElement('td',{className:'px-4 py-3 text-sm text-gray-700 truncate max-w-[20rem]'}, t.description||''),
+                                  React.createElement('td',{className:'px-3 py-2 text-xs text-gray-700'}, React.createElement('span',{className:'truncate max-w-[12rem] inline-block'}, t.apiPath||'')),
+                                  React.createElement('td',{className:'px-4 py-3 text-sm'}, (t.isActive?'激活':'禁用')),
+                                  React.createElement('td',{className:'px-3 py-2 text-xs'},
+                                      React.createElement('div',{className:'flex items-center justify-end gap-2'},
+                                          React.createElement('button',{className:'px-3 py-1 rounded bg-blue-600 text-white', onClick:()=>openEdit(t)}, '修改'),
+                                          React.createElement('button',{className:'px-3 py-1 rounded border border-red-600 text-red-600 bg-white hover:bg-red-50', onClick:()=>handleDelete(t.id)}, '删除')
+                                      )
+                                  )
+                              ))
                   )
-                )
-            ))
+              ),
+              React.createElement('div',{className:'flex items-center justify-between mt-4'},
+                  React.createElement('div',{className:'text-xs text-slate-500'}, `第 ${page+1} / ${Math.max(totalPages,1)} 页`),
+                  React.createElement('div',{className:'flex items-center gap-2'},
+                      React.createElement('button',{className:'px-3 py-1 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: page<=0, onClick:()=>setPage(p=>Math.max(0,p-1))}, '上一页'),
+                      React.createElement('button',{className:'px-3 py-1 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: (page+1)>=totalPages, onClick:()=>setPage(p=>p+1)}, '下一页')
+                  )
+              )
           )
-        ),
-        React.createElement('div',{className:'flex items-center justify-between mt-4'},
-          React.createElement('div',{className:'text-xs text-slate-500'}, `第 ${page+1} / ${Math.max(totalPages,1)} 页`),
-          React.createElement('div',{className:'flex items-center gap-2'},
-            React.createElement('button',{className:'px-3 py-1 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: page<=0, onClick:()=>setPage(p=>Math.max(0,p-1))}, '上一页'),
-            React.createElement('button',{className:'px-3 py-1 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: (page+1)>=totalPages, onClick:()=>setPage(p=>p+1)}, '下一页')
-          )
-        )
+          , (showAdd && React.createElement('div',{className:'fixed inset-0 bg-black/50 flex items-center justify-center p-4'},
+              React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 space-y-4'},
+                  React.createElement('h3',{className:'text-xl font-bold text-gray-800'}, '新增工具'),
+                  React.createElement('div',{className:'space-y-4'},
+                      React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-4'},
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具名称 *'),
+                              React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入工具名称', value:addForm.toolName, onChange:(e)=>setAddForm({...addForm, toolName:e.target.value})})
+                          ),
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, 'API路径 *'),
+                              React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入API路径，如：/api/chat/gpt4', value:addForm.apiPath, onChange:(e)=>setAddForm({...addForm, apiPath:e.target.value})})
+                          ),
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具类型'),
+                              React.createElement('select',{className:'w-full border rounded px-3 py-2', value:addForm.type, onChange:(e)=>setAddForm({...addForm, type:e.target.value})},
+                                  React.createElement('option',{value:''}, '请选择类型'),
+                                  ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
+                              )
+                          ),
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '权限设置'),
+                              React.createElement('select',{className:'w-full border rounded px-3 py-2', value:addForm.vipAllow, onChange:(e)=>setAddForm({...addForm, vipAllow:e.target.value})},
+                                  React.createElement('option',{value:'NO'}, '所有人可用'),
+                                  React.createElement('option',{value:'VIP'}, 'VIP99专享')
+                              )
+                          ),
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '链接方式'),
+                              React.createElement('select',{className:'w-full border rounded px-3 py-2', value:addForm.linkType || '1', onChange:(e)=>setAddForm({...addForm, linkType:e.target.value})},
+                                  React.createElement('option',{value:'1'}, '外部链接(直接跳转)'),
+                                  React.createElement('option',{value:'2'}, '内部实现'),
+                                  React.createElement('option',{value:'3'}, '内嵌页面'),
+                                  React.createElement('option',{value:'4'}, '内嵌链接(新)')
+                              )
+                          )
+                      ),
+                      React.createElement('div',{className:'space-y-1'},
+                          React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '图标URL'),
+                          React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入图标URL（可选）', value:addForm.iconUrl, onChange:(e)=>setAddForm({...addForm, iconUrl:e.target.value})})
+                      ),
+                      React.createElement('div',{className:'space-y-1'},
+                          React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '描述'),
+                          React.createElement('textarea',{className:'w-full border rounded px-3 py-2', rows:4, placeholder:'请输入工具描述（可选）', value:addForm.description, onChange:(e)=>setAddForm({...addForm, description:e.target.value})})
+                      ),
+                      React.createElement('div',{className:'flex items-center space-x-2 pt-2'},
+                          React.createElement('input',{type:'checkbox', checked:!!addForm.isActive, onChange:(e)=>setAddForm({...addForm, isActive:e.target.checked})}),
+                          React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '激活')
+                      )
+                  ),
+                  React.createElement('div',{className:'flex justify-end gap-2'},
+                      React.createElement('button',{className:'px-4 py-2 rounded bg-gray-200', onClick:()=>{ setShowAdd(false); }}, '取消'),
+                      React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text-white', onClick:saveAdd}, '保存')
+                  )
+              )
+          )),
+          (showEdit && editTool && React.createElement('div',{className:'fixed inset-0 bg-black/50 flex items-center justify-center p-4'},
+              React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 space-y-4'},
+                  React.createElement('h3',{className:'text-xl font-bold text-gray-800'}, '编辑工具'),
+                  React.createElement('div',{className:'space-y-4'},
+                      React.createElement('div',{className:'text-sm text-gray-500'}, `ID: ${editTool.id}`),
+                      React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-4'},
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具名称 *'),
+                              React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入工具名称', value:editTool.toolName||'', onChange:(e)=>setEditTool({...editTool, toolName:e.target.value})})
+                          ),
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, 'API路径 *'),
+                              React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入API路径', value:editTool.apiPath||'', onChange:(e)=>setEditTool({...editTool, apiPath:e.target.value})})
+                          ),
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具类型'),
+                              React.createElement('select',{className:'w-full border rounded px-3 py-2', value:(editTool.type||''), onChange:(e)=>setEditTool({...editTool, type:e.target.value})},
+                                  React.createElement('option',{value:''}, '请选择类型'),
+                                  ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
+                              )
+                          ),
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '权限设置'),
+                              React.createElement('select',{className:'w-full border rounded px-3 py-2', value:(editTool.vipAllow||'NO'), onChange:(e)=>setEditTool({...editTool, vipAllow:e.target.value})},
+                                  React.createElement('option',{value:'NO'}, '所有人可用'),
+                                  React.createElement('option',{value:'VIP'}, 'VIP99专享')
+                              )
+                          ),
+                          React.createElement('div',{className:'space-y-1'},
+                              React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '链接方式'),
+                              React.createElement('select',{className:'w-full border rounded px-3 py-2', value:(editTool.linkType||'1'), onChange:(e)=>setEditTool({...editTool, linkType:e.target.value})},
+                                  React.createElement('option',{value:'1'}, '外部链接(直接跳转)'),
+                                  React.createElement('option',{value:'2'}, '内部实现'),
+                                  React.createElement('option',{value:'3'}, '内嵌页面'),
+                                  React.createElement('option',{value:'4'}, '内嵌链接(新)')
+                              )
+                          )
+                      ),
+                      React.createElement('div',{className:'space-y-1'},
+                          React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '图标URL'),
+                          React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入图标URL（可选）', value:editTool.iconUrl||'', onChange:(e)=>setEditTool({...editTool, iconUrl:e.target.value})})
+                      ),
+                      React.createElement('div',{className:'space-y-1'},
+                          React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '描述'),
+                          React.createElement('textarea',{className:'w-full border rounded px-3 py-2', rows:4, placeholder:'请输入工具描述（可选）', value:editTool.description||'', onChange:(e)=>setEditTool({...editTool, description:e.target.value})})
+                      ),
+                      React.createElement('div',{className:'flex items-center space-x-2 pt-2'},
+                          React.createElement('input',{type:'checkbox', checked:!!editTool.isActive, onChange:(e)=>setEditTool({...editTool, isActive:e.target.checked})}),
+                          React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '激活')
+                      )
+                  ),
+                  React.createElement('div',{className:'flex justify-end gap-2'},
+                      React.createElement('button',{className:'px-4 py-2 rounded bg-gray-200', onClick:()=>{ setShowEdit(false); setEditTool(null); }}, '取消'),
+                      React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text-white', onClick:saveEdit}, '保存')
+                  )
+              )
+          ))
       )
-      , (showAdd && React.createElement('div',{className:'fixed inset-0 bg-black/50 flex items-center justify-center p-4'},
-          React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 space-y-4'},
-            React.createElement('h3',{className:'text-xl font-bold text-gray-800'}, '新增工具'),
-            React.createElement('div',{className:'space-y-4'},
-              React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-4'},
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具名称 *'),
-                  React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入工具名称', value:addForm.toolName, onChange:(e)=>setAddForm({...addForm, toolName:e.target.value})})
-                ),
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, 'API路径 *'),
-                  React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入API路径，如：/api/chat/gpt4', value:addForm.apiPath, onChange:(e)=>setAddForm({...addForm, apiPath:e.target.value})})
-                ),
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具类型'),
-                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:addForm.type, onChange:(e)=>setAddForm({...addForm, type:e.target.value})},
-                    React.createElement('option',{value:''}, '请选择类型'),
-                    ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
-                  )
-                ),
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '权限设置'),
-                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:addForm.vipAllow, onChange:(e)=>setAddForm({...addForm, vipAllow:e.target.value})},
-                    React.createElement('option',{value:'NO'}, '所有人可用'),
-                    React.createElement('option',{value:'VIP'}, 'VIP99专享')
-                  )
-                ),
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '链接方式'),
-                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:addForm.linkType || '1', onChange:(e)=>setAddForm({...addForm, linkType:e.target.value})},
-                    React.createElement('option',{value:'1'}, '外部链接(直接跳转)'),
-                    React.createElement('option',{value:'2'}, '内部实现'),
-                    React.createElement('option',{value:'3'}, '内嵌页面'),
-                    React.createElement('option',{value:'4'}, '内嵌链接(新)')
-                  )
-                )
-              ),
-              React.createElement('div',{className:'space-y-1'},
-                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '图标URL'),
-                React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入图标URL（可选）', value:addForm.iconUrl, onChange:(e)=>setAddForm({...addForm, iconUrl:e.target.value})})
-              ),
-              React.createElement('div',{className:'space-y-1'},
-                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '描述'),
-                React.createElement('textarea',{className:'w-full border rounded px-3 py-2', rows:4, placeholder:'请输入工具描述（可选）', value:addForm.description, onChange:(e)=>setAddForm({...addForm, description:e.target.value})})
-              ),
-              React.createElement('div',{className:'flex items-center space-x-2 pt-2'},
-                React.createElement('input',{type:'checkbox', checked:!!addForm.isActive, onChange:(e)=>setAddForm({...addForm, isActive:e.target.checked})}),
-                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '激活')
-              )
-            ),
-            React.createElement('div',{className:'flex justify-end gap-2'},
-              React.createElement('button',{className:'px-4 py-2 rounded bg-gray-200', onClick:()=>{ setShowAdd(false); }}, '取消'),
-              React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text-white', onClick:saveAdd}, '保存')
-            )
-          )
-        )),
-      (showEdit && editTool && React.createElement('div',{className:'fixed inset-0 bg-black/50 flex items-center justify-center p-4'},
-          React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 space-y-4'},
-            React.createElement('h3',{className:'text-xl font-bold text-gray-800'}, '编辑工具'),
-            React.createElement('div',{className:'space-y-4'},
-              React.createElement('div',{className:'text-sm text-gray-500'}, `ID: ${editTool.id}`),
-              React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-4'},
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具名称 *'),
-                  React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入工具名称', value:editTool.toolName||'', onChange:(e)=>setEditTool({...editTool, toolName:e.target.value})})
-                ),
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, 'API路径 *'),
-                  React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入API路径', value:editTool.apiPath||'', onChange:(e)=>setEditTool({...editTool, apiPath:e.target.value})})
-                ),
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具类型'),
-                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:(editTool.type||''), onChange:(e)=>setEditTool({...editTool, type:e.target.value})},
-                    React.createElement('option',{value:''}, '请选择类型'),
-                    ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
-                  )
-                ),
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '权限设置'),
-                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:(editTool.vipAllow||'NO'), onChange:(e)=>setEditTool({...editTool, vipAllow:e.target.value})},
-                    React.createElement('option',{value:'NO'}, '所有人可用'),
-                    React.createElement('option',{value:'VIP'}, 'VIP99专享')
-                  )
-                ),
-                React.createElement('div',{className:'space-y-1'},
-                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '链接方式'),
-                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:(editTool.linkType||'1'), onChange:(e)=>setEditTool({...editTool, linkType:e.target.value})},
-                    React.createElement('option',{value:'1'}, '外部链接(直接跳转)'),
-                    React.createElement('option',{value:'2'}, '内部实现'),
-                    React.createElement('option',{value:'3'}, '内嵌页面'),
-                    React.createElement('option',{value:'4'}, '内嵌链接(新)')
-                  )
-                )
-              ),
-              React.createElement('div',{className:'space-y-1'},
-                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '图标URL'),
-                React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入图标URL（可选）', value:editTool.iconUrl||'', onChange:(e)=>setEditTool({...editTool, iconUrl:e.target.value})})
-              ),
-              React.createElement('div',{className:'space-y-1'},
-                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '描述'),
-                React.createElement('textarea',{className:'w-full border rounded px-3 py-2', rows:4, placeholder:'请输入工具描述（可选）', value:editTool.description||'', onChange:(e)=>setEditTool({...editTool, description:e.target.value})})
-              ),
-              React.createElement('div',{className:'flex items-center space-x-2 pt-2'},
-                React.createElement('input',{type:'checkbox', checked:!!editTool.isActive, onChange:(e)=>setEditTool({...editTool, isActive:e.target.checked})}),
-                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '激活')
-              )
-            ),
-            React.createElement('div',{className:'flex justify-end gap-2'},
-              React.createElement('button',{className:'px-4 py-2 rounded bg-gray-200', onClick:()=>{ setShowEdit(false); setEditTool(null); }}, '取消'),
-              React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text-white', onClick:saveEdit}, '保存')
-            )
-          )
-        ))
-    )
   );
 };
 

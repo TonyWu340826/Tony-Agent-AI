@@ -586,7 +586,7 @@ const Footer = () => (
             ),
             // 🎯 优化 2: 增加留白 pt-8
             React.createElement('div',{id:'footer-copyright', className:'pt-12 border-t border-slate-800 text-center'},
-                React.createElement('p',{className:'text-sm text-white'}, '© 2025 TonyWu AI 平台. All rights reserved.'),
+                React.createElement('p',{className:'text-sm text-white'}, '© 2025 宙斯. All rights reserved.'),
                 React.createElement('p',{className:'text-sm text-slate-300 mt-1'}, '让智能赋能每个人 · 共建可信AI新纪元')
             )
         )
@@ -1350,10 +1350,7 @@ const UserHome = () => {
                 )
             ),
 
-            (activePage==='tools') && React.createElement('section',{id:'tools-page', className:'py-16 px-6 max-w-[1400px] mx-auto bg白 rounded-2xl'},
-                React.createElement('div',{className:'flex items-center justify-between mb-6'},
-                    React.createElement('h2',{className:'text-2xl font-extrabold text-slate-900'}, '工具合集')
-                ),
+            (activePage==='tools') && React.createElement('section',{id:'tools-page', className:'py-10 px-4 md:px-6 max-w-[1600px] mx-auto'},
                 (window.Components && window.Components.UserToolsExplorer) ? React.createElement(window.Components.UserToolsExplorer, { currentUser }) : React.createElement('div',null, toolsReady ? '组件加载中...' : '正在加载组件脚本...')
             ),
 
