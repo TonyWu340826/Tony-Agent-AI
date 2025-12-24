@@ -17,11 +17,12 @@ const ExamSessionAdmin = () => {
   const [qPage, setQPage] = useState(0);
   const [qSize, setQSize] = useState(10);
   const [qTotal, setQTotal] = useState(0);
+  const [addMode, setAddMode] = useState('manual');
   const [aiCount, setAiCount] = useState(10);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiError, setAiError] = useState('');
   const [showEdit, setShowEdit] = useState(false);
-  const [editForm, setEditForm] = useState({ id:null, code:'', userId:'', userName:'', paperName:'', subject:'数学', grade:1, status:0, startTime:'', endTime:'', aiSummary:'' });
+  const [editForm, setEditForm] = useState({ id:null, code:'', userId:'', userName:'', paperName:'', subject:'数学', grade:1, status:0, startTime:'', endTime:'', aiSummary:'', questionIds:'' });
 
   const fetchList = async (p=page, s=size) => {
     setLoading(true);
@@ -85,6 +86,7 @@ const ExamSessionAdmin = () => {
   };
 
   const openAdd = () => {
+    setAddMode('manual');
     setForm(defaultAddForm);
     setSelectedIds([]);
     setAiCount(10);
@@ -93,6 +95,7 @@ const ExamSessionAdmin = () => {
   };
 
   const openAiPaper = () => {
+    setAddMode('ai');
     setForm({ ...defaultAddForm, paperName: 'AI试卷' });
     setSelectedIds([]);
     setAiCount(10);
@@ -170,8 +173,8 @@ const ExamSessionAdmin = () => {
   };
   const toggleId = (id) => { setSelectedIds(prev => prev.includes(id) ? prev.filter(x=>x!==id) : (prev.length<25 ? [...prev, id] : prev)); };
 
-  useEffect(()=>{ if (showAdd) { fetchQBank(0, qSize); } }, [showAdd]);
-  useEffect(()=>{ if (showAdd) { fetchQBank(0, qSize); } }, [form.subject, form.grade]);
+  useEffect(()=>{ if (showAdd && addMode === 'manual') { fetchQBank(0, qSize); } }, [showAdd, addMode]);
+  useEffect(()=>{ if (showAdd && addMode === 'manual') { fetchQBank(0, qSize); } }, [form.subject, form.grade, showAdd, addMode]);
 
   const Field = (label, el) => React.createElement('div', { className:'space-y-1' }, React.createElement('div', { className:'text-xs text-slate-500' }, label), el);
   const Sel = (value, onChange, opts) => React.createElement('select', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value, onChange }, opts.map(x=>React.createElement('option',{ key:x, value:x }, x)));
@@ -188,7 +191,8 @@ const ExamSessionAdmin = () => {
       status: typeof s.status==='number'?s.status:0,
       startTime: s.startTime||'',
       endTime: s.endTime||'',
-      aiSummary: s.aiSummary||''
+      aiSummary: s.aiSummary||'',
+      questionIds: s.questionIds || ''
     });
     setShowEdit(true);
   };
@@ -271,7 +275,7 @@ const ExamSessionAdmin = () => {
       ),
       showAdd && React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 grid place-items-center p-4' },
         React.createElement('div', { className:'bg-white rounded-2xl p-4 w-full max-w-3xl space-y-3' },
-          React.createElement('div', { className:'text-lg font-bold text-slate-900' }, '新增考试'),
+          React.createElement('div', { className:'text-lg font-bold text-slate-900' }, addMode === 'ai' ? 'AI试卷' : '新增考试'),
           React.createElement('div', { className:'grid md:grid-cols-3 gap-3' },
             Field('考试名称', React.createElement('input', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value:form.paperName, onChange:(e)=>setForm({...form, paperName:e.target.value}) })),
             Field('科目', Sel(form.subject, (e)=>setForm({...form, subject:e.target.value}), SUBJECTS)),
@@ -290,7 +294,7 @@ const ExamSessionAdmin = () => {
             Field('用户ID', React.createElement('input', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value:form.userId, onChange:(e)=>setForm({...form, userId:e.target.value}) })),
             Field('用户名', React.createElement('input', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value:form.userName, onChange:(e)=>setForm({...form, userName:e.target.value}) }))
           ),
-          React.createElement('div', { className:'space-y-2' },
+          addMode === 'manual' ? React.createElement('div', { className:'space-y-2' },
             React.createElement('div', { className:'flex items-center justify-between' },
               React.createElement('div', { className:'text-sm text-slate-700 font-semibold' }, '选择题目（最多25题）'),
               React.createElement('div', { className:'text-xs text-slate-500' }, `已选 ${selectedIds.length} / 25`)
@@ -321,6 +325,9 @@ const ExamSessionAdmin = () => {
                 React.createElement('button', { className:'px-2 py-1 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: (qPage+1)*qSize>=qTotal, onClick:()=>{ const p=qPage+1; fetchQBank(p,qSize); } }, '下一页')
               )
             )
+          ) : React.createElement('div', { className:'space-y-1' },
+            React.createElement('div', { className:'text-xs text-slate-500' }, '已选择题目ID（逗号分隔）'),
+            React.createElement('textarea', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full text-xs', rows:2, readOnly:true, value: selectedIds.join(',') })
           ),
           Field('开始时间', React.createElement('input', { type:'datetime-local', className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value:form.startTime, onChange:(e)=>setForm({...form, startTime:e.target.value}) })),
           Field('结束时间', React.createElement('input', { type:'datetime-local', className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value:form.endTime, onChange:(e)=>setForm({...form, endTime:e.target.value}) })),
@@ -342,6 +349,10 @@ const ExamSessionAdmin = () => {
             Field('考试名称', React.createElement('input', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value:editForm.paperName, onChange:(e)=>setEditForm({...editForm, paperName:e.target.value}) })),
             Field('科目', Sel(editForm.subject, (e)=>setEditForm({...editForm, subject:e.target.value}), SUBJECTS)),
             Field('年级', Sel(editForm.grade, (e)=>setEditForm({...editForm, grade:parseInt(e.target.value,10)}), GRADES))
+          ),
+          React.createElement('div', { className:'grid md:grid-cols-3 gap-3' },
+            Field('题目数量', React.createElement('input', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full', readOnly:true, value: String(editForm.questionIds||'').split(',').filter(x=>x.trim()).length })),
+            Field('题目ID列表(只读)', React.createElement('textarea', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full text-xs md:col-span-2', rows:2, readOnly:true, value: editForm.questionIds || '' }))
           ),
           React.createElement('div', { className:'grid md:grid-cols-3 gap-3' },
             Field('状态', Sel(editForm.status, (e)=>setEditForm({...editForm, status:parseInt(e.target.value,10)}), [0,1]))
