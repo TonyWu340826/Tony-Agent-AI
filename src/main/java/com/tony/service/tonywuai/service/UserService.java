@@ -75,4 +75,12 @@ public interface UserService extends UserDetailsService {
      * @return 更新后的用户实体
      */
     User updateUserInfoByAdmin(UserDTO userDto);
+
+    /**
+     * [Admin] 更新用户的密码
+     * @param userId 用户ID
+     * @param newPassword 新密码
+     * @return 更新后的用户实体
+     */
+    User updateUserPassword(Long userId, String newPassword);
 }

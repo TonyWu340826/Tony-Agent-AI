@@ -127,7 +127,7 @@ const ExamAdmin = () => {
           React.createElement('button', { className:'px-2 py-1 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: (page+1)*size>=total, onClick:()=>{ const p=page+1; fetchList(p,size); } }, '下一页')
         )
       ),
-      showAdd && React.createElement('div', { className:'fixed inset-0 bg-black/40 grid place-items-center p-4' },
+      showAdd && React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 grid place-items-center p-4' },
         React.createElement('div', { className:'bg-white rounded-2xl p-4 w-full max-w-3xl space-y-3' },
           React.createElement('div', { className:'text-lg font-bold text-slate-900' }, '新增题目'),
           React.createElement('div', { className:'grid md:grid-cols-3 gap-3' },
@@ -147,7 +147,7 @@ const ExamAdmin = () => {
           )
         )
       ),
-      showEdit && React.createElement('div', { className:'fixed inset-0 bg-black/40 grid place-items-center p-4' },
+      showEdit && React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 grid place-items-center p-4' },
         React.createElement('div', { className:'bg-white rounded-2xl p-4 w-full max-w-3xl space-y-3' },
           React.createElement('div', { className:'text-lg font-bold text-slate-900' }, '编辑题目'),
           React.createElement('div', { className:'grid md:grid-cols-3 gap-3' },

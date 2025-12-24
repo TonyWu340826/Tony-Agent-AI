@@ -30,6 +30,25 @@ const ProSupportIcon = ({ className }) => React.createElement(Svg,{className},
     React.createElement('path',{d:'M12 2v2'}),
     React.createElement('path',{d:'M10.5 4.5L12 4l1.5.5'})
 );
+const Headphones = ({ className }) => React.createElement(Svg,{className},
+    React.createElement('path',{d:'M3 18v-6a9 9 0 0118 0v6'}),
+    React.createElement('path',{d:'M21 19a2 2 0 01-2 2h-1v-6h1a2 2 0 012 2z'}),
+    React.createElement('path',{d:'M3 19a2 2 0 002 2h1v-6H5a2 2 0 00-2 2z'})
+);
+const Timer = ({ className }) => React.createElement(Svg,{className},
+    React.createElement('circle',{cx:'12',cy:'13',r:'8'}),
+    React.createElement('path',{d:'M12 13l3 2'}),
+    React.createElement('path',{d:'M9 2h6'}),
+    React.createElement('path',{d:'M12 5v3'})
+);
+const BadgeCheck = ({ className }) => React.createElement(Svg,{className},
+    React.createElement('path',{d:'M12 2l3 2 4 1-1 4 1 4-4 1-3 2-3-2-4-1 1-4-1-4 4-1 3-2z'}),
+    React.createElement('path',{d:'M9 12l2 2 4-4'})
+);
+const ShieldCheck = ({ className }) => React.createElement(Svg,{className},
+    React.createElement('path',{d:'M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z'}),
+    React.createElement('path',{d:'M9 12l2 2 4-4'})
+);
 
 const features = [
     { id:'articles', icon:BookOpen, title:'文章咨询', description:'获取最新的AI技术文章、行业资讯和最佳实践指南', color:'from-blue-500 to-cyan-500' },
@@ -474,10 +493,24 @@ const Footer = () => (
     // 🎯 优化 2: 增加留白 py-16
     React.createElement('footer',{className:'bg-slate-900 text-slate-300 py-16 px-6'},
         React.createElement('div',{className:'max-w-7xl mx-auto'},
+            React.createElement('div',{className:'grid md:grid-cols-4 gap-10 pb-10 mb-12 border-b border-slate-800'},
+                [
+                    { icon: Headphones, title: '全天候售后服务', desc: '7x24小时专业服务保障' },
+                    { icon: Timer, title: '极速服务应答', desc: '秒级响应为业务保驾护航' },
+                    { icon: BadgeCheck, title: '客户价值为先', desc: '从服务价值到创造客户价值' },
+                    { icon: ShieldCheck, title: '全方位安全保障', desc: '打造安全、透明可信的平台' }
+                ].map((it, idx) => React.createElement('div',{key:idx, className:'flex items-start gap-4'},
+                    React.createElement('div',{className:'w-11 h-11 rounded-xl bg-slate-800/70 border border-slate-700 flex items-center justify-center flex-shrink-0'}, React.createElement(it.icon,{className:'w-6 h-6 text-slate-100'})),
+                    React.createElement('div',null,
+                        React.createElement('div',{className:'text-white font-semibold'}, it.title),
+                        React.createElement('div',{className:'text-sm text-slate-400 mt-1'}, it.desc)
+                    )
+                ))
+            ),
             // 🎯 优化 2: 增加留白 gap-12 mb-12
-            React.createElement('div',{className:'grid md:grid-cols-4 gap-12 mb-12'},
+            React.createElement('div',{className:'grid md:grid-cols-5 gap-12 mb-12'},
                 React.createElement('div',{className:'md:col-span-1'},
-                    React.createElement('div',{className:'flex items-center gap-2 mb-4'}, React.createElement('div',{className:'w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center'}, React.createElement(Sparkles,{className:'w-5 h-5 text-white'})), React.createElement('span',{className:'text-lg text-white font-bold'}, '云杉大模型')),
+                    React.createElement('div',{className:'flex items-center gap-2 mb-4'}, React.createElement('div',{className:'w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center'}, React.createElement(Sparkles,{className:'w-5 h-5 text-white'})), React.createElement('span',{className:'text-lg text-white font-bold'}, '宙斯')),
                     React.createElement('p',{className:'text-sm text-slate-400 mb-4'}, '赋能智能未来，让AI触手可及'),
                     // 🎯 优化 1: 社交链接在新标签页打开
                     React.createElement('div',{className:'flex items-center gap-3'},
@@ -507,6 +540,13 @@ const Footer = () => (
                     React.createElement('h4',{className:'text-white font-semibold mb-4'}, '公司'),
                     React.createElement('ul',{className:'space-y-2 text-sm'},
                         ['关于我们','加入我们','联系我们','隐私政策'].map((t,i)=>React.createElement('li',{key:i}, React.createElement('a',{href:'#',className:'hover:text-white transition-colors'}, t)))
+                    )
+                ),
+                React.createElement('div',null,
+                    React.createElement('h4',{className:'text-white font-semibold mb-4'}, '微信公众号'),
+                    React.createElement('div',{className:'bg-slate-800/60 border border-slate-700 rounded-2xl p-4'},
+                        React.createElement('img',{src:'/image/weixin.png', alt:'微信公众号二维码', className:'w-full aspect-square object-contain rounded-xl bg-white'}),
+                        React.createElement('div',{className:'text-xs text-slate-400 mt-3'}, '微信扫码关注，获取更新与通知')
                     )
                 )
             ),

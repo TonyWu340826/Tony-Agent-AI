@@ -41,4 +41,7 @@ public class AIToolCreateRequest {
 
     @Schema(description = "VIP 权限要求", example = "NO")
     private String vipAllow = "NO";
+
+    @Schema(description = "链接方式(1:根据api_path地址直接跳转，2：根据内部代码实现，3：根据api_path代码内嵌，4:根据api_path地址内嵌该页面)", example = "1")
+    private String linkType = "1";
 }

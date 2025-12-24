@@ -12,10 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -117,5 +117,26 @@ public class UserAdminController {
     public ResponseEntity<Void> deleteUser(@Parameter(description = "用户ID") @PathVariable Long userId) {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * [PUT] /api/admin/users/{userId}/password
+     * 管理员修改用户密码
+     *
+     * @param userId 用户ID
+     * @param request 包含新密码的请求体
+     * @return 更新后的用户DTO
+     */
+    @PutMapping("/{userId}/password")
+    @Operation(summary = "修改用户密码", description = "管理员修改用户密码")
+    public ResponseEntity<UserDTO> updateUserPassword(
+            @Parameter(description = "用户ID") @PathVariable Long userId,
+            @Parameter(description = "新密码") @RequestBody Map<String, String> request) {
+        String newPassword = request.get("password");
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        User updatedUser = userService.updateUserPassword(userId, newPassword);
+        return ResponseEntity.ok(UserDTO.fromEntity(updatedUser));
     }
 }

@@ -2,6 +2,7 @@ const ExamSessionAdmin = () => {
   const { useState, useEffect } = React;
   const SUBJECTS = ['数学','语文','英语'];
   const GRADES = [1,2,3,4,5,6];
+  const defaultAddForm = { userId:'', userName:'', paperName:'测试卷', subject:'数学', grade:1, questionIds:'', startTime:'', endTime:'', score:'', correctNum:0, wrongNum:0, aiSummary:'' };
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
@@ -9,13 +10,16 @@ const ExamSessionAdmin = () => {
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState({ subject:'', grade:'', q:'', userId:'' });
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ userId:'', userName:'', paperName:'测试卷', subject:'数学', grade:1, questionIds:'', startTime:'', endTime:'', score:'', correctNum:0, wrongNum:0, aiSummary:'' });
+  const [form, setForm] = useState(defaultAddForm);
   const [qBankLoading, setQBankLoading] = useState(false);
   const [qBank, setQBank] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [qPage, setQPage] = useState(0);
   const [qSize, setQSize] = useState(10);
   const [qTotal, setQTotal] = useState(0);
+  const [aiCount, setAiCount] = useState(10);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState('');
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState({ id:null, code:'', userId:'', userName:'', paperName:'', subject:'数学', grade:1, status:0, startTime:'', endTime:'', aiSummary:'' });
 
@@ -79,6 +83,91 @@ const ExamSessionAdmin = () => {
     } catch(_) { setQBank([]); }
     setQBankLoading(false);
   };
+
+  const openAdd = () => {
+    setForm(defaultAddForm);
+    setSelectedIds([]);
+    setAiCount(10);
+    setAiError('');
+    setShowAdd(true);
+  };
+
+  const openAiPaper = () => {
+    setForm({ ...defaultAddForm, paperName: 'AI试卷' });
+    setSelectedIds([]);
+    setAiCount(10);
+    setAiError('');
+    setShowAdd(true);
+  };
+
+  const fetchQuestionPage = async ({ subject, grade, page, size }) => {
+    const params = new URLSearchParams();
+    if (subject) params.set('subject', subject);
+    if (grade) params.set('grade', grade);
+    params.set('page', page);
+    params.set('size', size);
+    const r = await fetch(`/api/exams/questions?${params.toString()}`, { credentials:'same-origin' });
+    const t = await r.text();
+    let d = {};
+    try { d = JSON.parse(t || '{}'); } catch (_) { d = {}; }
+    const content = Array.isArray(d.content) ? d.content : (Array.isArray(d) ? d : []);
+    return {
+      content,
+      totalElements: typeof d.totalElements === 'number' ? d.totalElements : content.length,
+    };
+  };
+
+  const pickRandomIds = (items, count) => {
+    const pool = items.slice();
+    for (let i = pool.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = pool[i];
+      pool[i] = pool[j];
+      pool[j] = tmp;
+    }
+    return pool.slice(0, count).map(x => x && x.id).filter(Boolean);
+  };
+
+  const generateAiPaper = async () => {
+    const wanted = Math.max(1, Math.min(25, parseInt(String(aiCount || 0), 10) || 0));
+    if (!form.subject || !form.grade) { setAiError('请先选择科目与年级'); return; }
+    if (!wanted) { setAiError('请输入题目数量'); return; }
+
+    // 为什么：题库接口为分页，为了按“题目数量”生成试卷，需要聚合一定数量的候选题目再抽题。
+    setAiGenerating(true);
+    setAiError('');
+    try {
+      const pageSize = 50;
+      const maxPages = 10;
+      const all = [];
+
+      for (let p = 0; p < maxPages && all.length < wanted; p += 1) {
+        const { content } = await fetchQuestionPage({ subject: form.subject, grade: form.grade, page: p, size: pageSize });
+        if (!content || content.length === 0) break;
+        all.push(...content);
+      }
+
+      const uniqueById = new Map();
+      all.forEach(q => { if (q && q.id != null && !uniqueById.has(q.id)) uniqueById.set(q.id, q); });
+      const pool = Array.from(uniqueById.values());
+
+      if (pool.length < wanted) {
+        setAiError(`题库仅有 ${pool.length} 题，无法生成 ${wanted} 题试卷`);
+        setSelectedIds(pool.map(x => x.id));
+        return;
+      }
+
+      const ids = pickRandomIds(pool, wanted);
+      setSelectedIds(ids);
+      if (!form.paperName || form.paperName === '测试卷') {
+        setForm(prev => ({ ...prev, paperName: `AI试卷-${form.subject}-${form.grade}年级-${wanted}题` }));
+      }
+    } catch (_) {
+      setAiError('生成失败，请稍后重试');
+    } finally {
+      setAiGenerating(false);
+    }
+  };
   const toggleId = (id) => { setSelectedIds(prev => prev.includes(id) ? prev.filter(x=>x!==id) : (prev.length<25 ? [...prev, id] : prev)); };
 
   useEffect(()=>{ if (showAdd) { fetchQBank(0, qSize); } }, [showAdd]);
@@ -138,7 +227,10 @@ const ExamSessionAdmin = () => {
           React.createElement('button', { className:'px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 w-full', onClick:()=>fetchList(0,size) }, '搜索')
         ),
         React.createElement('div', null,
-          React.createElement('button', { className:'px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 w-full', onClick:()=>setShowAdd(true) }, '新增考试')
+          React.createElement('div', { className:'flex items-center gap-2' },
+            React.createElement('button', { className:'px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 w-full', onClick: openAdd }, '新增考试'),
+            React.createElement('button', { className:'px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 w-full', onClick: openAiPaper }, 'AI试卷')
+          )
         )
       ),
       loading ? React.createElement('div', { className:'grid md:grid-cols-3 gap-3' }, [1,2,3,4,5,6].map(i=>React.createElement('div', { key:i, className:'h-24 bg-slate-100 animate-pulse rounded-lg' })))
@@ -177,7 +269,7 @@ const ExamSessionAdmin = () => {
           React.createElement('button', { className:'px-2 py-1 rounded bg-slate-100 text-slate-700 disabled:opacity-50', disabled: (page+1)*size>=total, onClick:()=>{ const p=page+1; fetchList(p,size); } }, '下一页')
         )
       ),
-      showAdd && React.createElement('div', { className:'fixed inset-0 bg-black/40 grid place-items-center p-4' },
+      showAdd && React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 grid place-items-center p-4' },
         React.createElement('div', { className:'bg-white rounded-2xl p-4 w-full max-w-3xl space-y-3' },
           React.createElement('div', { className:'text-lg font-bold text-slate-900' }, '新增考试'),
           React.createElement('div', { className:'grid md:grid-cols-3 gap-3' },
@@ -185,6 +277,15 @@ const ExamSessionAdmin = () => {
             Field('科目', Sel(form.subject, (e)=>setForm({...form, subject:e.target.value}), SUBJECTS)),
             Field('年级', Sel(form.grade, (e)=>setForm({...form, grade:parseInt(e.target.value,10)}), GRADES))
           ),
+          React.createElement('div', { className:'grid md:grid-cols-3 gap-3' },
+            Field('题目数量(1-25)', React.createElement('input', { type:'number', min:1, max:25, className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value:aiCount, onChange:(e)=>setAiCount(parseInt(e.target.value||'0',10)) })),
+            React.createElement('div', { className:'md:col-span-2 flex items-end gap-2' },
+              React.createElement('button', { className:'px-3 py-2 rounded-lg bg-indigo-600 text-white disabled:opacity-50', disabled: aiGenerating, onClick: generateAiPaper, type:'button' }, aiGenerating ? '生成中...' : '生成AI试卷'),
+              React.createElement('button', { className:'px-3 py-2 rounded-lg bg-slate-100 text-slate-700', onClick:()=>{ setSelectedIds([]); setAiError(''); }, type:'button' }, '清空已选'),
+              React.createElement('div', { className:'text-xs text-slate-500' }, `已选 ${selectedIds.length} / 25`)
+            )
+          ),
+          aiError ? React.createElement('div', { className:'text-xs text-red-600' }, aiError) : null,
           React.createElement('div', { className:'grid md:grid-cols-3 gap-3' },
             Field('用户ID', React.createElement('input', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value:form.userId, onChange:(e)=>setForm({...form, userId:e.target.value}) })),
             Field('用户名', React.createElement('input', { className:'border border-slate-300 rounded-lg px-3 py-2 w-full', value:form.userName, onChange:(e)=>setForm({...form, userName:e.target.value}) }))
@@ -231,7 +332,7 @@ const ExamSessionAdmin = () => {
         )
       )
       ,
-      showEdit && React.createElement('div', { className:'fixed inset-0 bg-black/40 grid place-items-center p-4' },
+      showEdit && React.createElement('div', { className:'fixed inset-0 z-50 bg-black/40 grid place-items-center p-4' },
         React.createElement('div', { className:'bg-white rounded-2xl p-4 w-full max-w-3xl space-y-3' },
           React.createElement('div', { className:'text-lg font-bold text-slate-900' }, '编辑考试'),
           React.createElement('div', { className:'grid md:grid-cols-3 gap-3' },

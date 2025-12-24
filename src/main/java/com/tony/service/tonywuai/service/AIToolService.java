@@ -2,6 +2,8 @@ package com.tony.service.tonywuai.service;
 
 import com.tony.service.tonywuai.dto.AIToolCreateRequest;
 import com.tony.service.tonywuai.dto.AIToolDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -38,4 +40,6 @@ public interface AIToolService {
     void deleteTool(Long id);
 
     List<AIToolDTO> searchTools(Integer type, Boolean active, String q);
+
+    Page<AIToolDTO> searchTools(Integer type, Boolean active, String q, Pageable pageable);
 }

@@ -181,4 +181,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         return userRepository.save(user);
     }
+
+    @Override
+    @Transactional
+    public User updateUserPassword(Long userId, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户未找到，ID: " + userId));
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        return userRepository.save(user);
+    }
 }

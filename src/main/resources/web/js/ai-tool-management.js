@@ -452,62 +452,116 @@ const AIToolManagement = () => {
           )
         )
       )
-      , (showAdd && React.createElement('div',{className:'fixed inset-0 bg-black/30 flex items-center justify-center p-4'},
+      , (showAdd && React.createElement('div',{className:'fixed inset-0 bg-black/50 flex items-center justify-center p-4'},
           React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 space-y-4'},
             React.createElement('h3',{className:'text-xl font-bold text-gray-800'}, '新增工具'),
-            React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-3'},
-              React.createElement('input',{className:'border rounded px-3 py-2', placeholder:'名称', value:addForm.toolName, onChange:(e)=>setAddForm({...addForm, toolName:e.target.value})}),
-              React.createElement('input',{className:'border rounded px-3 py-2', placeholder:'API路径(如 10-aiSql-tools-management)', value:addForm.apiPath, onChange:(e)=>setAddForm({...addForm, apiPath:e.target.value})}),
-              React.createElement('select',{className:'border rounded px-3 py-2', value:addForm.type, onChange:(e)=>setAddForm({...addForm, type:e.target.value})},
-                ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
+            React.createElement('div',{className:'space-y-4'},
+              React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-4'},
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具名称 *'),
+                  React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入工具名称', value:addForm.toolName, onChange:(e)=>setAddForm({...addForm, toolName:e.target.value})})
+                ),
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, 'API路径 *'),
+                  React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入API路径，如：/api/chat/gpt4', value:addForm.apiPath, onChange:(e)=>setAddForm({...addForm, apiPath:e.target.value})})
+                ),
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具类型'),
+                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:addForm.type, onChange:(e)=>setAddForm({...addForm, type:e.target.value})},
+                    React.createElement('option',{value:''}, '请选择类型'),
+                    ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
+                  )
+                ),
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '权限设置'),
+                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:addForm.vipAllow, onChange:(e)=>setAddForm({...addForm, vipAllow:e.target.value})},
+                    React.createElement('option',{value:'NO'}, '所有人可用'),
+                    React.createElement('option',{value:'VIP'}, 'VIP99专享')
+                  )
+                ),
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '链接方式'),
+                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:addForm.linkType || '1', onChange:(e)=>setAddForm({...addForm, linkType:e.target.value})},
+                    React.createElement('option',{value:'1'}, '外部链接(直接跳转)'),
+                    React.createElement('option',{value:'2'}, '内部实现'),
+                    React.createElement('option',{value:'3'}, '内嵌页面'),
+                    React.createElement('option',{value:'4'}, '内嵌链接(新)')
+                  )
+                )
               ),
-              React.createElement('select',{className:'border rounded px-3 py-2', value:addForm.vipAllow, onChange:(e)=>setAddForm({...addForm, vipAllow:e.target.value})},
-                React.createElement('option',{value:'NO'}, '所有人可用'),
-                React.createElement('option',{value:'VIP'}, 'VIP99专享')
+              React.createElement('div',{className:'space-y-1'},
+                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '图标URL'),
+                React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入图标URL（可选）', value:addForm.iconUrl, onChange:(e)=>setAddForm({...addForm, iconUrl:e.target.value})})
               ),
-              React.createElement('select',{className:'border rounded px-3 py-2', value:addForm.linkType || '1', onChange:(e)=>setAddForm({...addForm, linkType:e.target.value})},
-                React.createElement('option',{value:'1'}, '外部链接'),
-                React.createElement('option',{value:'2'}, '内部实现'),
-                React.createElement('option',{value:'3'}, '内嵌页面'),
-                React.createElement('option',{value:'4'}, '内嵌链接(新)')
+              React.createElement('div',{className:'space-y-1'},
+                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '描述'),
+                React.createElement('textarea',{className:'w-full border rounded px-3 py-2', rows:4, placeholder:'请输入工具描述（可选）', value:addForm.description, onChange:(e)=>setAddForm({...addForm, description:e.target.value})})
               ),
-              React.createElement('input',{className:'border rounded px-3 py-2 md:col-span-2', placeholder:'图标URL(可选)', value:addForm.iconUrl, onChange:(e)=>setAddForm({...addForm, iconUrl:e.target.value})}),
-              React.createElement('textarea',{className:'border rounded px-3 py-2 md:col-span-2', rows:4, placeholder:'描述', value:addForm.description, onChange:(e)=>setAddForm({...addForm, description:e.target.value})}),
-              React.createElement('label',{className:'inline-flex items-center gap-2 md:col-span-2'}, React.createElement('input',{type:'checkbox', checked:!!addForm.isActive, onChange:(e)=>setAddForm({...addForm, isActive:e.target.checked})}), React.createElement('span',null,'激活'))
+              React.createElement('div',{className:'flex items-center space-x-2 pt-2'},
+                React.createElement('input',{type:'checkbox', checked:!!addForm.isActive, onChange:(e)=>setAddForm({...addForm, isActive:e.target.checked})}),
+                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '激活')
+              )
             ),
             React.createElement('div',{className:'flex justify-end gap-2'},
               React.createElement('button',{className:'px-4 py-2 rounded bg-gray-200', onClick:()=>{ setShowAdd(false); }}, '取消'),
               React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text-white', onClick:saveAdd}, '保存')
             )
           )
-        ))
-      , (showEdit && editTool && React.createElement('div',{className:'fixed inset-0 bg黑/30 flex items-center justify-center p-4'},
-          React.createElement('div',{className:'bg白 rounded-xl shadow-2xl w-full max-w-2xl p-6 space-y-4'},
+        )),
+      (showEdit && editTool && React.createElement('div',{className:'fixed inset-0 bg-black/50 flex items-center justify-center p-4'},
+          React.createElement('div',{className:'bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 space-y-4'},
             React.createElement('h3',{className:'text-xl font-bold text-gray-800'}, '编辑工具'),
-            React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-3'},
-              React.createElement('div',{className:'text-sm text-gray-500 md:col-span-2'}, `ID: ${editTool.id}`),
-              React.createElement('input',{className:'border rounded px-3 py-2', placeholder:'名称', value:editTool.toolName||'', onChange:(e)=>setEditTool({...editTool, toolName:e.target.value})}),
-              React.createElement('input',{className:'border rounded px-3 py-2', placeholder:'API路径', value:editTool.apiPath||'', onChange:(e)=>setEditTool({...editTool, apiPath:e.target.value})}),
-              React.createElement('select',{className:'border rounded px-3 py-2', value:(editTool.type||''), onChange:(e)=>setEditTool({...editTool, type:e.target.value})},
-                ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
+            React.createElement('div',{className:'space-y-4'},
+              React.createElement('div',{className:'text-sm text-gray-500'}, `ID: ${editTool.id}`),
+              React.createElement('div',{className:'grid grid-cols-1 md:grid-cols-2 gap-4'},
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具名称 *'),
+                  React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入工具名称', value:editTool.toolName||'', onChange:(e)=>setEditTool({...editTool, toolName:e.target.value})})
+                ),
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, 'API路径 *'),
+                  React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入API路径', value:editTool.apiPath||'', onChange:(e)=>setEditTool({...editTool, apiPath:e.target.value})})
+                ),
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '工具类型'),
+                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:(editTool.type||''), onChange:(e)=>setEditTool({...editTool, type:e.target.value})},
+                    React.createElement('option',{value:''}, '请选择类型'),
+                    ...categories.map(c=>React.createElement('option',{key:c.id, value:c.id}, c.name))
+                  )
+                ),
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '权限设置'),
+                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:(editTool.vipAllow||'NO'), onChange:(e)=>setEditTool({...editTool, vipAllow:e.target.value})},
+                    React.createElement('option',{value:'NO'}, '所有人可用'),
+                    React.createElement('option',{value:'VIP'}, 'VIP99专享')
+                  )
+                ),
+                React.createElement('div',{className:'space-y-1'},
+                  React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '链接方式'),
+                  React.createElement('select',{className:'w-full border rounded px-3 py-2', value:(editTool.linkType||'1'), onChange:(e)=>setEditTool({...editTool, linkType:e.target.value})},
+                    React.createElement('option',{value:'1'}, '外部链接(直接跳转)'),
+                    React.createElement('option',{value:'2'}, '内部实现'),
+                    React.createElement('option',{value:'3'}, '内嵌页面'),
+                    React.createElement('option',{value:'4'}, '内嵌链接(新)')
+                  )
+                )
               ),
-              React.createElement('select',{className:'border rounded px-3 py-2', value:(editTool.vipAllow||'NO'), onChange:(e)=>setEditTool({...editTool, vipAllow:e.target.value})},
-                React.createElement('option',{value:'NO'}, '所有人可用'),
-                React.createElement('option',{value:'VIP'}, 'VIP99专享')
+              React.createElement('div',{className:'space-y-1'},
+                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '图标URL'),
+                React.createElement('input',{className:'w-full border rounded px-3 py-2', placeholder:'请输入图标URL（可选）', value:editTool.iconUrl||'', onChange:(e)=>setEditTool({...editTool, iconUrl:e.target.value})})
               ),
-              React.createElement('select',{className:'border rounded px-3 py-2', value:(editTool.linkType||'1'), onChange:(e)=>setEditTool({...editTool, linkType:e.target.value})},
-                React.createElement('option',{value:'1'}, '外部链接'),
-                React.createElement('option',{value:'2'}, '内部实现'),
-                React.createElement('option',{value:'3'}, '内嵌页面'),
-                React.createElement('option',{value:'4'}, '内嵌链接(新)')
+              React.createElement('div',{className:'space-y-1'},
+                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '描述'),
+                React.createElement('textarea',{className:'w-full border rounded px-3 py-2', rows:4, placeholder:'请输入工具描述（可选）', value:editTool.description||'', onChange:(e)=>setEditTool({...editTool, description:e.target.value})})
               ),
-              React.createElement('input',{className:'border rounded px-3 py-2 md:col-span-2', placeholder:'图标URL(可选)', value:editTool.iconUrl||'', onChange:(e)=>setEditTool({...editTool, iconUrl:e.target.value})}),
-              React.createElement('textarea',{className:'border rounded px-3 py-2 md:col-span-2', rows:4, placeholder:'描述', value:editTool.description||'', onChange:(e)=>setEditTool({...editTool, description:e.target.value})}),
-              React.createElement('label',{className:'inline-flex items-center gap-2 md:col-span-2'}, React.createElement('input',{type:'checkbox', checked:!!editTool.isActive, onChange:(e)=>setEditTool({...editTool, isActive:e.target.checked})}), React.createElement('span',null,'激活'))
+              React.createElement('div',{className:'flex items-center space-x-2 pt-2'},
+                React.createElement('input',{type:'checkbox', checked:!!editTool.isActive, onChange:(e)=>setEditTool({...editTool, isActive:e.target.checked})}),
+                React.createElement('label',{className:'text-sm font-medium text-gray-700'}, '激活')
+              )
             ),
             React.createElement('div',{className:'flex justify-end gap-2'},
               React.createElement('button',{className:'px-4 py-2 rounded bg-gray-200', onClick:()=>{ setShowEdit(false); setEditTool(null); }}, '取消'),
-              React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text白', onClick:saveEdit}, '保存')
+              React.createElement('button',{className:'px-4 py-2 rounded bg-blue-600 text-white', onClick:saveEdit}, '保存')
             )
           )
         ))

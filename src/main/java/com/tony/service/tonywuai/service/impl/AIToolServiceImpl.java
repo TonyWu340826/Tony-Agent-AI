@@ -6,6 +6,8 @@ import com.tony.service.tonywuai.entity.AITool;
 import com.tony.service.tonywuai.repository.AIToolRepository;
 import com.tony.service.tonywuai.service.AIToolService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -63,6 +65,7 @@ public class AIToolServiceImpl implements AIToolService {
         tool.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         tool.setType(request.getType() != null ? request.getType() : 1);
         tool.setVipAllow(request.getVipAllow());
+        tool.setLinkType(request.getLinkType());
 
         AITool savedTool = aiToolRepository.save(tool);
         return convertToDTO(savedTool);
@@ -85,6 +88,7 @@ public class AIToolServiceImpl implements AIToolService {
         tool.setIsActive(request.getIsActive() != null ? request.getIsActive() : tool.getIsActive());
         tool.setType(request.getType() != null ? request.getType() : tool.getType());
         tool.setVipAllow(request.getVipAllow() != null ? request.getVipAllow() : tool.getVipAllow());
+        tool.setLinkType(request.getLinkType() != null ? request.getLinkType() : tool.getLinkType());
 
         AITool updatedTool = aiToolRepository.save(tool);
         return convertToDTO(updatedTool);
@@ -107,5 +111,12 @@ public class AIToolServiceImpl implements AIToolService {
     public List<AIToolDTO> searchTools(Integer type, Boolean active, String q) {
         List<AITool> list = aiToolRepository.search(type, active, (q == null || q.isBlank()) ? null : q.trim());
         return list.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AIToolDTO> searchTools(Integer type, Boolean active, String q, Pageable pageable) {
+        Page<AITool> page = aiToolRepository.search(type, active, (q == null || q.isBlank()) ? null : q.trim(), pageable);
+        return page.map(this::convertToDTO);
     }
 }

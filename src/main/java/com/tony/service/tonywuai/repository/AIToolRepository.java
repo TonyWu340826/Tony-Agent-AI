@@ -1,6 +1,8 @@
 package com.tony.service.tonywuai.repository;
 
 import com.tony.service.tonywuai.entity.AITool;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +24,7 @@ public interface AIToolRepository extends JpaRepository<AITool, Long> {
 
     @Query("select t from AITool t where (:type is null or t.type = :type) and (:active is null or t.isActive = :active) and ( :q is null or lower(t.toolName) like lower(concat('%', :q, '%')) or lower(t.description) like lower(concat('%', :q, '%')) or lower(t.apiPath) like lower(concat('%', :q, '%')) ) order by t.toolName asc")
     List<AITool> search(@Param("type") Integer type, @Param("active") Boolean active, @Param("q") String q);
+
+    @Query("select t from AITool t where (:type is null or t.type = :type) and (:active is null or t.isActive = :active) and ( :q is null or lower(t.toolName) like lower(concat('%', :q, '%')) or lower(t.description) like lower(concat('%', :q, '%')) or lower(t.apiPath) like lower(concat('%', :q, '%')) ) order by t.toolName asc")
+    Page<AITool> search(@Param("type") Integer type, @Param("active") Boolean active, @Param("q") String q, Pageable pageable);
 }

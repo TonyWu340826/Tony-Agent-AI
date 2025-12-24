@@ -15,6 +15,9 @@ const MemberManagement = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editUser, setEditUser] = useState(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [changePasswordUser, setChangePasswordUser] = useState(null);
+  const [passwordForm, setPasswordForm] = useState({ password: "", confirmPassword: "" });
   const [addForm, setAddForm] = useState({ username: "", email: "", password: "", nickname: "" });
 
   const fetchUsers = async (targetPage = page) => {
@@ -67,6 +70,39 @@ const MemberManagement = () => {
   };
 
   const openEdit = (user) => { setEditUser({ ...user }); setShowEdit(true); };
+
+  const openChangePassword = (user) => { setChangePasswordUser(user); setPasswordForm({ password: "", confirmPassword: "" }); setShowChangePassword(true); };
+
+  const handleChangePassword = async () => {
+    if (!changePasswordUser) return;
+    if (passwordForm.password !== passwordForm.confirmPassword) {
+      setError("两次输入的密码不一致");
+      return;
+    }
+    if (passwordForm.password.length < 6) {
+      setError("密码长度不能少于6位");
+      return;
+    }
+    
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/users/${changePasswordUser.id}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ password: passwordForm.password })
+      });
+      const text = await response.text();
+      let data = {};
+      try { data = JSON.parse(text || '{}'); } catch (_) { throw new Error('修改密码失败'); }
+      if (!response.ok) throw new Error(data.message || '修改密码失败');
+      setShowChangePassword(false);
+      setChangePasswordUser(null);
+      setPasswordForm({ password: "", confirmPassword: "" });
+      fetchUsers(page);
+    } catch (e) { setError(e.message || "请求失败"); } finally { setLoading(false); }
+  };
 
   const handleEditSave = async () => {
     if (!editUser) return;
@@ -144,7 +180,7 @@ const MemberManagement = () => {
         React.createElement('table', { className: 'min-w-full divide-y divide-gray-200' },
           React.createElement('thead', { className: 'bg-gray-50' },
             React.createElement('tr', null,
-              ['ID','用户名','昵称','邮箱','会员等级','状态','注册时间','操作'].map((h,i)=>React.createElement('th',{key:i,className:'px-4 py-3 text-left text-xs font-medium text-gray-500'},h))
+              ['ID','用户名','昵称','邮箱','会员等级','余额','状态','注册时间','操作'].map((h,i)=>React.createElement('th',{key:i,className:'px-4 py-3 text-left text-xs font-medium text-gray-500'},h))
             )
           ),
           React.createElement('tbody', { className: 'bg-white divide-y divide-gray-200' },
@@ -156,11 +192,13 @@ const MemberManagement = () => {
                 React.createElement('td', { className: 'px-4 py-3 text-sm text-gray-700' }, u.nickname),
                 React.createElement('td', { className: 'px-4 py-3 text-sm text-gray-700' }, u.email),
                 React.createElement('td', { className: 'px-4 py-3 text-sm text-gray-700' }, `VIP${u.vipLevel}`),
+                React.createElement('td', { className: 'px-4 py-3 text-sm text-gray-700' }, u.balance?.toFixed(2) || '0.00'),
                 React.createElement('td', { className: 'px-4 py-3 text-sm' }, (u.isActive ? '激活' : '禁用')),
                 React.createElement('td', { className: 'px-4 py-3 text-sm text-gray-700' }, (u.registrationDate ? new Date(u.registrationDate).toLocaleString() : '-')),
                 React.createElement('td', { className: 'px-4 py-3 text-sm' },
                   React.createElement('div', { className: 'flex items-center justify-end gap-2 whitespace-nowrap' },
                     React.createElement('button', { className: 'px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700', onClick: () => openEdit(u) }, '编辑'),
+                    React.createElement('button', { className: 'px-3 py-1 rounded-md bg-purple-600 text-white hover:bg-purple-700', onClick: () => openChangePassword(u) }, '改密'),
                     React.createElement('button', { className: 'px-3 py-1 rounded-md bg-yellow-500 text-white hover:bg-yellow-600', onClick: () => toggleActive(u) }, (u.isActive ? '禁用' : '启用')),
                     React.createElement('button', { className: 'px-3 py-1 rounded-md bg-red-600 text-white hover:bg-red-700', onClick: () => handleDelete(u.id) }, '删除')
                   )
@@ -188,6 +226,20 @@ const MemberManagement = () => {
           React.createElement('div', { className: 'flex justify-end space-x-2 pt-2' },
             React.createElement('button', { className: 'px-4 py-2 rounded-md bg-gray-200 text-gray-700', onClick: () => { setShowAdd(false); setAddForm({ username: "", email: "", password: "", nickname: "" }); } }, '取消'),
             React.createElement('button', { className: 'px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700', onClick: handleAdd }, '保存')
+          )
+        )
+      ),
+      showChangePassword && changePasswordUser && React.createElement('div', { className: 'fixed inset-0 bg-black/30 flex items-center justify-center p-4' },
+        React.createElement('div', { className: 'bg-white rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4' },
+          React.createElement('h3', { className: 'text-xl font-bold text-gray-800' }, `修改用户密码 - ${changePasswordUser.username}`),
+          error && React.createElement('div', { className: 'bg-red-100 text-red-700 border border-red-200 p-3 rounded-lg text-sm' }, error),
+          React.createElement('div', { className: 'space-y-3' },
+            React.createElement('input', { className: 'w-full border border-gray-300 rounded-lg px-3 py-2', placeholder: '新密码', type: 'password', value: passwordForm.password, onChange: (e) => setPasswordForm({ ...passwordForm, password: e.target.value }) }),
+            React.createElement('input', { className: 'w-full border border-gray-300 rounded-lg px-3 py-2', placeholder: '确认新密码', type: 'password', value: passwordForm.confirmPassword, onChange: (e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value }) })
+          ),
+          React.createElement('div', { className: 'flex justify-end space-x-2 pt-2' },
+            React.createElement('button', { className: 'px-4 py-2 rounded-md bg-gray-200 text-gray-700', onClick: () => { setShowChangePassword(false); setChangePasswordUser(null); setPasswordForm({ password: "", confirmPassword: "" }); setError(""); } }, '取消'),
+            React.createElement('button', { className: 'px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700', onClick: handleChangePassword }, '保存')
           )
         )
       ),

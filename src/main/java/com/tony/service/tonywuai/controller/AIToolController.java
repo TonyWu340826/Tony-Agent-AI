@@ -8,6 +8,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -85,13 +88,16 @@ public class AIToolController {
      */
     @GetMapping("/admin")
     @Operation(summary = "管理员搜索工具", description = "管理员根据条件搜索/过滤工具列表")
-    public ResponseEntity<List<AIToolDTO>> searchAdminTools(
+    public ResponseEntity<Page<AIToolDTO>> searchAdminTools(
             @Parameter(description = "搜索关键词") @RequestParam(value = "search", required = false) String search,
             @Parameter(description = "工具类型") @RequestParam(value = "type", required = false) Integer type,
-            @Parameter(description = "是否激活") @RequestParam(value = "active", required = false) Boolean active) {
-        List<AIToolDTO> tools = aiToolService.searchTools(type, active, search);
+            @Parameter(description = "是否激活") @RequestParam(value = "active", required = false) Boolean active,
+            @Parameter(description = "页码 (0开始)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AIToolDTO> tools = aiToolService.searchTools(type, active, search, pageable);
         return ResponseEntity.ok(tools);
     }
-
 }
+
 
