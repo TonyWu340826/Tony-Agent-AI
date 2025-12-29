@@ -1,5 +1,5 @@
 const UserToolsExplorer = ({ currentUser }) => {
-  const { useEffect, useState } = React;
+  const { useEffect, useMemo, useRef, useState } = React;
   const isVipUser = !!(currentUser && Number(currentUser.vipLevel) === 99);
   const [categories, setCategories] = useState([]);
   const [catMap, setCatMap] = useState({});
@@ -123,7 +123,10 @@ const UserToolsExplorer = ({ currentUser }) => {
   const load = async (type) => {
     setLoading(true);
     try {
-      const url = (type && type!==null) ? `/api/tools/active?type=${type}&page=${page}&size=${size}` : `/api/tools/active?page=${page}&size=${size}`;
+      const hasType = type !== null && type !== undefined && type !== '';
+      const url = hasType
+          ? `/api/tools/active?type=${type}&page=${page}&size=${size}`
+          : `/api/tools/active?page=${page}&size=${size}`;
       const r = await fetch(url, { credentials: 'same-origin' });
       const t = await r.text(); let d = []; try { d = JSON.parse(t || '[]'); } catch(_) { d = []; }
       let list = Array.isArray(d.content) ? d.content : (Array.isArray(d) ? d : []);
@@ -260,6 +263,229 @@ const UserToolsExplorer = ({ currentUser }) => {
       )
   );
 
+  const toolShortName = (name) => {
+    const raw = String(name || '').trim();
+    if (!raw) return '-';
+    const compact = raw.replace(/\s+/g, ' ');
+    const hasCjk = /[\u4e00-\u9fff]/.test(compact);
+    if (hasCjk) {
+      const cjk = compact.replace(/[^\u4e00-\u9fff]/g, '');
+      if (cjk.length >= 4) return cjk.slice(0, 4);
+      if (cjk.length >= 2) return cjk.slice(0, 2);
+      return (cjk || compact).slice(0, 4);
+    }
+    const parts = compact.split(' ').filter(Boolean);
+    if (parts.length >= 2) {
+      const a = String(parts[0] || '').charAt(0);
+      const b = String(parts[1] || '').charAt(0);
+      return (a + b).toUpperCase();
+    }
+    const word = parts[0] || compact;
+    const letters = word.replace(/[^a-zA-Z0-9]/g, '');
+    if (letters.length >= 4) return letters.slice(0, 4).toUpperCase();
+    if (letters.length >= 2) return letters.slice(0, 2).toUpperCase();
+    return compact.slice(0, 4).toUpperCase();
+  };
+
+  const ToolGlobe = ({ items, onOpen }) => {
+    const containerRef = useRef(null);
+    const itemRefs = useRef([]);
+    const rafRef = useRef(0);
+    const rotRef = useRef({ ax: 0, ay: 0, vx: 0.002, vy: 0.003 });
+    const dragRef = useRef({ down: false, x: 0, y: 0, sx: 0, sy: 0, pid: null, captured: false, t: 0, moved: false, lastMovedAt: 0 });
+    const sizeRef = useRef({ w: 0, h: 0 });
+    const radiusRef = useRef(160);
+
+    const points = useMemo(() => {
+      const list = Array.isArray(items) ? items : [];
+      const n = Math.max(1, list.length);
+      const golden = Math.PI * (3 - Math.sqrt(5));
+      return list.map((tool, i) => {
+        const y = 1 - (i / Math.max(1, n - 1)) * 2;
+        const r = Math.sqrt(1 - y * y);
+        const theta = golden * i;
+        const x = Math.cos(theta) * r;
+        const z = Math.sin(theta) * r;
+        return { x, y, z, tool };
+      });
+    }, [items]);
+
+    useEffect(() => {
+      const el = containerRef.current;
+      if (!el) return;
+
+      const updateSize = () => {
+        const rect = el.getBoundingClientRect();
+        const w = Math.max(1, rect.width);
+        const h = Math.max(1, rect.height);
+        sizeRef.current = { w, h };
+        radiusRef.current = Math.max(120, Math.min(w, h) * 0.38);
+      };
+
+      updateSize();
+      let ro;
+      if (typeof ResizeObserver !== 'undefined') {
+        ro = new ResizeObserver(() => updateSize());
+        try { ro.observe(el); } catch (_) {}
+      } else {
+        window.addEventListener('resize', updateSize);
+      }
+
+      const tick = () => {
+        const { w, h } = sizeRef.current;
+        const r = radiusRef.current;
+        const fov = 520;
+        const st = rotRef.current;
+        st.ay += st.vy;
+        st.ax += st.vx;
+        st.vx *= 0.985;
+        st.vy *= 0.985;
+        if (Math.abs(st.vx) < 0.0003) st.vx = (st.vx < 0 ? -1 : 1) * 0.0003;
+        if (Math.abs(st.vy) < 0.0003) st.vy = (st.vy < 0 ? -1 : 1) * 0.0003;
+
+        const sinY = Math.sin(st.ay);
+        const cosY = Math.cos(st.ay);
+        const sinX = Math.sin(st.ax);
+        const cosX = Math.cos(st.ax);
+
+        for (let i = 0; i < points.length; i++) {
+          const p = points[i];
+          const node = itemRefs.current[i];
+          if (!node) continue;
+
+          let x = p.x;
+          let y = p.y;
+          let z = p.z;
+
+          const x1 = x * cosY + z * sinY;
+          const z1 = -x * sinY + z * cosY;
+          x = x1;
+          z = z1;
+
+          const y1 = y * cosX - z * sinX;
+          const z2 = y * sinX + z * cosX;
+          y = y1;
+          z = z2;
+
+          const px = x * r;
+          const py = y * r;
+          const pz = z * r;
+
+          const scale = fov / (fov + pz + r);
+          const tx = px * scale + w / 2;
+          const ty = py * scale + h / 2;
+          const opacity = Math.max(0.25, Math.min(1, 0.35 + (scale - 0.4) * 1.6));
+          const s = Math.max(0.65, Math.min(1.12, scale));
+
+          node.style.transform = `translate(-50%, -50%) translate(${tx}px, ${ty}px) scale(${s})`;
+          node.style.opacity = String(opacity);
+          node.style.zIndex = String(Math.floor(1000 + pz));
+          node.style.filter = `blur(${Math.max(0, (0.9 - scale) * 1.2)}px)`;
+        }
+
+        rafRef.current = requestAnimationFrame(tick);
+      };
+
+      rafRef.current = requestAnimationFrame(tick);
+
+      return () => {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        if (ro) {
+          try { ro.disconnect(); } catch (_) {}
+        } else {
+          window.removeEventListener('resize', updateSize);
+        }
+      };
+    }, [points]);
+
+    const onPointerDown = (e) => {
+      const el = containerRef.current;
+      if (!el) return;
+      dragRef.current = {
+        down: true,
+        x: e.clientX,
+        y: e.clientY,
+        sx: e.clientX,
+        sy: e.clientY,
+        pid: (e && e.pointerId != null) ? e.pointerId : null,
+        captured: false,
+        t: Date.now(),
+        moved: false,
+        lastMovedAt: 0
+      };
+    };
+    const onPointerMove = (e) => {
+      if (!dragRef.current.down) return;
+      const el = containerRef.current;
+      const { w, h } = sizeRef.current;
+      const dx = e.clientX - dragRef.current.x;
+      const dy = e.clientY - dragRef.current.y;
+      const totalDx = e.clientX - dragRef.current.sx;
+      const totalDy = e.clientY - dragRef.current.sy;
+      const dist = Math.hypot(totalDx, totalDy);
+      if (dist > 6) {
+        if (!dragRef.current.moved) {
+          dragRef.current.moved = true;
+        }
+        dragRef.current.lastMovedAt = Date.now();
+        if (el && !dragRef.current.captured && dragRef.current.pid != null) {
+          try { el.setPointerCapture(dragRef.current.pid); dragRef.current.captured = true; } catch (_) {}
+        }
+      }
+      dragRef.current.x = e.clientX;
+      dragRef.current.y = e.clientY;
+      const st = rotRef.current;
+      const kx = (Math.PI / Math.max(220, w)) * 0.9;
+      const ky = (Math.PI / Math.max(220, h)) * 0.9;
+      st.vy = dx * kx;
+      st.vx = dy * ky;
+    };
+    const onPointerUp = (e) => {
+      dragRef.current.down = false;
+      const el = containerRef.current;
+      if (!el) return;
+      if (dragRef.current.captured && dragRef.current.pid != null) {
+        try { el.releasePointerCapture(dragRef.current.pid); } catch (_) {}
+      }
+      dragRef.current.captured = false;
+      dragRef.current.pid = null;
+    };
+
+    const list = Array.isArray(items) ? items : [];
+    const shouldIgnoreClick = () => {
+      const now = Date.now();
+      const st = dragRef.current;
+      return !!(st && st.moved && st.lastMovedAt && (now - st.lastMovedAt) < 220);
+    };
+
+    return React.createElement('div', {
+          ref: containerRef,
+          onPointerDown,
+          onPointerMove,
+          onPointerUp,
+          className: 'relative w-full h-[420px] md:h-[480px] rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-indigo-50/40 overflow-hidden select-none touch-none'
+        },
+        React.createElement('div', { className: 'absolute inset-0 pointer-events-none', style: { backgroundImage: 'radial-gradient(circle at 30% 30%, rgba(99,102,241,0.12) 0%, rgba(255,255,255,0) 55%), radial-gradient(circle at 70% 60%, rgba(59,130,246,0.10) 0%, rgba(255,255,255,0) 60%)' } }),
+        React.createElement('div', { className: 'absolute inset-0 pointer-events-none opacity-60', style: { backgroundImage: 'linear-gradient(rgba(148,163,184,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.22) 1px, transparent 1px)', backgroundSize: '48px 48px' } }),
+        React.createElement('div', { className: 'absolute left-4 top-4 text-xs text-slate-500' }, '拖拽旋转 · 点击打开工具'),
+        ...list.map((tool, idx) => React.createElement('button', {
+          key: tool && tool.id != null ? String(tool.id) : String(idx),
+          type: 'button',
+          ref: (node) => { itemRefs.current[idx] = node; },
+          onClick: () => { if (shouldIgnoreClick()) return; if (onOpen) onOpen(tool); },
+          className: 'absolute left-0 top-0 px-2.5 py-1.5 rounded-full border border-slate-200 bg-white/85 backdrop-blur text-slate-800 shadow-sm hover:shadow-md hover:border-indigo-300 hover:text-indigo-700 transition flex items-center gap-2 max-w-[220px]',
+          style: { transform: 'translate(-50%, -50%) translate(-9999px, -9999px)' },
+          title: tool && tool.toolName ? tool.toolName : ''
+        },
+          (tool && tool.iconUrl
+              ? React.createElement('img', { src: tool.iconUrl, alt: tool.toolName || 'tool', className: 'w-7 h-7 rounded-full object-cover border border-slate-200 bg-white flex-none' })
+              : React.createElement('div', { className: 'w-7 h-7 rounded-full bg-gradient-to-br from-slate-200 to-slate-100 text-slate-700 border border-slate-200 flex-none grid place-items-center text-[11px] font-bold' }, toolShortName(tool && tool.toolName))
+          ),
+          React.createElement('span', { className: 'text-[12px] font-semibold truncate leading-4 min-w-0' }, (tool && tool.toolName) ? tool.toolName : '-')
+        ))
+    );
+  };
+
   const ToolListItem = (tool) => (
       React.createElement('button', {
             type: 'button',
@@ -291,6 +517,7 @@ const UserToolsExplorer = ({ currentUser }) => {
 
   const renderActiveTool = () => {
     if (!activeTool) {
+      const globeItems = (Array.isArray(filtered) ? filtered : []).slice(0, 42);
       return React.createElement('div', { className: 'relative overflow-hidden rounded-2xl border bg-white text-slate-900 min-h-[62vh]' },
           React.createElement('div', { className: 'absolute inset-0', style: { backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(99,102,241,0.18) 0%, rgba(255,255,255,0) 55%), radial-gradient(circle at 80% 30%, rgba(59,130,246,0.14) 0%, rgba(255,255,255,0) 60%), radial-gradient(circle at 50% 90%, rgba(34,211,238,0.10) 0%, rgba(255,255,255,0) 55%)' } }),
           React.createElement('div', { className: 'absolute inset-0 opacity-60', style: { backgroundImage: 'linear-gradient(rgba(148,163,184,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.25) 1px, transparent 1px)', backgroundSize: '52px 52px' } }),
@@ -319,6 +546,9 @@ const UserToolsExplorer = ({ currentUser }) => {
               React.createElement('div', { className: 'mt-7 flex flex-wrap items-center gap-3' },
                   React.createElement('div', { className: 'px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold text-sm shadow-sm' }, '从左侧选择一个工具开始'),
                   React.createElement('div', { className: 'text-xs text-slate-500' }, `当前可用工具：${filtered.length} 个`)
+              ),
+              React.createElement('div', { className: 'mt-6' },
+                  React.createElement(ToolGlobe, { items: globeItems, onOpen: openTool }, null)
               )
           )
       );
@@ -355,6 +585,17 @@ const UserToolsExplorer = ({ currentUser }) => {
       }))
       .filter(g => g.items.length > 0);
 
+  const handleCategoryChange = (e) => {
+    setPage(0);
+    const raw = (e && e.target && e.target.value != null) ? String(e.target.value) : '';
+    if (!raw) {
+      setActiveType(null);
+      return;
+    }
+    const next = Number(raw);
+    setActiveType(Number.isNaN(next) ? null : next);
+  };
+
   return (
       React.createElement('div', { className: 'bg-white rounded-2xl border overflow-hidden min-h-[75vh]' },
           React.createElement('div', { className: 'md:hidden flex items-center justify-between px-4 py-3 border-b bg-slate-50/60' },
@@ -377,6 +618,14 @@ const UserToolsExplorer = ({ currentUser }) => {
                           }, sidebarCollapsed ? '›' : '‹')
                       ),
                       !sidebarCollapsed && React.createElement('input', { className: 'w-full border border-slate-200 rounded-xl px-3 py-2 bg-white', placeholder: '搜索工具...', value: search, onChange: (e)=>setSearch(e.target.value) }),
+                      !sidebarCollapsed && React.createElement('select', {
+                        className: 'w-full border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-900',
+                        value: (activeType == null ? '' : String(activeType)),
+                        onChange: handleCategoryChange
+                      },
+                          ...(Array.isArray(categories) ? categories : [{ id: null, name: '全部' }])
+                              .map(c => React.createElement('option', { key: String(c && c.id), value: (c && c.id != null) ? String(c.id) : '' }, (c && c.name) ? c.name : '全部'))
+                      ),
                       React.createElement('div', { className: `${sidebarCollapsed ? 'max-h-[66vh]' : 'max-h-[64vh]'} overflow-auto pr-1 space-y-4` },
                           loading
                               ? React.createElement('div', { className: 'space-y-2' }, [1,2,3,4,5,6,7,8].map(i=>React.createElement('div', { key: i, className: 'h-10 bg-slate-100 rounded-xl animate-pulse' })))
@@ -522,7 +771,7 @@ const AIToolManagement = () => {
           React.createElement('div',{className:'overflow-x-auto bg-white rounded-lg border border-gray-200 shadow'},
               React.createElement('table',{className:'min-w-full divide-y divide-gray-200 text-xs'},
                   React.createElement('thead',{className:'bg-gray-50'}, React.createElement('tr',null, ['ID','名称','类型','权限','链接方式','描述','API路径','状态','操作'].map((h,i)=>React.createElement('th',{key:i,className:'px-4 py-3 text-left text-xs font-medium text-gray-500'},h)))),
-                  React.createElement('tbody',{className:'bg白 divide-y divide-gray-200'},
+                  React.createElement('tbody',{className:'bg-white divide-y divide-gray-200'},
                       loading ? React.createElement('tr',null, React.createElement('td',{className:'px-4 py-6 text-center text-gray-500', colSpan:9}, '加载中...'))
                           : tools.length===0 ? React.createElement('tr',null, React.createElement('td',{className:'px-4 py-6 text-center text-gray-500', colSpan:9}, '暂无数据'))
                               : tools.map(t=>React.createElement('tr',{key:t.id},

@@ -281,10 +281,42 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                                 {name:'技术学习', anchor:'#tech-learning', icon:BookOpen},
                                 {name:'VIP服务', anchor:'#vip-section', icon:Crown},
                                 {name:'代码开源', anchor:'#opensource', icon:GitBranch}
-                            ].map((a,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer', onClick:()=>{ 
-                                if(a.anchor==='#articles-preview'){ try{ history.pushState({ page:'articles' }, '', '/articles'); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} } 
+                            ].map((a,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer', onClick:()=>{
+                                if(a.anchor==='#articles-preview'){ try{ history.pushState({ page:'articles' }, '', '/articles'); }catch(_){ try{ window.location.hash='articles'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} }
                                 else if(a.anchor==='#tech-learning'){ try{ history.pushState({ page:'tech-learning' }, '', '/tech-learning'); }catch(_){ try{ window.location.hash='tech-learning'; }catch(__){} } try{ window.dispatchEvent(new Event('popstate')); }catch(__){} }
-                                else { const el=document.querySelector(a.anchor); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); } 
+                                else if(a.anchor==='#vip-section'){
+                                    // 🎯 修复VIP服务菜单点击问题：确保切换到首页状态并滚动到VIP区域
+                                    try{ window.location.hash = ''; }catch(_){ }
+                                    setActivePage && setActivePage(null);
+                                    setShowModule && setShowModule(null);
+                                    // 🎯 优化过渡效果：添加淡入动画，减少页面刷新感觉
+                                    const overlay = document.createElement('div');
+                                    overlay.style.position = 'fixed';
+                                    overlay.style.inset = '0';
+                                    overlay.style.background = 'rgba(255,255,255,0.8)';
+                                    overlay.style.backdropFilter = 'blur(4px)';
+                                    overlay.style.zIndex = '9998';
+                                    overlay.style.opacity = '0';
+                                    overlay.style.transition = 'opacity 0.3s ease-out';
+                                    document.body.appendChild(overlay);
+
+                                    // 淡入
+                                    requestAnimationFrame(() => {
+                                        overlay.style.opacity = '1';
+                                    });
+
+                                    // 延迟滚动，确保页面状态已更新
+                                    setTimeout(() => {
+                                        const el=document.querySelector(a.anchor);
+                                        if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+                                        // 淡出
+                                        setTimeout(() => {
+                                            overlay.style.opacity = '0';
+                                            setTimeout(() => overlay.remove(), 300);
+                                        }, 300);
+                                    }, 150);
+                                }
+                                else { const el=document.querySelector(a.anchor); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }
                             }},
                                 React.createElement(a.icon,{className:'w-5 h-5 text-slate-700'}),
                                 React.createElement('span',{className:'text-slate-900 font-medium'}, a.name)
