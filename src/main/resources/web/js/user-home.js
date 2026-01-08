@@ -331,7 +331,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                                 { name:'模型服务', icon:Zap, onClick:()=>{ try{ window.location.hash = 'model'; openModule && openModule('model'); }catch(_){ } } },
                                 { name:'MCP', icon:GitBranch, onClick:()=>{ try{ smoothNavigate('/mcp/index.html'); }catch(_){ } } },
                                 { name:'Prompt工程', icon:Code2, onMouseEnter:()=>{ try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } }, onClick:()=>{ try{ history.pushState({ page:'prompt-engineering' }, '', '/prompt-engineering'); }catch(_){ try{ window.location.hash = 'prompt-engineering'; }catch(__){} } try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } try{ openModule && openModule('prompt-engineering'); }catch(_){ } try{ const el=document.getElementById('prompt-engineering-page'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } } },
-                                { name:'智能知识库', icon:BookOpen, onClick:()=>{ try{ alert('页面开发中'); }catch(_){ } } }
+                                { name:'智能知识库', icon:BookOpen, onClick:()=>{ try{ window.location.assign('/vector/index.html'); }catch(_){ } } }
                             ].map((it,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer', onMouseEnter:()=>{ try{ it.onMouseEnter && it.onMouseEnter(); }catch(_){ } }, onClick:()=>{ try{ it.onClick && it.onClick(); }catch(_){ } }},
                                 React.createElement(it.icon || 'div',{className:'w-4 h-4 text-slate-600'}),
                                 React.createElement('span',{className:'text-slate-900 font-medium'}, it.name)

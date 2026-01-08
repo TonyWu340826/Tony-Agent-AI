@@ -5,6 +5,7 @@ import com.tony.service.tonywuai.dto.request.ChunkEmbedRequest;
 import com.tony.service.tonywuai.openapi.MilvusOpenAiClient;
 import com.tony.service.tonywuai.openapi.dto.DocChatRequest;
 import com.tony.service.tonywuai.openapi.dto.DocSearchHit;
+import com.tony.service.tonywuai.service.DocumentUploadFacade;
 import com.tony.service.tonywuai.service.impl.DocumentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -32,6 +33,8 @@ public class DocumentController {
 
     private final MilvusOpenAiClient milvusOpenAiClient;
 
+    private final DocumentUploadFacade documentUploadFacade;
+
     @Resource
     private DocumentService documentService;
 
@@ -52,10 +55,7 @@ public class DocumentController {
             @RequestPart(value = "request", required = false) String requestJson,
             @ModelAttribute ChunkEmbedRequest request) throws Exception {
 
-        if (requestJson != null && !requestJson.isBlank()) {
-            request = JSONObject.parseObject(requestJson, ChunkEmbedRequest.class);
-        }
-        return milvusOpenAiClient.chunkEmbed(file, request);
+        return documentUploadFacade.upload(file, requestJson, request);
     }
 
 
