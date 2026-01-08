@@ -270,7 +270,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                     React.createElement('span',{className:'text-3xl tracking-tight text-slate-950 font-bold'}, '宙斯')
                 ),
                 // 🎯 优化 3: 增大导航项间距 gap-8
-                React.createElement('div',{className:'hidden md:flex items-center gap-12 relative flex-1 justify-center'}, 
+                 React.createElement('div',{className:'hidden md:flex items-center gap-12 relative flex-1 justify-center'}, 
                     React.createElement('div',{className:'relative group'},
                         React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ const p=String(window.location.pathname||''); const isHome = p.endsWith('/home.html') || p==='/' || p==='' ; if(!isHome){ window.location.assign('/home.html'); return; } }catch(_){ } try{ openModule && openModule(null); }catch(_){ } try{ const el=document.getElementById('features-section'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, React.createElement(Code2,{className:'w-5 h-5'}),'平台功能'),
                         // 使用 visible/invisible 控制可交互性，避免 pointer-events 切换导致 hover 丢失而无法点击
@@ -324,9 +324,20 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                         ) 
                     ),
                     React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-indigo-600 transition-colors border-b-2 border-transparent hover:border-indigo-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ if(String(window.location.pathname||'').endsWith('/home.html')){ window.location.hash = 'tools'; if(openModule) openModule('tools'); } else { window.location.assign('/home.html#tools'); } }catch(_){ } try{ const el=document.getElementById('tools-page'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, React.createElement(Terminal,{className:'w-5 h-5'}),'工具合集'),
-                    React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); try{ window.location.hash = 'model'; openModule && openModule('model'); }catch(_){ } }}, '模型服务'),
-                    React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); smoothNavigate('/mcp/index.html'); }}, 'MCP'),
-                    React.createElement('a',{href:'#',className:'text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onMouseEnter:()=>{ try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } }, onClick:(e)=>{ e.preventDefault(); try{ history.pushState({ page:'prompt-engineering' }, '', '/prompt-engineering'); }catch(_){ try{ window.location.hash = 'prompt-engineering'; }catch(__){} } try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } try{ openModule && openModule('prompt-engineering'); }catch(_){ } try{ const el=document.getElementById('prompt-engineering-page'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } }}, 'Prompt工程'),
+                    React.createElement('div',{className:'relative group'},
+                        React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); }}, 'AI工作台'),
+                        React.createElement('div',{className:'absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-64 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100]'},
+                            [
+                                { name:'模型服务', icon:Zap, onClick:()=>{ try{ window.location.hash = 'model'; openModule && openModule('model'); }catch(_){ } } },
+                                { name:'MCP', icon:GitBranch, onClick:()=>{ try{ smoothNavigate('/mcp/index.html'); }catch(_){ } } },
+                                { name:'Prompt工程', icon:Code2, onMouseEnter:()=>{ try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } }, onClick:()=>{ try{ history.pushState({ page:'prompt-engineering' }, '', '/prompt-engineering'); }catch(_){ try{ window.location.hash = 'prompt-engineering'; }catch(__){} } try{ prefetchPrompt && prefetchPrompt(); }catch(_){ } try{ openModule && openModule('prompt-engineering'); }catch(_){ } try{ const el=document.getElementById('prompt-engineering-page'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ } } },
+                                { name:'智能知识库', icon:BookOpen, onClick:()=>{ try{ alert('页面开发中'); }catch(_){ } } }
+                            ].map((it,i)=>React.createElement('div',{key:i,className:'flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer', onMouseEnter:()=>{ try{ it.onMouseEnter && it.onMouseEnter(); }catch(_){ } }, onClick:()=>{ try{ it.onClick && it.onClick(); }catch(_){ } }},
+                                React.createElement(it.icon || 'div',{className:'w-4 h-4 text-slate-600'}),
+                                React.createElement('span',{className:'text-slate-900 font-medium'}, it.name)
+                            ))
+                        )
+                    ),
                     React.createElement('div',{className:'relative group', ref: agentsMenuRef},
                         React.createElement('a',{href:'#',className:'flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1', onClick:(e)=>{ e.preventDefault(); setUserMenuOpen(false); setAgentsMenuOpen(v=>!v); }}, React.createElement(Star,{className:'w-5 h-5'}),'三方AI平台'),
                         // 同上：避免 pointer-events 切换导致下拉菜单无法点击
@@ -604,8 +615,11 @@ const Footer = () => (
             showModule && React.createElement('div',{className:'fixed inset-0 z-[950] bg-black/60 flex items-center justify-center p-4', onClick:()=>{ setShowModule(null); }},
                 React.createElement('div',{className:'bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden', onClick:(e)=>e.stopPropagation()},
                     React.createElement('div',{className:'p-6 space-y-4'},
-                        React.createElement('div',{className:'text-xl font-bold text-slate-900'},
-                            showModule==='tools'?'工具合集':showModule==='model'?'模型服务':showModule==='mcp'?'MCP':showModule==='dba'?'SQL 智能生成与执行助手':'Prompt工程'
+                        React.createElement('div',{className:'flex items-center justify-between gap-3'},
+                            React.createElement('div',{className:'text-xl font-bold text-slate-900'},
+                                showModule==='tools'?'工具合集':showModule==='model'?'模型服务':showModule==='mcp'?'MCP':showModule==='dba'?'SQL 智能生成与执行助手':'Prompt工程'
+                            ),
+                            React.createElement('button',{className:'px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200', onClick:()=>setShowModule(null)}, '返回')
                         ),
                         (showModule==='tools' && (window.Components&&window.Components.UserToolsExplorer) ? React.createElement(window.Components.UserToolsExplorer, { currentUser }) : null),
                         (showModule==='model' && (window.Components&&window.Components.ModelUI) ? React.createElement(window.Components.ModelUI) : null),

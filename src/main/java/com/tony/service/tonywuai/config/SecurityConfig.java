@@ -43,6 +43,11 @@ public class SecurityConfig {
                         // 允许匿名访问 /api/auth/** (注册, 登录处理, 获取用户信息)
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // 允许匿名访问向量接口（文档切分上传）
+                        .requestMatchers(HttpMethod.POST, "/api/embedding/**").permitAll()
+                        // 允许匿名访问向量接口（知识库管理）
+                        .requestMatchers(HttpMethod.POST, "/api/document/**").permitAll()
+
                         // 允许匿名访问文章的 GET 请求 (文章列表和详情)
                         .requestMatchers(HttpMethod.GET, "/api/articles").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/articles/**").permitAll()
