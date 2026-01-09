@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Swagger 智能工作流</title>
+    <link rel="icon" type="image/png" href="/image/logNew.png.png" />
+    <link rel="apple-touch-icon" href="/image/logNew.png.png" />
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <script defer src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -147,8 +149,20 @@
         const bind = () => {
           renderUserNav().then(()=>{ try{ initMenus(); }catch(_){ } });
         };
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
-        else bind();
+        const initLogoReload = () => {
+          try {
+            const logoImg = document.querySelector('header a[href="/home.html"] img[alt="ZEUS.AI"]');
+            if (!logoImg) return;
+            logoImg.style.cursor = 'pointer';
+            logoImg.addEventListener('click', (e) => {
+              try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
+              try { window.location.reload(); } catch(_) {}
+            });
+          } catch(_) {}
+        };
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { bind(); initLogoReload(); });
+        else { bind(); initLogoReload(); }
       })();
     </script>
 
@@ -156,8 +170,8 @@
       <div class="max-w-7xl mx-auto px-3 lg:px-6 py-4">
         <div class="flex items-center">
           <a href="/home.html" class="flex items-center gap-2 cursor-pointer">
-            <span class="w-9 h-9 rounded-xl bg-[#0B1120] border border-white/10 shadow-[0_10px_30px_rgba(2,6,23,0.35)] flex items-center justify-center">
-              <svg class="w-4.5 h-4.5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4z"/></svg>
+            <span class="w-10 h-10 rounded-xl bg-[#0B1120] border border-white/10 shadow-[0_10px_30px_rgba(2,6,23,0.35)] flex items-center justify-center overflow-hidden">
+              <img src="/image/logNew.png.png" alt="ZEUS.AI" class="w-full h-full object-contain" style="transform:scale(1.25);transform-origin:50% 50%;" />
             </span>
             <span class="text-2xl tracking-tight text-white font-extrabold">ZEUS.AI</span>
           </a>

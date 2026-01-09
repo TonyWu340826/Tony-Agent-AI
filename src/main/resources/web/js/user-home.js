@@ -192,7 +192,7 @@ const ErrorBoundary = class extends React.Component {
 const ImageWithFallback = ({ src, alt, className }) => {
     const { useState } = React;
     const [idx, setIdx] = useState(0);
-    const list = [src, '/image/img.png', 'image/img.png', '/web/image/img.png'];
+    const list = [src, '/image/logNew.png.png', 'image/logNew.png.png', '/web/image/logNew.png.png', '/image/logNew.png', 'image/logNew.png', '/web/image/logNew.png'];
     const current = list[Math.min(idx, list.length - 1)];
     return React.createElement('img', { src: current, alt, className, onError: () => setIdx(i => i + 1) });
 };
@@ -213,6 +213,7 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
     const [featMenuOpen, setFeatMenuOpen] = useState(false);
     const featMenuRef = useRef(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    
 
     // Stable state ref for event listeners
     const openStates = useRef({ user: false, agents: false, wb: false, feat: false, mobile: false });
@@ -337,8 +338,8 @@ const Header = ({ user, onOpenLogin, onOpenRegister, onLogout, onOpenAgents, ope
                 React.createElement('div', { className: 'flex items-center h-16 relative' },
                     // Logo
                     React.createElement('div', { className: 'flex items-center gap-3 cursor-pointer group', onClick: (e) => { e.preventDefault(); try { window.location.hash = ''; setActivePage(null); setShowModule(null); window.scrollTo({ top: 0, behavior: 'smooth' }); try { history.pushState(null, '', '/home.html'); } catch (_) { } } catch (_) { } } },
-                        React.createElement('div', { className: 'w-10 h-10 rounded-xl bg-[#0B1120] border border-white/10 shadow-[0_10px_30px_rgba(2,6,23,0.45)] flex items-center justify-center' },
-                            React.createElement(Sparkles, { className: 'w-5 h-5 text-cyan-400' })
+                        React.createElement('div', { className: 'w-11 h-11 rounded-xl bg-[#0B1120] border border-white/10 shadow-[0_10px_30px_rgba(2,6,23,0.45)] flex items-center justify-center overflow-hidden' },
+                            React.createElement('img', { src: '/image/logNew.png.png', alt: 'ZEUS.AI', className: 'w-full h-full object-contain', style: { transform: 'scale(1.25)', transformOrigin: '50% 50%' }, onClick: (e) => { try { e.preventDefault(); e.stopPropagation(); } catch (_) { } try { window.location.reload(); } catch (_) { } } })
                         ),
                         React.createElement('span', { className: 'text-2xl font-extrabold text-white tracking-tight' }, 'ZEUS.AI')
                     ),
@@ -1774,16 +1775,13 @@ const UserHome = () => {
                             React.createElement('div', null,
                                 React.createElement('div', { className: 'relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10' },
                                     React.createElement('div', { className: 'w-full aspect-[16/9] bg-slate-800' },
-                                        React.createElement(ImageWithFallback, { src: '/image/img.png', alt: '', className: 'w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity' })
+                                        React.createElement(ImageWithFallback, { src: '/image/logNew.png.png', alt: '', className: 'w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity' })
                                     )
                                 )
                             )
                         )
                     )
                 ),
-            ),
-
-
 
             // Platform (iframe modal) - 逻辑保持，但点击功能卡片时在新窗口打开，所以 modal 不会显示
             (activePage !== 'tools' && activePage !== 'prompt-engineering' && activePage !== 'articles' && activePage !== 'tech-learning' && !String(activePage || '').startsWith('interview') && showIframe) && React.createElement('div', { className: 'fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-4', onClick: () => setShowIframe(false) },
@@ -1861,10 +1859,10 @@ const UserHome = () => {
                 React.createElement('div', { className: 'bg-[#0f172a]/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-white/10', onClick: (e) => e.stopPropagation() },
                     React.createElement('div', { className: 'px-6 py-5 border-b border-white/10 flex items-center justify-between' },
                         React.createElement('div', { className: 'flex items-center gap-2' },
-                            React.createElement('div', { className: 'relative w-9 h-9 flex items-center justify-center' },
+                            React.createElement('div', { className: 'relative w-10 h-10 flex items-center justify-center' },
                                 React.createElement('div', { className: 'absolute inset-0 bg-gradient-to-br from-cyan-500 to-violet-500 rounded-xl blur opacity-40' }),
                                 React.createElement('div', { className: 'relative z-10 w-full h-full bg-[#0B1120] rounded-xl border border-white/10 flex items-center justify-center' },
-                                    React.createElement(Sparkles, { className: 'w-4 h-4 text-cyan-400' })
+                                    React.createElement('img', { src: '/image/logNew.png.png', alt: 'ZEUS.AI', className: 'w-7 h-7 rounded bg-white/90 p-1 shadow' })
                                 )
                             ),
                             React.createElement('div', null,
@@ -2077,11 +2075,14 @@ const UserHome = () => {
                         )
                     )
                 ),
-                !showAuth && !String(activePage || '').startsWith('interview') && React.createElement(Footer, null)
-                , React.createElement(SupportChat, null)
+                (!showAuth && !String(activePage || '').startsWith('interview') && React.createElement(Footer, null)),
+                React.createElement(SupportChat, null)
+            ),
+            React.createElement('div', { className: 'fixed bottom-6 right-6 z-[1000] pointer-events-none' },
+                React.createElement(SupportChat, null)
             )
         )
-    );
+    ));
 };
 
 window.Components = window.Components || {};
