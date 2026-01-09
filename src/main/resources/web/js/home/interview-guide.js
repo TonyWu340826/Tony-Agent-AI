@@ -79,7 +79,7 @@
         const [loading, setLoading] = useState(true);
 
         useEffect(() => {
-            document.title = '面试宝典 - 宙斯';
+            document.title = '面试宝典 - ZEUS.AI';
             // type <= -10, parentId = 0 (roots)
             fetchCategories(0, -10).then(setCategories).catch(console.error).finally(()=>setLoading(false));
         }, []);

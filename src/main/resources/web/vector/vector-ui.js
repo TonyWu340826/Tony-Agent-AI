@@ -149,21 +149,21 @@
   const SpaceListPage = ({ user, spaces, onEnterSpace, onCreate }) => {
     const total = Array.isArray(spaces) ? spaces.length : 0;
     return React.createElement('div', { className:'max-w-6xl mx-auto' },
-      React.createElement('div', { className:'bg-white/80 backdrop-blur rounded-3xl border border-white/70 shadow-xl p-6' },
+      React.createElement('div', { className:'bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-xl p-6' },
         React.createElement('div', { className:'flex items-start justify-between gap-4' },
           React.createElement('div', null,
-            React.createElement('div', { className:'text-2xl font-extrabold text-slate-900 tracking-tight' }, '智能知识库'),
-            React.createElement('div', { className:'text-sm text-slate-600 mt-1' }, '创建空间 · 上传文档 · 选择范围 · 开始对话'),
+            React.createElement('div', { className:'text-2xl font-extrabold text-white tracking-tight' }, '智能知识库'),
+            React.createElement('div', { className:'text-sm text-slate-400 mt-1' }, '创建空间 · 上传文档 · 选择范围 · 开始对话'),
             React.createElement('div', { className:'mt-4 flex flex-wrap items-center gap-2' },
-              React.createElement('span', { className:'inline-flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white/70 border border-slate-200 rounded-full px-3 py-1.5' },
+              React.createElement('span', { className:'inline-flex items-center gap-2 text-xs font-semibold text-slate-200 bg-white/5 border border-white/10 rounded-full px-3 py-1.5' },
                 React.createElement('span', { className:'w-2 h-2 rounded-full bg-indigo-500' }),
                 React.createElement('span', null, `空间 ${total}`)
               ),
-              React.createElement('span', { className:'inline-flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white/70 border border-slate-200 rounded-full px-3 py-1.5' },
+              React.createElement('span', { className:'inline-flex items-center gap-2 text-xs font-semibold text-slate-200 bg-white/5 border border-white/10 rounded-full px-3 py-1.5' },
                 React.createElement('span', { className:'w-2 h-2 rounded-full bg-emerald-500' }),
                 React.createElement('span', null, '支持 pdf/docx/txt/md')
               ),
-              React.createElement('span', { className:'inline-flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white/70 border border-slate-200 rounded-full px-3 py-1.5' },
+              React.createElement('span', { className:'inline-flex items-center gap-2 text-xs font-semibold text-slate-200 bg-white/5 border border-white/10 rounded-full px-3 py-1.5' },
                 React.createElement('span', { className:'w-2 h-2 rounded-full bg-blue-500' }),
                 React.createElement('span', null, '可指定单文档问答')
               )
@@ -173,20 +173,20 @@
         ),
         React.createElement('div', { className:'mt-6' },
           spaces.length === 0
-            ? React.createElement('div', { className:'rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 to-indigo-50 p-8 text-center shadow-sm' },
-                React.createElement('div', { className:'mx-auto w-14 h-14 rounded-2xl bg-white shadow flex items-center justify-center border border-slate-100' },
-                  React.createElement('svg', { className:'w-7 h-7 text-indigo-600', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round' },
+            ? React.createElement('div', { className:'rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-sm' },
+                React.createElement('div', { className:'mx-auto w-14 h-14 rounded-2xl bg-white/5 shadow flex items-center justify-center border border-white/10' },
+                  React.createElement('svg', { className:'w-7 h-7 text-indigo-400', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round' },
                     React.createElement('path', { d:'M12 3l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4z' })
                   )
                 ),
-                React.createElement('div', { className:'mt-4 text-base font-bold text-slate-900' }, '还没有空间'),
-                React.createElement('div', { className:'mt-1 text-sm text-slate-600' }, '创建一个空间来管理你的文档并进行知识库问答'),
+                React.createElement('div', { className:'mt-4 text-base font-bold text-white' }, '还没有空间'),
+                React.createElement('div', { className:'mt-1 text-sm text-slate-400' }, '创建一个空间来管理你的文档并进行知识库问答'),
                 React.createElement('button', { className:'mt-5 px-5 py-2.5 rounded-2xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700', onClick:onCreate }, '立即创建')
               )
             : React.createElement('div', { className:'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' },
                 spaces.map(s => React.createElement('button', {
                   key: s.id,
-                  className:'group text-left rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all overflow-hidden',
+                  className:'group text-left rounded-3xl border border-white/10 bg-white/5 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all overflow-hidden',
                   onClick: ()=>onEnterSpace(s)
                 },
                   React.createElement('div', { className:'h-20 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 relative' },
@@ -201,9 +201,9 @@
                     )
                   ),
                   React.createElement('div', { className:'p-4' },
-                    React.createElement('div', { className:'text-base font-extrabold text-slate-900 truncate' }, s.name || '未命名空间'),
-                    React.createElement('div', { className:'text-xs text-slate-500 mt-1 break-all line-clamp-2' }, s.orgCode),
-                    React.createElement('div', { className:'mt-3 inline-flex items-center gap-2 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-3 py-1' },
+                    React.createElement('div', { className:'text-base font-extrabold text-white truncate' }, s.name || '未命名空间'),
+                    React.createElement('div', { className:'text-xs text-slate-400 mt-1 break-all line-clamp-2' }, s.orgCode),
+                    React.createElement('div', { className:'mt-3 inline-flex items-center gap-2 text-xs font-semibold text-cyan-200 bg-cyan-500/10 border border-cyan-500/20 rounded-full px-3 py-1' },
                       React.createElement('span', { className:'w-1.5 h-1.5 rounded-full bg-indigo-600' }),
                       React.createElement('span', { className:'group-hover:underline' }, '进入空间')
                     )
@@ -216,13 +216,13 @@
   };
 
   const SpaceDetailHeader = ({ space, onBack }) => {
-    return React.createElement('div', { className:'rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden' },
-      React.createElement('div', { className:'p-4 bg-gradient-to-r from-slate-50 to-indigo-50 border-b border-slate-100 flex items-start justify-between gap-3' },
+    return React.createElement('div', { className:'rounded-3xl border border-white/10 bg-white/5 shadow-sm overflow-hidden' },
+      React.createElement('div', { className:'p-4 bg-white/5 border-b border-white/10 flex items-start justify-between gap-3' },
         React.createElement('div', null,
-          React.createElement('div', { className:'text-base font-extrabold text-slate-900' }, space ? (space.name || '未命名空间') : ''),
-          React.createElement('div', { className:'text-xs text-slate-500 mt-1 break-all' }, space ? space.orgCode : '')
+          React.createElement('div', { className:'text-base font-extrabold text-white' }, space ? (space.name || '未命名空间') : ''),
+          React.createElement('div', { className:'text-xs text-slate-400 mt-1 break-all' }, space ? space.orgCode : '')
         ),
-        React.createElement('button', { className:'px-3 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 text-sm shadow-sm', onClick:onBack }, '返回')
+        React.createElement('button', { className:'px-3 py-2 rounded-2xl bg-white/5 text-slate-200 hover:bg-white/10 border border-white/10 text-sm shadow-sm', onClick:onBack }, '返回')
       )
     );
   };
@@ -591,15 +591,15 @@
       React.createElement('div', { className:'lg:col-span-5 space-y-6' },
         React.createElement(SpaceDetailHeader, { space: activeSpace, onBack: backToSpaces }),
 
-        React.createElement('div', { className:'bg-white rounded-3xl border border-slate-200 shadow-sm p-4 space-y-4 overflow-hidden' },
+        React.createElement('div', { className:'bg-white/5 rounded-3xl border border-white/10 shadow-sm p-4 space-y-4 overflow-hidden' },
           React.createElement('div', { className:'flex items-center justify-between' },
-            React.createElement('div', { className:'text-sm font-bold text-slate-900' }, '文档上传'),
-            React.createElement('div', { className:'text-xs text-slate-500 break-all' }, activeSpace.orgCode)
+            React.createElement('div', { className:'text-sm font-bold text-white' }, '文档上传'),
+            React.createElement('div', { className:'text-xs text-slate-400 break-all' }, activeSpace.orgCode)
           ),
           React.createElement('div', {
             className: cx(
-              'relative rounded-3xl border border-slate-200 bg-[radial-gradient(circle_at_10%_10%,rgba(99,102,241,0.10),transparent_45%),radial-gradient(circle_at_90%_0%,rgba(59,130,246,0.10),transparent_40%),linear-gradient(to_bottom,rgba(248,250,252,1),rgba(255,255,255,1))] p-4',
-              dragOver ? 'ring-4 ring-indigo-100 border-indigo-200' : ''
+              'relative rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_10%_10%,rgba(99,102,241,0.18),transparent_45%),radial-gradient(circle_at_90%_0%,rgba(59,130,246,0.16),transparent_40%),linear-gradient(to_bottom,rgba(15,23,42,0.75),rgba(2,6,23,0.85))] p-4',
+              dragOver ? 'ring-4 ring-cyan-400/20 border-cyan-400/30' : ''
             ),
             onDragEnter: (e)=>{ e.preventDefault(); e.stopPropagation(); setDragOver(true); },
             onDragOver: (e)=>{ e.preventDefault(); e.stopPropagation(); setDragOver(true); },
@@ -613,30 +613,30 @@
           },
             React.createElement('div', { className:'flex items-start justify-between gap-3' },
               React.createElement('div', null,
-                React.createElement('div', { className:'text-sm text-slate-900 font-extrabold' }, '拖拽文件到这里，或点击上传'),
-                React.createElement('div', { className:'text-xs text-slate-600 mt-1' }, '支持 pdf / docx / txt / md · 自动切分向量化')
+                React.createElement('div', { className:'text-sm text-white font-extrabold' }, '拖拽文件到这里，或点击上传'),
+                React.createElement('div', { className:'text-xs text-slate-400 mt-1' }, '支持 pdf / docx / txt / md · 自动切分向量化')
               ),
               React.createElement('button', { className:'px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold shadow hover:from-blue-700 hover:to-indigo-700 disabled:opacity-60', disabled: uploading, onClick: onPickFile }, uploading ? '上传中…' : '选择文件')
             ),
             React.createElement('input', { ref:fileInputRef, type:'file', className:'hidden', disabled: uploading, accept:'.pdf,.docx,.txt,.md', onChange:(e)=>{ const f=e.target.files&&e.target.files[0]; if(f) onUploadFile(f); e.target.value=''; } })
           ),
           uploadSteps && React.createElement('div', { className:'space-y-2' },
-            React.createElement('div', { className:'text-sm font-bold text-slate-900' }, '解析过程'),
+            React.createElement('div', { className:'text-sm font-bold text-white' }, '解析过程'),
             React.createElement(Steps, { process: uploadSteps })
           )
         ),
 
-        React.createElement('div', { className:'bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden' },
-          React.createElement('div', { className:'px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-white to-slate-50' },
+        React.createElement('div', { className:'bg-white/5 rounded-3xl border border-white/10 shadow-sm overflow-hidden' },
+          React.createElement('div', { className:'px-4 py-3 border-b border-white/10 bg-white/5' },
             React.createElement('div', { className:'flex items-center justify-between gap-3' },
-              React.createElement('div', { className:'font-extrabold text-slate-900' }, '文档列表'),
-              React.createElement('div', { className:'text-xs text-slate-500' }, `${docs.length} 个文档`)
+              React.createElement('div', { className:'font-extrabold text-white' }, '文档列表'),
+              React.createElement('div', { className:'text-xs text-slate-400' }, `${docs.length} 个文档`)
             ),
             React.createElement('div', { className:'mt-3 flex items-center gap-2' },
               React.createElement('div', { className:'flex-1' },
-                React.createElement('input', { className:'w-full border border-slate-200 rounded-2xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200', placeholder:'搜索文件名 / docType', value: docQuery, onChange:(e)=>setDocQuery(e.target.value) })
+                React.createElement('input', { className:'w-full border border-white/10 bg-white/5 text-slate-100 rounded-2xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-cyan-400/30 placeholder:text-slate-500', placeholder:'搜索文件名 / docType', value: docQuery, onChange:(e)=>setDocQuery(e.target.value) })
               ),
-              React.createElement('select', { className:'border border-slate-200 rounded-2xl px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-200', value: docFilter, onChange:(e)=>setDocFilter(e.target.value) },
+              React.createElement('select', { className:'border border-white/10 rounded-2xl px-3 py-2 text-sm bg-white/5 text-slate-200 outline-none focus:ring-2 focus:ring-cyan-400/30', value: docFilter, onChange:(e)=>setDocFilter(e.target.value) },
                 React.createElement('option', { value:'all' }, '全部'),
                 React.createElement('option', { value:'ready' }, '可检索'),
                 React.createElement('option', { value:'processing' }, '处理中'),
@@ -646,25 +646,25 @@
           ),
           React.createElement('div', { className:'max-h-[420px] overflow-auto p-3' },
             docsFiltered.length === 0
-              ? React.createElement('div', { className:'p-6 text-center rounded-3xl border border-slate-200 bg-slate-50' },
-                  React.createElement('div', { className:'text-sm font-extrabold text-slate-900' }, docs.length === 0 ? '暂无文档' : '没有匹配的文档'),
-                  React.createElement('div', { className:'mt-1 text-xs text-slate-500' }, docs.length === 0 ? '上传一个文档后即可开始问答' : '换个关键词或筛选条件试试')
+              ? React.createElement('div', { className:'p-6 text-center rounded-3xl border border-white/10 bg-white/5' },
+                  React.createElement('div', { className:'text-sm font-extrabold text-white' }, docs.length === 0 ? '暂无文档' : '没有匹配的文档'),
+                  React.createElement('div', { className:'mt-1 text-xs text-slate-400' }, docs.length === 0 ? '上传一个文档后即可开始问答' : '换个关键词或筛选条件试试')
                 )
               : React.createElement('div', { className:'grid grid-cols-1 gap-3' },
                   docsFiltered.map(d => {
                     const ok = d.status === 'READY';
-                    const st = ok ? { txt:'可检索', cls:'text-emerald-700 bg-emerald-50 border-emerald-200' }
-                      : d.status === 'FAILED' ? { txt:'失败', cls:'text-rose-700 bg-rose-50 border-rose-200' }
-                      : { txt:'处理中', cls:'text-slate-700 bg-slate-50 border-slate-200' };
-                    return React.createElement('div', { key:d.id, className:'rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition overflow-hidden' },
+                    const st = ok ? { txt:'可检索', cls:'text-emerald-200 bg-emerald-500/10 border-emerald-500/20' }
+                      : d.status === 'FAILED' ? { txt:'失败', cls:'text-rose-200 bg-rose-500/10 border-rose-500/20' }
+                      : { txt:'处理中', cls:'text-slate-200 bg-white/5 border-white/10' };
+                    return React.createElement('div', { key:d.id, className:'rounded-3xl border border-white/10 bg-white/5 shadow-sm hover:shadow-md transition overflow-hidden' },
                       React.createElement('div', { className:'p-4 flex items-start justify-between gap-3' },
                         React.createElement('div', { className:'min-w-0' },
-                          React.createElement('div', { className:'text-sm font-extrabold text-slate-900 truncate' }, d.fileName || '-'),
-                          React.createElement('div', { className:'mt-1 text-xs text-slate-500 break-all' }, `${d.docType || '-'} · ${fmtTime(d.createdAt)}`)
+                          React.createElement('div', { className:'text-sm font-extrabold text-white truncate' }, d.fileName || '-'),
+                          React.createElement('div', { className:'mt-1 text-xs text-slate-400 break-all' }, `${d.docType || '-'} · ${fmtTime(d.createdAt)}`)
                         ),
                         React.createElement('div', { className:'flex items-center gap-2' },
                           React.createElement('span', { className:cx('text-[11px] font-extrabold px-2.5 py-1 rounded-full border', st.cls) }, st.txt),
-                          React.createElement('button', { className:'text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline', onClick:()=>doDelete(d.id) }, '删除')
+                          React.createElement('button', { className:'text-xs font-semibold text-rose-300 hover:text-rose-200 hover:underline', onClick:()=>doDelete(d.id) }, '删除')
                         )
                       )
                     );

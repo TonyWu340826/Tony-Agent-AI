@@ -10,7 +10,7 @@
       html,body{height:100%;margin:0;padding:0}
     </style>
   </head>
-  <body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+  <body class="min-h-screen bg-[#020617] text-slate-200">
     <script>
       (function(){
         const ensureVip99 = async () => {
@@ -185,66 +185,71 @@
         else bind();
       })();
     </script>
-    <header class="sticky top-0 z-[60] backdrop-blur-lg bg-white/90 border-b border-slate-100 shadow-sm">
+    <header class="sticky top-0 z-[60] backdrop-blur-xl bg-[#020617]/80 border-b border-white/5">
       <div class="max-w-7xl mx-auto px-3 lg:px-6 py-4">
         <div class="flex items-center">
-          <a href="/home.html" class="flex items-center gap-1 cursor-pointer">
-            <span class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-extrabold">宙</span>
-            <span class="text-2xl tracking-tight text-slate-950 font-bold">宙斯</span>
+          <a href="/home.html" class="flex items-center gap-2 cursor-pointer">
+            <span class="w-9 h-9 rounded-xl bg-[#0B1120] border border-white/10 shadow-[0_10px_30px_rgba(2,6,23,0.45)] flex items-center justify-center">
+              <svg class="w-4.5 h-4.5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4z"/></svg>
+            </span>
+            <span class="text-2xl tracking-tight text-white font-extrabold">ZEUS.AI</span>
           </a>
 
           <div class="hidden md:flex items-center gap-12 relative flex-1 justify-center">
-            <a href="/home.html#features-section" class="flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1">平台功能</a>
-            <a href="/home.html#tools" class="flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-indigo-600 transition-colors border-b-2 border-transparent hover:border-indigo-600 pb-1">工具合集</a>
+            <a href="/home.html#features-section" class="flex items-center gap-2 text-slate-300 font-semibold text-base md:text-lg hover:text-white transition-colors border-b-2 border-transparent hover:border-cyan-400 pb-1">平台功能</a>
+            <a href="/home.html#tools" class="flex items-center gap-2 text-slate-300 font-semibold text-base md:text-lg hover:text-white transition-colors border-b-2 border-transparent hover:border-cyan-400 pb-1">工具合集</a>
             <div class="relative group">
-              <a href="#" class="flex items-center gap-2 text-blue-600 font-semibold text-base md:text-lg border-b-2 border-blue-600 pb-1" onclick="event.preventDefault()">AI工作台</a>
-              <div class="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-64 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100]">
-                <a href="/home.html#model" class="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-lg">
-                  <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+              <a href="#" class="flex items-center gap-2 text-cyan-300 font-semibold text-base md:text-lg border-b-2 border-cyan-400 pb-1" onclick="event.preventDefault()">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4z"/></svg>
+                AI工作台
+              </a>
+              <div class="absolute left-0 top-full mt-2 bg-[#0f172a]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 w-64 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100]">
+                <a href="/home.html#model" class="flex items-center gap-2 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl">
+                  <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z"/></svg>
                   <span>模型服务</span>
                 </a>
-                <a href="/mcp/index.html" class="flex items-center gap-2 px-3 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg">
+                <a href="/mcp/index.html" class="flex items-center gap-2 px-3 py-2 text-cyan-200 font-semibold hover:bg-white/5 rounded-xl">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 21V6a9 9 0 009 9h3"/></svg>
                   <span>MCP</span>
                 </a>
-                <a href="/home.html#prompt-engineering" class="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-lg">
-                  <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6L2 12l6 6"/></svg>
+                <a href="/home.html#prompt-engineering" class="flex items-center gap-2 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl">
+                  <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6L2 12l6 6"/></svg>
                   <span>Prompt工程</span>
                 </a>
-                <a href="/vector/index.html" class="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-lg">
-                  <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h8a3 3 0 013 3v11H5a3 3 0 01-3-3V5z"/><path d="M22 5h-8a3 3 0 00-3 3v11h8a3 3 0 003-3V5z"/></svg>
+                <a href="/vector/index.html" class="flex items-center gap-2 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl">
+                  <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h8a3 3 0 013 3v11H5a3 3 0 01-3-3V5z"/><path d="M22 5h-8a3 3 0 00-3 3v11h8a3 3 0 003-3V5z"/></svg>
                   <span>智能知识库</span>
                 </a>
               </div>
             </div>
 
             <div id="nav-agents-wrap" class="relative">
-              <a id="nav-agents-btn" href="#" class="flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1">三方AI平台</a>
-              <div id="nav-agents-menu" class="hidden absolute right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-80 p-2 transition-opacity z-[100]">
-                <div class="px-3 py-2 text-sm text-slate-500">加载中...</div>
+              <a id="nav-agents-btn" href="#" class="flex items-center gap-2 text-slate-300 font-semibold text-base md:text-lg hover:text-white transition-colors border-b-2 border-transparent hover:border-cyan-400 pb-1">三方AI平台</a>
+              <div id="nav-agents-menu" class="hidden absolute right-0 top-full mt-2 bg-[#0f172a]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 w-80 p-2 transition-opacity z-[100]">
+                <div class="px-3 py-2 text-sm text-slate-400">加载中...</div>
               </div>
             </div>
           </div>
 
           <div class="flex items-center gap-3 ml-auto">
-            <a id="nav-login" href="/home.html" class="hidden px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200">去登录</a>
+            <a id="nav-login" href="/home.html" class="hidden px-3 py-2 rounded-xl bg-white/5 text-slate-200 text-sm hover:bg-white/10 border border-white/10">去登录</a>
 
             <div id="nav-user-wrap" class="hidden relative">
               <a id="nav-user-btn" href="#" class="flex items-center gap-2 cursor-pointer">
-                <span id="nav-username" class="text-sm font-semibold text-slate-700"></span>
-                <span class="w-8 h-8 rounded-full overflow-hidden border-2 border-slate-200">
+                <span id="nav-username" class="text-sm font-semibold text-slate-200"></span>
+                <span class="w-8 h-8 rounded-full overflow-hidden border-2 border-white/10">
                   <img id="nav-avatar-img" class="w-full h-full object-cover" alt="用户头像" />
                 </span>
               </a>
-              <div id="nav-user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-200 p-2">
-                <a href="/home.html" class="block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md">个人资料</a>
-                <a href="/home.html" class="block w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-md">设置</a>
-                <div class="border-t border-slate-100 my-1"></div>
-                <a id="nav-logout-btn" href="#" class="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-md">登出</a>
+              <div id="nav-user-menu" class="hidden absolute right-0 mt-2 w-48 bg-[#0f172a]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 p-2">
+                <a href="/home.html" class="block w-full text-left px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl">个人资料</a>
+                <a href="/home.html" class="block w-full text-left px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl">设置</a>
+                <div class="border-t border-white/10 my-1"></div>
+                <a id="nav-logout-btn" href="#" class="block w-full text-left px-3 py-2 text-rose-300 hover:bg-rose-500/10 rounded-xl">登出</a>
               </div>
             </div>
 
-            <a href="/home.html" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm hover:bg-slate-800">返回首页</a>
+            <a href="/home.html" class="px-3 py-2 rounded-xl bg-white text-black text-sm font-bold hover:scale-[1.02] transition">返回首页</a>
           </div>
         </div>
       </div>
@@ -252,63 +257,63 @@
 
     <main class="max-w-6xl mx-auto px-4 py-10">
       <section class="text-center">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">选择一个 MCP 工作流</h1>
-        <p class="mt-3 text-slate-600">统一入口，快速进入你的智能工作流</p>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">选择一个 MCP 工作流</h1>
+        <p class="mt-3 text-slate-400">统一入口，快速进入你的智能工作流</p>
       </section>
 
       <section class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <a data-role="mcp-vip-link" href="/mcp/swagger-workflow.html" class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 transition p-6">
+        <a data-role="mcp-vip-link" href="/mcp/swagger-workflow.html" class="group bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 shadow-sm hover:shadow-2xl hover:border-white/20 transition p-6">
           <div class="flex items-start justify-between gap-4">
             <div class="flex items-center gap-3">
               <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white flex items-center justify-center font-bold text-lg shadow">S</div>
               <div>
-                <div class="text-lg font-bold text-slate-900">Swagger 智能工作流</div>
-                <div class="mt-1 text-sm text-slate-600">基于 Swagger 接口清单自动规划与执行</div>
+                <div class="text-lg font-bold text-white">Swagger 智能工作流</div>
+                <div class="mt-1 text-sm text-slate-400">基于 Swagger 接口清单自动规划与执行</div>
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">VIP99</span>
-              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">推荐</span>
+              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">VIP99</span>
+              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-indigo-500/10 text-indigo-200 border border-indigo-500/20">推荐</span>
             </div>
           </div>
-          <div class="mt-4 text-sm text-slate-600">
+          <div class="mt-4 text-sm text-slate-400">
             支持输入需求、Swagger 文档地址、API BaseUrl 与认证 Headers。
           </div>
-          <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
+          <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-300 group-hover:text-cyan-200">
             打开工具（VIP99）
             <span class="transition-transform group-hover:translate-x-0.5">→</span>
           </div>
         </a>
 
-        <a data-role="mcp-vip-link" href="/mcp/custom-api-workflow.html" class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 transition p-6">
+        <a data-role="mcp-vip-link" href="/mcp/custom-api-workflow.html" class="group bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 shadow-sm hover:shadow-2xl hover:border-white/20 transition p-6">
           <div class="flex items-start justify-between gap-4">
             <div class="flex items-center gap-3">
               <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-bold text-lg shadow">C</div>
               <div>
-                <div class="text-lg font-bold text-slate-900">自定义接口清单工作流</div>
-                <div class="mt-1 text-sm text-slate-600">手动粘贴接口清单，AI 生成执行方案</div>
+                <div class="text-lg font-bold text-white">自定义接口清单工作流</div>
+                <div class="mt-1 text-sm text-slate-400">手动粘贴接口清单，AI 生成执行方案</div>
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">VIP99</span>
-              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">灵活</span>
+              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">VIP99</span>
+              <span class="mt-1 text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-200 border border-emerald-500/20">灵活</span>
             </div>
           </div>
-          <div class="mt-4 text-sm text-slate-600">
+          <div class="mt-4 text-sm text-slate-400">
             适用于无 Swagger、或仅有接口描述文档的场景。
           </div>
-          <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 group-hover:text-emerald-700">
+          <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-300 group-hover:text-cyan-200">
             打开工具（VIP99）
             <span class="transition-transform group-hover:translate-x-0.5">→</span>
           </div>
         </a>
       </section>
 
-      <section class="mt-10 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <div class="text-sm font-semibold text-slate-900">快捷入口</div>
+      <section class="mt-10 bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 shadow-sm p-6">
+        <div class="text-sm font-semibold text-white">快捷入口</div>
         <div class="mt-3 flex flex-col md:flex-row md:items-center gap-3">
-          <a href="/swagger-ui/index.html" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200 text-sm">Swagger UI</a>
-          <a href="/v3/api-docs" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200 text-sm">OpenAPI JSON</a>
+          <a href="/swagger-ui/index.html" class="px-4 py-2 rounded-xl bg-white/5 text-slate-200 hover:bg-white/10 border border-white/10 text-sm">Swagger UI</a>
+          <a href="/v3/api-docs" class="px-4 py-2 rounded-xl bg-white/5 text-slate-200 hover:bg-white/10 border border-white/10 text-sm">OpenAPI JSON</a>
         </div>
       </section>
 

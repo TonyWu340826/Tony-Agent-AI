@@ -293,7 +293,7 @@
             ),
             React.createElement('div', null,
               React.createElement('h2', { className: 'font-bold text-lg' }, 'AI 图像生成工作台'),
-              React.createElement('span', { className: 'text-xs text-white/80' }, 'Powered by 宙斯AI')
+              React.createElement('span', { className: 'text-xs text-white/80' }, 'Powered by ZEUS.AIAI')
             )
           ),
           React.createElement('button', {

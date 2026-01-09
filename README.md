@@ -46,4 +46,4 @@ mvn spring-boot:run
 http://localhost:8080/idnex.html  //后管端
 http://localhost:8080/home.html   //用户端
 
--宙斯团队
+-ZEUS.AI团队

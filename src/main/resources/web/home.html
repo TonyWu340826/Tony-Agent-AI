@@ -1,347 +1,379 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TonyWu AI 用户主页</title>
-    <!-- 预连接CDN加速资源加载 -->
-    <link rel="preconnect" href="https://unpkg.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
-    <!-- 异步加载React和Babel -->
-    <script defer src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script defer src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script defer src="https://cdn.tailwindcss.com"></script>
-    <style>
-      html,body{height:100%;background:#f6f7fb;margin:0;padding:0}
-      /* 加载动画 */
-      .page-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f6f7fb;z-index:9999}
-      .spinner{border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;width:40px;height:40px;animation:spin 0.8s linear infinite}
-      @keyframes spin{to{transform:rotate(360deg)}}
-    </style>
-  </head>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TonyWu AI 用户主页</title>
+  <!-- 预连接CDN加速资源加载 -->
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+  <!-- 异步加载React和Babel -->
+  <script defer src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script defer src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script defer src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      background: #f6f7fb;
+      margin: 0;
+      padding: 0
+    }
+
+    /* 加载动画 */
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f6f7fb;
+      z-index: 9999
+    }
+
+    .spinner {
+      border: 3px solid #e2e8f0;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+  </style>
+</head>
+
 <body>
-    <!-- 页面加载动画 -->
-    <div class="page-loader" id="page-loader">
-      <div class="spinner"></div>
-    </div>
-    <div id="root" class="min-h-screen"></div>
-    <div id="fixed-footer" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:1200;background:#0f172a;color:#fff;border-top:1px solid #334155;text-align:center;padding:8px 0;">
-      <div style="font-size:12px;">© 2025 宙斯. All rights reserved.</div>
-      <div style="font-size:11px;color:#cbd5e1;margin-top:2px;">让智能赋能每个人 · 共建可信AI新纪元</div>
-    </div>
-    <script type="text/javascript" defer src="/js/tools-ui.js"></script>
-    <script type="text/javascript" defer src="/js/model-ui.js"></script>
-    <script type="text/javascript" defer src="/js/mcp-ui.js"></script>
-    <script type="text/javascript" defer src="/js/prompt-ui.js"></script>
-    <script type="text/javascript" defer src="/js/sql-dba-ui.js"></script>
-    <script type="text/javascript" defer src="/js/ai-tool-management.js"></script>
+  <!-- 页面加载动画 -->
+  <div class="page-loader" id="page-loader">
+    <div class="spinner"></div>
+  </div>
+  <div id="root" class="min-h-screen"></div>
+  <div id="fixed-footer"
+    style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:1200;background:#0f172a;color:#fff;border-top:1px solid #334155;text-align:center;padding:8px 0;">
+    <div style="font-size:12px;">© 2025 ZEUS.AI. All rights reserved.</div>
+    <div style="font-size:11px;color:#cbd5e1;margin-top:2px;">让智能赋能每个人 · 共建可信AI新纪元</div>
+  </div>
+  <script type="text/javascript" defer src="/js/tools-ui.js"></script>
+  <script type="text/javascript" defer src="/js/model-ui.js"></script>
+  <script type="text/javascript" defer src="/js/mcp-ui.js"></script>
+  <script type="text/javascript" defer src="/js/prompt-ui.js"></script>
+  <script type="text/javascript" defer src="/js/sql-dba-ui.js"></script>
+  <script type="text/javascript" defer src="/js/ai-tool-management.js"></script>
   <script type="text/javascript" defer src="/tools/10-aiSql-tools-management.js"></script>
-    <script type="text/javascript" defer src="/js/user-home.js?v=23"></script>
-    <script type="text/babel">
-      const root = ReactDOM.createRoot(document.getElementById('root'))
-      let mounted = false
-      let mountedComp = null
-      const render = () => {
-        const Comp = window.Components && window.Components.UserHome
-        if (mounted && mountedComp === Comp) return
-        root.render(Comp ? React.createElement(Comp) : React.createElement('div', {className:'p-6'}, '组件加载中...'))
-        if (Comp) { mounted = true; mountedComp = Comp }
-        // 隐藏加载动画
-        const loader = document.getElementById('page-loader')
-        if (loader && Comp) {
-          loader.style.opacity = '0'
-          loader.style.transition = 'opacity 0.3s'
-          setTimeout(() => loader.remove(), 300)
-        }
+  <script type="text/javascript" defer src="/js/user-home.js?v=30"></script>
+  <script type="text/babel">
+    const root = ReactDOM.createRoot(document.getElementById('root'))
+    let mounted = false
+    let mountedComp = null
+    const render = () => {
+      const Comp = window.Components && window.Components.UserHome
+      if (mounted && mountedComp === Comp) return
+      root.render(Comp ? React.createElement(Comp) : React.createElement('div', { className: 'p-6' }, '组件加载中...'))
+      if (Comp) { mounted = true; mountedComp = Comp }
+      // 隐藏加载动画
+      const loader = document.getElementById('page-loader')
+      if (loader && Comp) {
+        loader.style.opacity = '0'
+        loader.style.transition = 'opacity 0.3s'
+        setTimeout(() => loader.remove(), 300)
       }
-      // 等待React和其他资源加载完成
-      if (window.React && window.ReactDOM) {
-        render()
-      } else {
-        window.addEventListener('load', render)
-      }
-      try { window.addEventListener('modules:loaded', render) } catch(e) {}
-    </script>
-    <script>
-      (function(){
-        const init = () => {
-          if (document.getElementById('don-btn-inline')) return;
-          if (!document.body) return;
-        };
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-      })();
-    </script>
-    <script>
-      (function(){
-        const makeBtn = () => {
-          if (window.__supportChatMounted) return; // React版本已挂载则不创建fallback
-          if (document.getElementById('support-chat-fallback')) return;
-          const style = document.getElementById('sc-fallback-style') || document.createElement('style');
-          style.id = 'sc-fallback-style';
-          style.textContent = '@keyframes scFloat2{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 2px))}}@keyframes scPulse2{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.12);opacity:.2}}@keyframes scBounce2{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 8px))}}@keyframes scGlow2{0%,100%{box-shadow:0 10px 25px rgba(30,58,138,0.25),0 0 0 rgba(56,189,248,0)}50%{box-shadow:0 14px 35px rgba(30,58,138,0.35),0 0 18px rgba(56,189,248,0.35)}}';
-          document.head.appendChild(style);
-          const btn = document.createElement('button');
-          btn.id = 'support-chat-fallback';
-          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M7 10a5 5 0 0110 0v3a2 2 0 01-2 2H9a2 2 0 01-2-2v-3z"/><path d="M9 10V9a3 3 0 016 0v1"/><path d="M9 16v2a3 3 0 003 3h0a3 3 0 003-3v-2"/><path d="M4 12v1a3 3 0 003 3"/><path d="M20 12v1a3 3 0 01-3 3"/><circle cx="10" cy="13" r="0.6"/><circle cx="14" cy="13" r="0.6"/></svg>';
-          btn.style.position = 'fixed';
-          btn.style.right = '24px';
-          btn.style.top = '50%';
-          btn.style.transform = 'translateY(-50%)';
-          btn.style.zIndex = '1301';
-          btn.style.width = '48px';
-          btn.style.height = '48px';
-          btn.style.borderRadius = '9999px';
-          btn.style.background = 'linear-gradient(135deg, #06b6d4 0%, #2563eb 45%, #4f46e5 100%)';
-          btn.style.color = '#fff';
-          btn.style.boxShadow = '0 12px 30px rgba(56,189,248,0.35)';
-          btn.style.display = 'grid';
-          btn.style.placeItems = 'center';
-          btn.style.animation = 'scBounce2 1.6s ease-in-out infinite, scGlow2 2.2s ease-in-out infinite';
-          btn.style.willChange = 'transform';
-          document.body.appendChild(btn);
-          const ring = document.createElement('span');
-          ring.style.position = 'absolute';
-          ring.style.inset = '0';
-          ring.style.border = '2px solid #67e8f9';
-          ring.style.borderRadius = '9999px';
-          ring.style.animation = 'scPulse2 1.8s ease-in-out infinite';
-          btn.appendChild(ring);
-          const dot = document.createElement('span');
-          dot.style.position = 'absolute';
-          dot.style.right = '-2px';
-          dot.style.top = '-2px';
-          dot.style.width = '8px';
-          dot.style.height = '8px';
-          dot.style.borderRadius = '9999px';
-          dot.style.background = '#f43f5e';
-          dot.style.boxShadow = '0 0 0 0 rgba(244,63,94,.7)';
-          dot.style.animation = 'scPulse2 1.8s ease-in-out infinite';
-          btn.appendChild(dot);
-          const panel = document.createElement('div');
-          panel.style.position = 'fixed';
-          panel.style.right = '24px';
-          panel.style.top = '50%';
-          panel.style.transform = 'translateY(-50%)';
-          panel.style.zIndex = '1300';
-          panel.style.width = '340px';
-          panel.style.height = '420px';
-          panel.style.background = '#fff';
-          panel.style.border = '1px solid #e2e8f0';
-          panel.style.borderRadius = '16px';
-          panel.style.boxShadow = '0 20px 40px rgba(2,6,23,0.2)';
-          panel.style.display = 'none';
-          panel.style.overflow = 'hidden';
-          panel.style.display = 'none';
-          panel.style.flexDirection = 'column';
-          panel.style.alignItems = 'stretch';
-          panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(90deg,#0891b2 0%,#2563eb 50%,#4f46e5 100%);border-bottom:1px solid rgba(255,255,255,0.15);font-weight:700;color:#fff">AI客服<div style="display:flex;align-items:center;gap:8px"><button id="support-chat-fallback-full" style="padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.18)">全屏</button><button id="support-chat-fallback-close" style="padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.18)">关闭</button></div></div><div style="padding:10px;overflow:auto;flex:1;min-height:0;font-size:12px;color:#0f172a;background:rgba(248,250,252,0.7)" id="support-chat-fallback-body"></div><div style="padding:10px;border-top:1px solid #e2e8f0;background:#fff;flex:0 0 auto"><input id="support-chat-fallback-input" placeholder="请输入您的问题…" style="width:72%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;outline:none"/><button id="support-chat-fallback-send" style="margin-left:8px;padding:10px 12px;background:#2563eb;color:#fff;border-radius:10px">发送</button></div>';
-          document.body.appendChild(panel);
-          const body = panel.querySelector('#support-chat-fallback-body');
-          const add = (role, text) => {
-            const isAssistant = role === 'assistant';
-            const row = document.createElement('div');
-            row.style.display = 'flex';
-            row.style.alignItems = 'flex-end';
-            row.style.gap = '8px';
-            row.style.margin = '10px 0';
-            row.style.justifyContent = isAssistant ? 'flex-start' : 'flex-end';
+    }
+    // 等待React和其他资源加载完成
+    if (window.React && window.ReactDOM) {
+      render()
+    } else {
+      window.addEventListener('load', render)
+    }
+    try { window.addEventListener('modules:loaded', render) } catch (e) { }
+  </script>
+  <script>
+    (function () {
+      const init = () => {
+        if (document.getElementById('don-btn-inline')) return;
+        if (!document.body) return;
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    })();
+  </script>
+  <script>
+    (function () {
+      const makeBtn = () => {
+        if (window.__supportChatMounted) return; // React版本已挂载则不创建fallback
+        if (document.getElementById('support-chat-fallback')) return;
+        const style = document.getElementById('sc-fallback-style') || document.createElement('style');
+        style.id = 'sc-fallback-style';
+        style.textContent = '@keyframes scFloat2{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 2px))}}@keyframes scPulse2{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.12);opacity:.2}}@keyframes scBounce2{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 8px))}}@keyframes scGlow2{0%,100%{box-shadow:0 10px 25px rgba(30,58,138,0.25),0 0 0 rgba(56,189,248,0)}50%{box-shadow:0 14px 35px rgba(30,58,138,0.35),0 0 18px rgba(56,189,248,0.35)}}';
+        document.head.appendChild(style);
+        const btn = document.createElement('button');
+        btn.id = 'support-chat-fallback';
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M7 10a5 5 0 0110 0v3a2 2 0 01-2 2H9a2 2 0 01-2-2v-3z"/><path d="M9 10V9a3 3 0 016 0v1"/><path d="M9 16v2a3 3 0 003 3h0a3 3 0 003-3v-2"/><path d="M4 12v1a3 3 0 003 3"/><path d="M20 12v1a3 3 0 01-3 3"/><circle cx="10" cy="13" r="0.6"/><circle cx="14" cy="13" r="0.6"/></svg>';
+        btn.style.position = 'fixed';
+        btn.style.right = '24px';
+        btn.style.top = '50%';
+        btn.style.transform = 'translateY(-50%)';
+        btn.style.zIndex = '1301';
+        btn.style.width = '48px';
+        btn.style.height = '48px';
+        btn.style.borderRadius = '9999px';
+        btn.style.background = 'linear-gradient(135deg, #06b6d4 0%, #2563eb 45%, #4f46e5 100%)';
+        btn.style.color = '#fff';
+        btn.style.boxShadow = '0 12px 30px rgba(56,189,248,0.35)';
+        btn.style.display = 'grid';
+        btn.style.placeItems = 'center';
+        btn.style.animation = 'scBounce2 1.6s ease-in-out infinite, scGlow2 2.2s ease-in-out infinite';
+        btn.style.willChange = 'transform';
+        document.body.appendChild(btn);
+        const ring = document.createElement('span');
+        ring.style.position = 'absolute';
+        ring.style.inset = '0';
+        ring.style.border = '2px solid #67e8f9';
+        ring.style.borderRadius = '9999px';
+        ring.style.animation = 'scPulse2 1.8s ease-in-out infinite';
+        btn.appendChild(ring);
+        const dot = document.createElement('span');
+        dot.style.position = 'absolute';
+        dot.style.right = '-2px';
+        dot.style.top = '-2px';
+        dot.style.width = '8px';
+        dot.style.height = '8px';
+        dot.style.borderRadius = '9999px';
+        dot.style.background = '#f43f5e';
+        dot.style.boxShadow = '0 0 0 0 rgba(244,63,94,.7)';
+        dot.style.animation = 'scPulse2 1.8s ease-in-out infinite';
+        btn.appendChild(dot);
+        const panel = document.createElement('div');
+        panel.style.position = 'fixed';
+        panel.style.right = '24px';
+        panel.style.top = '50%';
+        panel.style.transform = 'translateY(-50%)';
+        panel.style.zIndex = '1300';
+        panel.style.width = '340px';
+        panel.style.height = '420px';
+        panel.style.background = '#fff';
+        panel.style.border = '1px solid #e2e8f0';
+        panel.style.borderRadius = '16px';
+        panel.style.boxShadow = '0 20px 40px rgba(2,6,23,0.2)';
+        panel.style.display = 'none';
+        panel.style.overflow = 'hidden';
+        panel.style.display = 'none';
+        panel.style.flexDirection = 'column';
+        panel.style.alignItems = 'stretch';
+        panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(90deg,#0891b2 0%,#2563eb 50%,#4f46e5 100%);border-bottom:1px solid rgba(255,255,255,0.15);font-weight:700;color:#fff">AI客服<div style="display:flex;align-items:center;gap:8px"><button id="support-chat-fallback-full" style="padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.18)">全屏</button><button id="support-chat-fallback-close" style="padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.18)">关闭</button></div></div><div style="padding:10px;overflow:auto;flex:1;min-height:0;font-size:12px;color:#0f172a;background:rgba(248,250,252,0.7)" id="support-chat-fallback-body"></div><div style="padding:10px;border-top:1px solid #e2e8f0;background:#fff;flex:0 0 auto"><input id="support-chat-fallback-input" placeholder="请输入您的问题…" style="width:72%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;outline:none"/><button id="support-chat-fallback-send" style="margin-left:8px;padding:10px 12px;background:#2563eb;color:#fff;border-radius:10px">发送</button></div>';
+        document.body.appendChild(panel);
+        const body = panel.querySelector('#support-chat-fallback-body');
+        const add = (role, text) => {
+          const isAssistant = role === 'assistant';
+          const row = document.createElement('div');
+          row.style.display = 'flex';
+          row.style.alignItems = 'flex-end';
+          row.style.gap = '8px';
+          row.style.margin = '10px 0';
+          row.style.justifyContent = isAssistant ? 'flex-start' : 'flex-end';
 
-            const avatar = document.createElement('div');
-            avatar.style.width = '32px';
-            avatar.style.height = '32px';
-            avatar.style.borderRadius = '9999px';
-            avatar.style.display = 'flex';
-            avatar.style.alignItems = 'center';
-            avatar.style.justifyContent = 'center';
-            avatar.style.fontSize = '10px';
-            avatar.style.fontWeight = '800';
-            avatar.style.flexShrink = '0';
-            if (isAssistant) {
-              avatar.style.background = 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)';
-              avatar.style.color = '#fff';
-              avatar.textContent = 'AI';
-            } else {
-              avatar.style.background = '#e2e8f0';
-              avatar.style.color = '#334155';
-              avatar.textContent = '我';
-            }
-
-            const wrap = document.createElement('div');
-            wrap.style.maxWidth = '78%';
-            wrap.style.textAlign = isAssistant ? 'left' : 'right';
-
-            const name = document.createElement('div');
-            name.textContent = isAssistant ? 'AI客服' : '我';
-            name.style.fontSize = '10px';
-            name.style.color = '#94a3b8';
-            name.style.marginBottom = '4px';
-
-            const bubble = document.createElement('div');
-            bubble.style.padding = '8px 12px';
-            bubble.style.borderRadius = '16px';
-            bubble.style.fontSize = '12px';
-            bubble.style.lineHeight = '1.5';
-            bubble.style.whiteSpace = 'pre-wrap';
-            bubble.style.wordBreak = 'break-word';
-            bubble.style.boxShadow = '0 1px 2px rgba(15,23,42,0.08)';
-            if (isAssistant) {
-              bubble.style.background = '#fff';
-              bubble.style.color = '#0f172a';
-              bubble.style.border = '1px solid #e2e8f0';
-              bubble.style.borderBottomLeftRadius = '8px';
-            } else {
-              bubble.style.background = '#2563eb';
-              bubble.style.color = '#fff';
-              bubble.style.borderBottomRightRadius = '8px';
-            }
-            bubble.textContent = text;
-
-            wrap.appendChild(name);
-            wrap.appendChild(bubble);
-            if (isAssistant) { row.appendChild(avatar); row.appendChild(wrap); }
-            else { row.appendChild(wrap); row.appendChild(avatar); }
-            body.appendChild(row);
-            body.scrollTop = body.scrollHeight;
-          };
-          const addThinking = () => {
-            const row = document.createElement('div');
-            row.style.display = 'flex';
-            row.style.alignItems = 'flex-end';
-            row.style.gap = '8px';
-            row.style.margin = '10px 0';
-            row.style.justifyContent = 'flex-start';
-
-            const avatar = document.createElement('div');
-            avatar.style.width = '32px';
-            avatar.style.height = '32px';
-            avatar.style.borderRadius = '9999px';
-            avatar.style.display = 'flex';
-            avatar.style.alignItems = 'center';
-            avatar.style.justifyContent = 'center';
-            avatar.style.fontSize = '10px';
-            avatar.style.fontWeight = '800';
-            avatar.style.flexShrink = '0';
+          const avatar = document.createElement('div');
+          avatar.style.width = '32px';
+          avatar.style.height = '32px';
+          avatar.style.borderRadius = '9999px';
+          avatar.style.display = 'flex';
+          avatar.style.alignItems = 'center';
+          avatar.style.justifyContent = 'center';
+          avatar.style.fontSize = '10px';
+          avatar.style.fontWeight = '800';
+          avatar.style.flexShrink = '0';
+          if (isAssistant) {
             avatar.style.background = 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)';
             avatar.style.color = '#fff';
             avatar.textContent = 'AI';
+          } else {
+            avatar.style.background = '#e2e8f0';
+            avatar.style.color = '#334155';
+            avatar.textContent = '我';
+          }
 
-            const wrap = document.createElement('div');
-            wrap.style.maxWidth = '78%';
+          const wrap = document.createElement('div');
+          wrap.style.maxWidth = '78%';
+          wrap.style.textAlign = isAssistant ? 'left' : 'right';
 
-            const name = document.createElement('div');
-            name.textContent = 'AI客服';
-            name.style.fontSize = '10px';
-            name.style.color = '#94a3b8';
-            name.style.marginBottom = '4px';
+          const name = document.createElement('div');
+          name.textContent = isAssistant ? 'AI客服' : '我';
+          name.style.fontSize = '10px';
+          name.style.color = '#94a3b8';
+          name.style.marginBottom = '4px';
 
-            const bubble = document.createElement('div');
-            bubble.style.padding = '8px 12px';
-            bubble.style.borderRadius = '16px';
-            bubble.style.borderBottomLeftRadius = '8px';
-            bubble.style.fontSize = '12px';
+          const bubble = document.createElement('div');
+          bubble.style.padding = '8px 12px';
+          bubble.style.borderRadius = '16px';
+          bubble.style.fontSize = '12px';
+          bubble.style.lineHeight = '1.5';
+          bubble.style.whiteSpace = 'pre-wrap';
+          bubble.style.wordBreak = 'break-word';
+          bubble.style.boxShadow = '0 1px 2px rgba(15,23,42,0.08)';
+          if (isAssistant) {
             bubble.style.background = '#fff';
             bubble.style.color = '#0f172a';
             bubble.style.border = '1px solid #e2e8f0';
-            bubble.style.boxShadow = '0 1px 2px rgba(15,23,42,0.08)';
-            bubble.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><svg style="animation:spin 0.8s linear infinite" viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"></circle><path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>正在思考…</span></div>';
+            bubble.style.borderBottomLeftRadius = '8px';
+          } else {
+            bubble.style.background = '#2563eb';
+            bubble.style.color = '#fff';
+            bubble.style.borderBottomRightRadius = '8px';
+          }
+          bubble.textContent = text;
 
-            wrap.appendChild(name);
-            wrap.appendChild(bubble);
-            row.appendChild(avatar);
-            row.appendChild(wrap);
-            body.appendChild(row);
-            body.scrollTop = body.scrollHeight;
-            return bubble;
-          };
-          add('assistant','您好，我是AI智能客服。可以为您提供以下帮助：\n- 了解平台核心功能\n- 查找工具合集分类\n- 咨询VIP权益与服务\n- 反馈问题与建议');
-          add('assistant','您可以直接输入问题，或点击“发送”反馈。');
-          btn.addEventListener('click', ()=>{ panel.style.display = 'flex'; btn.style.display='none'; });
-          let isFull = false;
-          const applySize = () => {
-            if (isFull) {
-              panel.style.right = 'auto';
-              panel.style.left = '50%';
-              panel.style.top = '50%';
-              panel.style.transform = 'translate(-50%, -50%)';
-              panel.style.width = 'min(1100px, calc(100vw - 64px))';
-              panel.style.height = 'min(82vh, 820px)';
-              panel.style.borderRadius = '18px';
-              panel.style.maxWidth = 'none';
-              panel.style.border = '1px solid rgba(226,232,240,0.9)';
-              panel.style.boxShadow = '0 40px 90px rgba(2,6,23,0.45)';
-              const fullBtn = panel.querySelector('#support-chat-fallback-full'); if (fullBtn) fullBtn.textContent = '退出全屏';
+          wrap.appendChild(name);
+          wrap.appendChild(bubble);
+          if (isAssistant) { row.appendChild(avatar); row.appendChild(wrap); }
+          else { row.appendChild(wrap); row.appendChild(avatar); }
+          body.appendChild(row);
+          body.scrollTop = body.scrollHeight;
+        };
+        const addThinking = () => {
+          const row = document.createElement('div');
+          row.style.display = 'flex';
+          row.style.alignItems = 'flex-end';
+          row.style.gap = '8px';
+          row.style.margin = '10px 0';
+          row.style.justifyContent = 'flex-start';
 
-              try {
-                let overlay = document.getElementById('support-chat-fallback-overlay');
-                if (!overlay) {
-                  overlay = document.createElement('div');
-                  overlay.id = 'support-chat-fallback-overlay';
-                  overlay.style.position = 'fixed';
-                  overlay.style.inset = '0';
-                  overlay.style.zIndex = '1299';
-                  overlay.style.background = 'rgba(15,23,42,0.45)';
-                  overlay.style.backdropFilter = 'blur(8px)';
-                  document.body.appendChild(overlay);
-                }
-                overlay.style.display = 'block';
-              } catch(_) {}
-            } else {
-              panel.style.left = 'auto'; panel.style.right = '24px'; panel.style.top = '50%'; panel.style.transform = 'translateY(-50%)';
-              panel.style.width = '340px'; panel.style.height = '420px'; panel.style.borderRadius = '16px';
-              const fullBtn = panel.querySelector('#support-chat-fallback-full'); if (fullBtn) fullBtn.textContent = '全屏';
+          const avatar = document.createElement('div');
+          avatar.style.width = '32px';
+          avatar.style.height = '32px';
+          avatar.style.borderRadius = '9999px';
+          avatar.style.display = 'flex';
+          avatar.style.alignItems = 'center';
+          avatar.style.justifyContent = 'center';
+          avatar.style.fontSize = '10px';
+          avatar.style.fontWeight = '800';
+          avatar.style.flexShrink = '0';
+          avatar.style.background = 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)';
+          avatar.style.color = '#fff';
+          avatar.textContent = 'AI';
 
-              try {
-                const overlay = document.getElementById('support-chat-fallback-overlay');
-                if (overlay) overlay.style.display = 'none';
-              } catch(_) {}
-            }
-          };
-          panel.querySelector('#support-chat-fallback-full').addEventListener('click', ()=>{ isFull = !isFull; applySize(); });
-          panel.querySelector('#support-chat-fallback-close').addEventListener('click', ()=>{
-            panel.style.display = 'none';
-            btn.style.display='';
-            isFull=false;
-            applySize();
+          const wrap = document.createElement('div');
+          wrap.style.maxWidth = '78%';
+
+          const name = document.createElement('div');
+          name.textContent = 'AI客服';
+          name.style.fontSize = '10px';
+          name.style.color = '#94a3b8';
+          name.style.marginBottom = '4px';
+
+          const bubble = document.createElement('div');
+          bubble.style.padding = '8px 12px';
+          bubble.style.borderRadius = '16px';
+          bubble.style.borderBottomLeftRadius = '8px';
+          bubble.style.fontSize = '12px';
+          bubble.style.background = '#fff';
+          bubble.style.color = '#0f172a';
+          bubble.style.border = '1px solid #e2e8f0';
+          bubble.style.boxShadow = '0 1px 2px rgba(15,23,42,0.08)';
+          bubble.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><svg style="animation:spin 0.8s linear infinite" viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"></circle><path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>正在思考…</span></div>';
+
+          wrap.appendChild(name);
+          wrap.appendChild(bubble);
+          row.appendChild(avatar);
+          row.appendChild(wrap);
+          body.appendChild(row);
+          body.scrollTop = body.scrollHeight;
+          return bubble;
+        };
+        add('assistant', '您好，我是AI智能客服。可以为您提供以下帮助：\n- 了解平台核心功能\n- 查找工具合集分类\n- 咨询VIP权益与服务\n- 反馈问题与建议');
+        add('assistant', '您可以直接输入问题，或点击“发送”反馈。');
+        btn.addEventListener('click', () => { panel.style.display = 'flex'; btn.style.display = 'none'; });
+        let isFull = false;
+        const applySize = () => {
+          if (isFull) {
+            panel.style.right = 'auto';
+            panel.style.left = '50%';
+            panel.style.top = '50%';
+            panel.style.transform = 'translate(-50%, -50%)';
+            panel.style.width = 'min(1100px, calc(100vw - 64px))';
+            panel.style.height = 'min(82vh, 820px)';
+            panel.style.borderRadius = '18px';
+            panel.style.maxWidth = 'none';
+            panel.style.border = '1px solid rgba(226,232,240,0.9)';
+            panel.style.boxShadow = '0 40px 90px rgba(2,6,23,0.45)';
+            const fullBtn = panel.querySelector('#support-chat-fallback-full'); if (fullBtn) fullBtn.textContent = '退出全屏';
+
+            try {
+              let overlay = document.getElementById('support-chat-fallback-overlay');
+              if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'support-chat-fallback-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.inset = '0';
+                overlay.style.zIndex = '1299';
+                overlay.style.background = 'rgba(15,23,42,0.45)';
+                overlay.style.backdropFilter = 'blur(8px)';
+                document.body.appendChild(overlay);
+              }
+              overlay.style.display = 'block';
+            } catch (_) { }
+          } else {
+            panel.style.left = 'auto'; panel.style.right = '24px'; panel.style.top = '50%'; panel.style.transform = 'translateY(-50%)';
+            panel.style.width = '340px'; panel.style.height = '420px'; panel.style.borderRadius = '16px';
+            const fullBtn = panel.querySelector('#support-chat-fallback-full'); if (fullBtn) fullBtn.textContent = '全屏';
+
             try {
               const overlay = document.getElementById('support-chat-fallback-overlay');
               if (overlay) overlay.style.display = 'none';
-            } catch(_) {}
-          });
-          const doSend = async () => {
-            const inp = panel.querySelector('#support-chat-fallback-input');
-            const v = (inp.value||'').trim(); if(!v) return; add('user', v); inp.value='';
-            const holder = addThinking();
-            try {
-              const r = await fetch('/api/open/chat', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ prompt: v }) });
-              const t = await r.text(); let d={}; try{ d=JSON.parse(t||'{}'); }catch(_){ d={}; }
-              const reply = (d && typeof d.response==='string') ? d.response : (d.message || '未获取到回复');
-              holder.innerText = reply;
-            } catch(_) {
-              holder.innerText = '网络异常，请稍后重试';
-            }
-          };
-          panel.querySelector('#support-chat-fallback-send').addEventListener('click', doSend);
-          panel.querySelector('#support-chat-fallback-input').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ doSend(); }});
+            } catch (_) { }
+          }
         };
-        document.addEventListener('DOMContentLoaded', makeBtn);
-        window.addEventListener('modules:loaded', makeBtn);
-      })();
-    </script>
-    <script>
-      (function(){
-        const el = document.getElementById('fixed-footer');
-        if(!el) return;
-        const threshold = 8;
-        const update = () => {
-          const atBottom = (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - threshold);
-          el.style.display = atBottom ? 'block' : 'none';
+        panel.querySelector('#support-chat-fallback-full').addEventListener('click', () => { isFull = !isFull; applySize(); });
+        panel.querySelector('#support-chat-fallback-close').addEventListener('click', () => {
+          panel.style.display = 'none';
+          btn.style.display = '';
+          isFull = false;
+          applySize();
+          try {
+            const overlay = document.getElementById('support-chat-fallback-overlay');
+            if (overlay) overlay.style.display = 'none';
+          } catch (_) { }
+        });
+        const doSend = async () => {
+          const inp = panel.querySelector('#support-chat-fallback-input');
+          const v = (inp.value || '').trim(); if (!v) return; add('user', v); inp.value = '';
+          const holder = addThinking();
+          try {
+            const r = await fetch('/api/open/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: v }) });
+            const t = await r.text(); let d = {}; try { d = JSON.parse(t || '{}'); } catch (_) { d = {}; }
+            const reply = (d && typeof d.response === 'string') ? d.response : (d.message || '未获取到回复');
+            holder.innerText = reply;
+          } catch (_) {
+            holder.innerText = '网络异常，请稍后重试';
+          }
         };
-        window.addEventListener('scroll', update, { passive: true });
-        window.addEventListener('resize', update);
-        document.addEventListener('DOMContentLoaded', update);
-        update();
-      })();
-    </script>
-  </body>
-  </html>
+        panel.querySelector('#support-chat-fallback-send').addEventListener('click', doSend);
+        panel.querySelector('#support-chat-fallback-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') { doSend(); } });
+      };
+      document.addEventListener('DOMContentLoaded', makeBtn);
+      window.addEventListener('modules:loaded', makeBtn);
+    })();
+  </script>
+  <script>
+    (function () {
+      const el = document.getElementById('fixed-footer');
+      if (!el) return;
+      const threshold = 8;
+      const update = () => {
+        const atBottom = (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - threshold);
+        el.style.display = atBottom ? 'block' : 'none';
+      };
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', update);
+      document.addEventListener('DOMContentLoaded', update);
+      update();
+    })();
+  </script>
+</body>
+
+</html>

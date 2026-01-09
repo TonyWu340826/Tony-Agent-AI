@@ -13,35 +13,40 @@
     html,body{height:100%;margin:0;padding:0}
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+<body class="min-h-screen bg-[#020617] text-slate-200">
 
-<header class="sticky top-0 z-[60] backdrop-blur-lg bg-white/90 border-b border-slate-100 shadow-sm">
+<header class="sticky top-0 z-[60] backdrop-blur-xl bg-[#020617]/80 border-b border-white/5">
   <div class="max-w-7xl mx-auto px-3 lg:px-6 py-4">
     <div class="flex items-center">
-      <a href="/home.html" class="flex items-center gap-1 cursor-pointer">
-        <span class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-extrabold">宙</span>
-        <span class="text-2xl tracking-tight text-slate-950 font-bold">宙斯</span>
+      <a href="/home.html" class="flex items-center gap-2 cursor-pointer">
+        <span class="w-9 h-9 rounded-xl bg-[#0B1120] border border-white/10 shadow-[0_10px_30px_rgba(2,6,23,0.45)] flex items-center justify-center">
+          <svg class="w-4.5 h-4.5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4z"/></svg>
+        </span>
+        <span class="text-2xl tracking-tight text-white font-extrabold">ZEUS.AI</span>
       </a>
 
       <div class="hidden md:flex items-center gap-12 relative flex-1 justify-center">
-        <a href="/home.html#features-section" class="flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-1">平台功能</a>
-        <a href="/home.html#tools" class="flex items-center gap-2 text-slate-800 font-semibold text-base md:text-lg hover:text-indigo-600 transition-colors border-b-2 border-transparent hover:border-indigo-600 pb-1">工具合集</a>
+        <a href="/home.html#features-section" class="flex items-center gap-2 text-slate-300 font-semibold text-base md:text-lg hover:text-white transition-colors border-b-2 border-transparent hover:border-cyan-400 pb-1">平台功能</a>
+        <a href="/home.html#tools" class="flex items-center gap-2 text-slate-300 font-semibold text-base md:text-lg hover:text-white transition-colors border-b-2 border-transparent hover:border-cyan-400 pb-1">工具合集</a>
         <div class="relative group">
-          <a href="#" class="flex items-center gap-2 text-blue-600 font-semibold text-base md:text-lg border-b-2 border-blue-600 pb-1" onclick="event.preventDefault()">AI工作台</a>
-          <div class="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 w-64 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100]">
-            <a href="/home.html#model" class="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-lg">
-              <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+          <a href="#" class="flex items-center gap-2 text-cyan-300 font-semibold text-base md:text-lg border-b-2 border-cyan-400 pb-1" onclick="event.preventDefault()">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4z"/></svg>
+            AI工作台
+          </a>
+          <div class="absolute left-0 top-full mt-2 bg-[#0f172a]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 w-64 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100]">
+            <a href="/home.html#model" class="flex items-center gap-2 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl">
+              <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z"/></svg>
               <span>模型服务</span>
             </a>
-            <a href="/mcp/index.html" class="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-lg">
-              <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 21V6a9 9 0 009 9h3"/></svg>
+            <a href="/mcp/index.html" class="flex items-center gap-2 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl">
+              <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 21V6a9 9 0 009 9h3"/></svg>
               <span>MCP</span>
             </a>
-            <a href="/home.html#prompt-engineering" class="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-blue-50 rounded-lg">
-              <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6L2 12l6 6"/></svg>
+            <a href="/home.html#prompt-engineering" class="flex items-center gap-2 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl">
+              <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6L2 12l6 6"/></svg>
               <span>Prompt工程</span>
             </a>
-            <a href="/vector/index.html" class="flex items-center gap-2 px-3 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg">
+            <a href="/vector/index.html" class="flex items-center gap-2 px-3 py-2 text-cyan-200 font-semibold hover:bg-white/5 rounded-xl">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h8a3 3 0 013 3v11H5a3 3 0 01-3-3V5z"/><path d="M22 5h-8a3 3 0 00-3 3v11h8a3 3 0 003-3V5z"/></svg>
               <span>智能知识库</span>
             </a>
@@ -50,12 +55,12 @@
       </div>
 
       <div class="flex items-center gap-3 ml-auto">
-        <a id="nav-back" href="/home.html" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm hover:bg-slate-200">返回主页</a>
+        <a id="nav-back" href="/home.html" class="px-3 py-2 rounded-xl bg-white/5 text-slate-200 text-sm hover:bg-white/10 border border-white/10">返回主页</a>
 
         <div id="nav-user-wrap" class="hidden relative">
           <div class="flex items-center gap-2">
-            <span id="nav-username" class="text-sm font-semibold text-slate-700"></span>
-            <span class="w-9 h-9 rounded-full overflow-hidden border-2 border-slate-200 bg-white">
+            <span id="nav-username" class="text-sm font-semibold text-slate-200"></span>
+            <span class="w-9 h-9 rounded-full overflow-hidden border-2 border-white/10 bg-white/5">
               <img id="nav-avatar-img" class="w-full h-full object-cover" alt="用户头像" />
             </span>
           </div>
