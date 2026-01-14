@@ -60,8 +60,37 @@
   <div id="root" class="min-h-screen"></div>
   <div id="fixed-footer"
     style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:1200;background:#0f172a;color:#fff;border-top:1px solid #334155;text-align:center;padding:8px 0;">
-    <div style="font-size:12px;">© 2025 ZEUS.AI. All rights reserved.</div>
-    <div style="font-size:11px;color:#cbd5e1;margin-top:2px;">让智能赋能每个人 · 共建可信AI新纪元</div>
+    <div style="font-size:12px;"> 2025 ZEUS.AI. All rights reserved.</div>
+    <div style="display:flex;gap:14px;justify-content:center;align-items:center;margin-top:8px;flex-wrap:wrap;">
+      <div style="font-size:12px;color:#cbd5e1;">联系名片：</div>
+      <a href="#" data-preview-src="/image/message/%E5%BE%AE%E4%BF%A1%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" style="display:flex;align-items:center;gap:6px;color:#e2e8f0;text-decoration:none;">
+        <img src="/image/message/%E5%BE%AE%E4%BF%A1%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" alt="微信公众号" style="width:84px;height:84px;border-radius:10px;background:#fff;object-fit:contain;" />
+        <span style="font-size:12px;">公众号</span>
+      </a>
+      <a href="#" data-preview-src="/image/message/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%91%E5%8F%B7.jpg" style="display:flex;align-items:center;gap:6px;color:#e2e8f0;text-decoration:none;">
+        <img src="/image/message/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%91%E5%8F%B7.jpg" alt="微信视频号" style="width:84px;height:84px;border-radius:10px;background:#fff;object-fit:contain;" />
+        <span style="font-size:12px;">视频号</span>
+      </a>
+      <a href="#" data-preview-src="/image/message/%E6%8A%96%E9%9F%B31.png" style="display:flex;align-items:center;gap:6px;color:#e2e8f0;text-decoration:none;">
+        <img src="/image/message/%E6%8A%96%E9%9F%B31.png" alt="抖音1" style="width:84px;height:84px;border-radius:10px;background:#fff;object-fit:contain;" />
+        <span style="font-size:12px;">抖音1</span>
+      </a>
+      <a href="#" data-preview-src="/image/message/%E6%8A%96%E9%9F%B32.png" style="display:flex;align-items:center;gap:6px;color:#e2e8f0;text-decoration:none;">
+        <img src="/image/message/%E6%8A%96%E9%9F%B32.png" alt="抖音2" style="width:84px;height:84px;border-radius:10px;background:#fff;object-fit:contain;" />
+        <span style="font-size:12px;">抖音2</span>
+      </a>
+    </div>
+  </div>
+  <div id="contact-card-preview" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(2,6,23,0.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:18px;">
+    <div style="position:relative;width:min(980px, calc(100vw - 36px));max-height:calc(100vh - 36px);background:#0b1220;border:1px solid rgba(148,163,184,0.25);border-radius:16px;box-shadow:0 30px 80px rgba(2,6,23,0.55);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px;border-bottom:1px solid rgba(148,163,184,0.18);background:linear-gradient(90deg, rgba(8,145,178,0.25) 0%, rgba(37,99,235,0.22) 50%, rgba(79,70,229,0.22) 100%);">
+        <div id="contact-card-preview-title" style="font-size:13px;font-weight:700;color:#e2e8f0;">联系名片预览</div>
+        <button id="contact-card-preview-close" type="button" style="padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.10);color:#e2e8f0;border:1px solid rgba(255,255,255,0.12);cursor:pointer;">关闭</button>
+      </div>
+      <div style="padding:14px;background:rgba(15,23,42,0.4);">
+        <img id="contact-card-preview-img" src="" alt="联系名片" style="width:100%;max-height:calc(100vh - 140px);object-fit:contain;background:#fff;border-radius:12px;" />
+      </div>
+    </div>
   </div>
   <script type="text/javascript" defer src="/js/tools-ui.js"></script>
   <script type="text/javascript" defer src="/js/model-ui.js"></script>
@@ -70,7 +99,7 @@
   <script type="text/javascript" defer src="/js/sql-dba-ui.js"></script>
   <script type="text/javascript" defer src="/js/ai-tool-management.js"></script>
   <script type="text/javascript" defer src="/tools/10-aiSql-tools-management.js"></script>
-  <script type="text/javascript" defer src="/js/user-home.js?v=30"></script>
+  <script type="text/javascript" defer src="/js/user-home.js?v=31"></script>
   <script type="text/babel">
     const root = ReactDOM.createRoot(document.getElementById('root'))
     let mounted = false
@@ -78,7 +107,7 @@
     const render = () => {
       const Comp = window.Components && window.Components.UserHome
       if (mounted && mountedComp === Comp) return
-      root.render(Comp ? React.createElement(Comp) : React.createElement('div', { className: 'p-6' }, '组件加载中...'))
+      root.render(Comp ? React.createElement(Comp) : React.createElement('div', { className: 'p-6' }, ''))
       if (Comp) { mounted = true; mountedComp = Comp }
       // 隐藏加载动画
       const loader = document.getElementById('page-loader')
@@ -103,6 +132,84 @@
         if (!document.body) return;
       };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    })();
+  </script>
+  <script>
+    (function () {
+      const overlay = () => document.getElementById('contact-card-preview');
+      const imgEl = () => document.getElementById('contact-card-preview-img');
+      const titleEl = () => document.getElementById('contact-card-preview-title');
+      const closeBtn = () => document.getElementById('contact-card-preview-close');
+
+      const open = (src, title) => {
+        const ov = overlay();
+        const img = imgEl();
+        if (!ov || !img) return;
+        img.src = src || '';
+        try { img.loading = 'eager'; } catch (_) { }
+        const t = titleEl();
+        if (t) t.textContent = title || '联系名片预览';
+        ov.style.display = 'flex';
+      };
+
+      const close = () => {
+        const ov = overlay();
+        const img = imgEl();
+        if (ov) ov.style.display = 'none';
+        if (img) img.src = '';
+      };
+
+      const bind = () => {
+        try {
+          const footer = document.getElementById('fixed-footer');
+          if (footer && !footer.__contactCardBound) {
+            footer.__contactCardBound = true;
+            footer.addEventListener('click', (e) => {
+              const a = e.target && e.target.closest ? e.target.closest('a[data-preview-src]') : null;
+              if (!a) return;
+              try { e.preventDefault(); e.stopPropagation(); } catch (_) { }
+              const src = a.getAttribute('data-preview-src') || '';
+              let title = '';
+              try {
+                const span = a.querySelector('span');
+                title = span ? (span.textContent || '').trim() : '';
+              } catch (_) { }
+              open(src, title ? ('联系名片 - ' + title) : '联系名片预览');
+            }, true);
+          }
+        } catch (_) { }
+
+        try {
+          const ov = overlay();
+          if (ov && !ov.__bound) {
+            ov.__bound = true;
+            ov.addEventListener('click', (e) => {
+              if (e.target === ov) close();
+            });
+          }
+        } catch (_) { }
+
+        try {
+          const btn = closeBtn();
+          if (btn && !btn.__bound) {
+            btn.__bound = true;
+            btn.addEventListener('click', close);
+          }
+        } catch (_) { }
+
+        try {
+          if (!window.__contactCardEscBound) {
+            window.__contactCardEscBound = true;
+            window.addEventListener('keydown', (e) => {
+              if (e && e.key === 'Escape') close();
+            });
+          }
+        } catch (_) { }
+      };
+
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+      else bind();
+      window.addEventListener('modules:loaded', bind);
     })();
   </script>
   <script>

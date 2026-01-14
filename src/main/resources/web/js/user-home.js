@@ -749,10 +749,23 @@ const Footer = () => (
                     )
                 ),
                 React.createElement('div', null,
-                    React.createElement('h4', { className: 'text-white font-semibold mb-4' }, '微信公众号'),
-                    React.createElement('div', { className: 'bg-slate-800/60 border border-slate-700 rounded-2xl p-4' },
-                        React.createElement('img', { src: '/image/weixin.png', alt: '微信公众号二维码', className: 'w-full aspect-square object-contain rounded-xl bg-white' }),
-                        React.createElement('div', { className: 'text-xs text-slate-400 mt-3' }, '微信扫码关注，获取更新与通知')
+                    React.createElement('h4', { className: 'text-white font-semibold mb-4' }, '联系名片'),
+                    React.createElement('div', { className: 'grid grid-cols-2 gap-3' },
+                        [
+                            { title: '微信公众号', src: encodeURI('/image/message/微信公众号.jpg') },
+                            { title: '微信视频号', src: encodeURI('/image/message/微信视频号.jpg') },
+                            { title: '抖音（1）', src: encodeURI('/image/message/抖音1.png') },
+                            { title: '抖音（2）', src: encodeURI('/image/message/抖音2.png') }
+                        ].map((it, i) => React.createElement('a', {
+                            key: i,
+                            href: it.src,
+                            target: '_blank',
+                            rel: 'noreferrer',
+                            className: 'block bg-slate-800/60 border border-slate-700 rounded-2xl p-2 hover:border-slate-500 transition-colors'
+                        },
+                            React.createElement('img', { src: it.src, alt: it.title, className: 'w-full aspect-square object-contain rounded-xl bg-white' }),
+                            React.createElement('div', { className: 'text-[11px] text-slate-400 mt-2 text-center truncate' }, it.title)
+                        ))
                     )
                 )
             ),
@@ -1771,11 +1784,18 @@ const UserHome = () => {
                                 React.createElement('button', { className: `px-6 py-3 rounded-xl font-semibold transition-colors shadow-lg ${articlesHasMore ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`, onClick: () => { if (articlesHasMore) loadMoreArticles(); } }, articlesLoading ? '加载中...' : (articlesHasMore ? '浏览更多文章' : '没有更多了'))
                             ),
 
-                            // 右侧展示图
+                            // 右侧展示视频
                             React.createElement('div', null,
                                 React.createElement('div', { className: 'relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10' },
-                                    React.createElement('div', { className: 'w-full aspect-[16/9] bg-slate-800' },
-                                        React.createElement(ImageWithFallback, { src: '/image/logNew.png.png', alt: '', className: 'w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity' })
+                                    React.createElement('div', { className: 'w-full aspect-video bg-slate-800/20' },
+                                        React.createElement('video', {
+                                            src: '/image/video/v.mp4',
+                                            className: 'w-full h-full object-cover opacity-100 transition-opacity',
+                                            controls: true,
+                                            autoPlay: true,
+                                            muted: true,
+                                            loop: true
+                                        })
                                     )
                                 )
                             )
@@ -2062,24 +2082,7 @@ const UserHome = () => {
                             React.createElement('div', { className: 'p-6' }, '未登录')
                         )
                     )
-                ),
-                React.createElement('div', { className: 'fixed bottom-0 left-0 right-0 z-[1000] pointer-events-none' },
-                    React.createElement('div', { className: `mx-auto max-w-7xl px-4 transition-all duration-300 transform ${showArticle ? 'translate-y-0 opacity-100 pointer-events-auto' : 'translate-y-full opacity-0'}`, style: { transform: showArticle ? 'translateY(0)' : 'translateY(100%)', opacity: showArticle ? 1 : 0, transition: 'transform .3s ease, opacity .3s ease' } },
-                        React.createElement('div', { className: 'bg-white rounded-t-2xl shadow-2xl border border-slate-200 overflow-hidden' },
-                            React.createElement('div', { className: 'flex items-center justify-between px-6 pt-4' },
-                                React.createElement('h3', { className: 'text-lg font-semibold text-slate-900 truncate' }, (articleDetail && articleDetail.title) || '文章详情'),
-                                React.createElement('button', { className: 'px-2 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200', onClick: () => { setShowArticle(false); setActiveArticleId(null); }, 'aria-label': '关闭详情' }, '×')
-                            ),
-                            React.createElement('div', { className: 'px-6 pb-6 text-sm text-slate-500' }, (articleDetail && articleDetail.createdAt) ? new Date(articleDetail.createdAt).toLocaleString() : ''),
-                            React.createElement('div', { className: 'px-6 pb-6 max-h-[40vh] md:max-h-[50vh] overflow-auto' }, React.createElement(ArticleContent, { detail: articleDetail }))
-                        )
-                    )
-                ),
-                (!showAuth && !String(activePage || '').startsWith('interview') && React.createElement(Footer, null)),
-                React.createElement(SupportChat, null)
-            ),
-            React.createElement('div', { className: 'fixed bottom-6 right-6 z-[1000] pointer-events-none' },
-                React.createElement(SupportChat, null)
+                )
             )
         )
     ));
