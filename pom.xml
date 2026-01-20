@@ -8,9 +8,9 @@
         <version>4.0.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.tony.service</groupId>
+    <groupId>com.tony</groupId>
     <artifactId>tonywu-ai</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>tonywu-ai</name>
     <description>tonywu-ai</description>
     <url/>
